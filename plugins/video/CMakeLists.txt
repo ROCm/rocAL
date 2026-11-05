@@ -22,12 +22,6 @@
 
 cmake_minimum_required(VERSION 3.10)
 
-project(rocal_video_plugin LANGUAGES CXX)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-option(ROCAL_VIDEO_PLUGIN_STATIC "Build rocal_video_plugin as a static library" OFF)
-
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
     set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
@@ -37,13 +31,18 @@ else()
     set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
 
-# Default backend options when this CMake is invoked standalone from installed sources.
-if(NOT DEFINED GPU_SUPPORT)
-    option(GPU_SUPPORT "Build with GPU support" ON)
+# The rocDecode color-conversion and resize kernels are compiled into the plugin, which needs a
+# HIP-capable compiler. Standalone builds would otherwise pick the host default (usually g++).
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/lib/llvm/bin/amdclang++")
+    set(CMAKE_C_COMPILER ${ROCM_PATH}/lib/llvm/bin/amdclang)
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/lib/llvm/bin/amdclang++)
 endif()
-if(NOT DEFINED BACKEND)
-    set(BACKEND "HIP" CACHE STRING "Backend [CPU/HIP]")
-endif()
+
+project(rocal_video_plugin LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+option(ROCAL_VIDEO_PLUGIN_STATIC "Build rocal_video_plugin as a static library" OFF)
 
 # Detect whether we are building inside the full rocAL source tree or standalone
 # from the sources shipped with the rocAL dev package.
@@ -68,6 +67,13 @@ if(ROCAL_VIDEO_PLUGIN_IN_TREE)
     list(APPEND ROCAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/rocAL/include)
 else()
     message("-- ${White}rocal_video_plugin: building standalone from installed sources${ColourReset}")
+    # librocal dlopen()s the plugin, and the plugin's own RUNPATH is what resolves its ROCm
+    # dependencies (e.g. librocdecode). Without it, tarball ROCm installs that are not
+    # registered with ldconfig fail to load the plugin. $ORIGIN covers the plugin installed next
+    # to librocal in the ROCm lib directory, and ROCM_PATH/lib covers a separate install prefix.
+    if(NOT DEFINED CMAKE_INSTALL_RPATH)
+        set(CMAKE_INSTALL_RPATH "\$ORIGIN;${ROCM_PATH}/lib")
+    endif()
     # Make ROCm packages (HIP, rocDecode) discoverable without caller-supplied hints,
     # matching rocAL/CMakeLists.txt. This must run before the HIP/rocDecode discovery below.
     list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/lib/cmake ${ROCM_PATH}/hip)
@@ -106,15 +112,29 @@ endif()
 # FFmpeg is mandatory for the plugin.
 find_package(FFmpeg REQUIRED)
 
-# Detect HIP backend independently so the plugin can compile rocDecode support
-# even though ENABLE_HIP is only a compile definition of the core target.
-set(ROCAL_VIDEO_PLUGIN_HIP OFF)
-if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
-    find_package(HIP QUIET)
-    if(HIP_FOUND)
-        set(ROCAL_VIDEO_PLUGIN_HIP ON)
-    endif()
+# The plugin shares rocAL's internal C++ types (e.g. DecoderConfig), whose layout depends on
+# ENABLE_HIP, so the plugin must use the backend the selected rocAL was built with.
+if(ROCAL_VIDEO_PLUGIN_IN_TREE)
+    set(ROCAL_BUILD_CONFIG_HEADER "${CMAKE_BINARY_DIR}/rocAL/rocal_build_config.h")
+else()
+    set(ROCAL_BUILD_CONFIG_HEADER "${ROCAL_INSTALL_PREFIX}/include/rocal/rocal_build_config.h")
 endif()
+if(NOT EXISTS "${ROCAL_BUILD_CONFIG_HEADER}")
+    message(FATAL_ERROR "-- ${Red}rocal_video_plugin: ${ROCAL_BUILD_CONFIG_HEADER} not found; the selected rocAL does not support the video plugin${ColourReset}")
+endif()
+file(STRINGS "${ROCAL_BUILD_CONFIG_HEADER}" ROCAL_CONFIG_ENABLE_HIP_LINE REGEX "^#define ROCAL_CONFIG_ENABLE_HIP [01]$")
+string(REGEX MATCH "[01]$" ROCAL_CONFIG_ENABLE_HIP "${ROCAL_CONFIG_ENABLE_HIP_LINE}")
+
+set(ROCAL_VIDEO_PLUGIN_HIP OFF)
+if(ROCAL_CONFIG_ENABLE_HIP)
+    find_package(HIP QUIET)
+    if(NOT HIP_FOUND)
+        message(FATAL_ERROR "-- ${Red}rocal_video_plugin: rocAL was built with the HIP backend but HIP was not found. Install the HIP development package or set ROCM_PATH/CMAKE_PREFIX_PATH to the ROCm installation${ColourReset}")
+    endif()
+    find_package(hip QUIET)
+    set(ROCAL_VIDEO_PLUGIN_HIP ON)
+endif()
+message("-- ${White}rocal_video_plugin: rocAL backend from ${ROCAL_BUILD_CONFIG_HEADER} -- ENABLE_HIP=${ROCAL_CONFIG_ENABLE_HIP}${ColourReset}")
 
 # rocDecode is optional and only required on HIP builds.
 set(ROCAL_VIDEO_PLUGIN_ROCDECODE OFF)
@@ -148,7 +168,15 @@ if(ROCAL_VIDEO_PLUGIN_HIP AND ROCAL_VIDEO_PLUGIN_ROCDECODE)
     # The rocDecode runtime package may not ship the utility source files.
     # If they are missing, disable rocDecode support in the plugin instead of
     # failing configure.
-    if(EXISTS "${rocdecode_ROCVIDEODECODE_DIR}/roc_video_dec.cpp")
+    if(NOT EXISTS "${rocdecode_ROCVIDEODECODE_DIR}/roc_video_dec.cpp"
+       OR NOT EXISTS "${rocdecode_UTILS_DIR}/resize_kernels.cpp"
+       OR NOT EXISTS "${rocdecode_UTILS_DIR}/colorspace_kernels.cpp")
+        message("-- ${Yellow}NOTE: rocDecode utility sources missing at ${rocdecode_UTILS_DIR}; disabling rocDecode video decoder in plugin${ColourReset}")
+        set(ROCAL_VIDEO_PLUGIN_ROCDECODE OFF)
+    elseif(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        message("-- ${Yellow}NOTE: ${CMAKE_CXX_COMPILER} cannot compile the rocDecode HIP kernels; disabling rocDecode video decoder in plugin (use amdclang++)${ColourReset}")
+        set(ROCAL_VIDEO_PLUGIN_ROCDECODE OFF)
+    else()
         list(APPEND ROCAL_VIDEO_PLUGIN_SOURCES source/rocdec_video_decoder.cpp)
         list(APPEND ROCAL_VIDEO_PLUGIN_SOURCES ${rocdecode_ROCVIDEODECODE_DIR}/roc_video_dec.cpp)
         include_directories(
@@ -157,10 +185,24 @@ if(ROCAL_VIDEO_PLUGIN_HIP AND ROCAL_VIDEO_PLUGIN_ROCDECODE)
             ${rocdecode_ROCVIDEODECODE_DIR}
             ${rocdecode_UTILS_DIR}
         )
-    else()
-        message("-- ${Yellow}NOTE: rocDecode utility sources missing at ${rocdecode_ROCVIDEODECODE_DIR}; disabling rocDecode video decoder in plugin${ColourReset}")
-        set(ROCAL_VIDEO_PLUGIN_ROCDECODE OFF)
+        # The rocDecode decoder calls these kernels, so they must ship with it rather than rely
+        # on optional objects in the prebuilt core.
+        set(ROCAL_VIDEO_PLUGIN_KERNEL_SOURCES
+            ${rocdecode_UTILS_DIR}/resize_kernels.cpp
+            ${rocdecode_UTILS_DIR}/colorspace_kernels.cpp
+        )
+        set_source_files_properties(${ROCAL_VIDEO_PLUGIN_KERNEL_SOURCES} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
+        add_library(rocal_video_plugin_hip OBJECT ${ROCAL_VIDEO_PLUGIN_KERNEL_SOURCES})
+        set_target_properties(rocal_video_plugin_hip PROPERTIES POSITION_INDEPENDENT_CODE ON)
+        target_compile_definitions(rocal_video_plugin_hip PRIVATE __HIP_PLATFORM_AMD__)
+        target_include_directories(rocal_video_plugin_hip PRIVATE ${rocdecode_UTILS_DIR})
+        target_link_libraries(rocal_video_plugin_hip PRIVATE hip::device)
+        list(APPEND ROCAL_VIDEO_PLUGIN_SOURCES $<TARGET_OBJECTS:rocal_video_plugin_hip>)
     endif()
+endif()
+
+if(ROCAL_VIDEO_PLUGIN_IN_TREE)
+    set(ROCAL_VIDEO_ROCDECODE_AVAILABLE ${ROCAL_VIDEO_PLUGIN_ROCDECODE} PARENT_SCOPE)
 endif()
 
 if(ROCAL_VIDEO_PLUGIN_STATIC)

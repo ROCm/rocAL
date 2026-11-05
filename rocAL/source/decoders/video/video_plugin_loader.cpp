@@ -103,6 +103,8 @@ void do_load_video_plugin() {
                 return;  // plugin constructor registered the factories.
             }
             // The .so loaded but did not register; close it and keep searching.
+            if (!error_log.empty()) error_log += "; ";
+            error_log += candidate + ": loaded but registered no decoders (built against a different rocAL backend?)";
             dlclose(handle);
         } else {
             const char *err = dlerror();
@@ -139,3 +141,7 @@ void ensure_video_plugin_loaded() {
 
 }  // namespace video
 }  // namespace rocal
+
+extern "C" int rocal_video_plugin_core_enable_hip() {
+    return ENABLE_HIP;
+}

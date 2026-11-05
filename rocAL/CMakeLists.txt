@@ -236,9 +236,9 @@ if(${BUILD_ROCAL})
     include_directories(${HALF_INCLUDE_DIRS})
     #rocDecode
     if ("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND rocdecode_FOUND)
-        # rocDecode utility kernels live under share/rocdecode/utils; the HIP object
-        # library needs their include path even when the decoder itself lives in the
-        # separate video plugin.
+        # rocDecode utility kernels live under share/rocdecode/utils. In monolithic builds
+        # they are compiled into the rocAL_hip object library; with ROCAL_VIDEO_PLUGIN the
+        # plugin compiles them instead.
         get_filename_component(rocdecode_PREFIX_DIR "${rocdecode_INCLUDE_DIR}" DIRECTORY)
         set(rocdecode_UTILS_DIR "${rocdecode_PREFIX_DIR}/share/rocdecode/utils")
         set(rocdecode_ROCVIDEODECODE_DIR "${rocdecode_UTILS_DIR}/rocvideodecode")
@@ -324,6 +324,7 @@ if(${BUILD_ROCAL})
 
         if(rocdecode_FOUND AND NOT ROCAL_VIDEO_PLUGIN)
             target_compile_definitions(${PROJECT_NAME} PUBLIC -DENABLE_ROCDECODE)
+            set(ROCAL_VIDEO_ROCDECODE_AVAILABLE ON PARENT_SCOPE)
             message("-- ${White}rocAL built with rocDecode video decode capabilities${ColourReset}")
         endif()
         if(rocjpeg_FOUND)
@@ -335,6 +336,17 @@ if(${BUILD_ROCAL})
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_HIP=0)
         message("-- ${White}rocAL built with CPU only Backend${ColourReset}")
     endif()
+
+    # The video plugin is compiled against rocAL's internal headers, whose class layouts depend
+    # on ENABLE_HIP. Record the backend so a plugin built later (in-tree or from the installed
+    # sources) uses the same value instead of guessing from the build host.
+    if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
+        set(ROCAL_CONFIG_ENABLE_HIP 1)
+    else()
+        set(ROCAL_CONFIG_ENABLE_HIP 0)
+    endif()
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rocal_build_config.h
+         "#pragma once\n#define ROCAL_CONFIG_ENABLE_HIP ${ROCAL_CONFIG_ENABLE_HIP}\n")
 
     target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_SIMD=1)
     target_compile_definitions(${PROJECT_NAME} PRIVATE "ROCM_PATH=\"${ROCM_PATH}\"")
@@ -466,6 +478,8 @@ if(${BUILD_ROCAL})
             PATTERN "*.h"
             PATTERN "*.hpp"
             PATTERN "api/*" EXCLUDE)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/rocal_build_config.h
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocal COMPONENT dev)
     # install generated protobuf headers needed by some internal headers
     install(DIRECTORY ${CMAKE_BINARY_DIR}/rocAL/
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocal

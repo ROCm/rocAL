@@ -165,6 +165,10 @@ message("-- ${Cyan}     -D PYTHON_VERSION_SUGGESTED=${PYTHON_VERSION_SUGGESTED} 
 # core and the test suite can share the result.
 find_package(FFmpeg QUIET)
 
+# Set by rocAL (monolithic) or the video plugin when the rocDecode decoder is actually built;
+# the test suite uses it to decide whether to register the rocDecode video test.
+set(ROCAL_VIDEO_ROCDECODE_AVAILABLE OFF)
+
 add_subdirectory(rocAL)
 
 if(ROCAL_VIDEO_PLUGIN)

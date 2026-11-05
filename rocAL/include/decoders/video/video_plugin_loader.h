@@ -34,3 +34,7 @@ void ensure_video_plugin_loaded();
 
 }  // namespace video
 }  // namespace rocal
+
+// ENABLE_HIP value librocal was built with. The plugin compares it with its own value before
+// registering, because rocAL's internal types (e.g. DecoderConfig) differ between backends.
+extern "C" int rocal_video_plugin_core_enable_hip();

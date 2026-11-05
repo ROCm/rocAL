@@ -22,7 +22,10 @@ THE SOFTWARE.
 
 #include "rocal_video_plugin/register.h"
 
+#include <iostream>
+
 #include "decoders/video/video_decoder_registry.h"
+#include "decoders/video/video_plugin_loader.h"
 #include "readers/video/video_properties.h"
 
 #include "rocal_video_plugin/ffmpeg_video_decoder.h"
@@ -44,6 +47,12 @@ namespace {
 class VideoPluginRegistrar {
    public:
     VideoPluginRegistrar() {
+        if (rocal_video_plugin_core_enable_hip() != ENABLE_HIP) {
+            std::cerr << "rocal_video_plugin: built with ENABLE_HIP=" << ENABLE_HIP
+                      << " but librocal was built with ENABLE_HIP=" << rocal_video_plugin_core_enable_hip()
+                      << "; not registering video decoders. Rebuild rocal_video_plugin against this rocAL.\n";
+            return;
+        }
         register_decoder_factory(DecoderType::FFMPEG_VIDEO,
                                  [](DecoderConfig& cfg) { return std::make_shared<FFmpegVideoDecoder>(); });
 #if ENABLE_HIP && ENABLE_ROCDECODE

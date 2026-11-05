@@ -38,7 +38,9 @@ list(APPEND rocAL_HIP_SOURCES
     rocal_hip_kernels.cpp
     box_encoder_hip.cpp
 )
-if (rocdecode_FOUND)
+# With ROCAL_VIDEO_PLUGIN the rocDecode decoder and its kernels live in the plugin. Building them
+# here as well would export a second copy that the RTLD_GLOBAL-loaded plugin could bind to.
+if (rocdecode_FOUND AND NOT ROCAL_VIDEO_PLUGIN)
     get_filename_component(rocdecode_PREFIX_DIR "${rocdecode_INCLUDE_DIR}" DIRECTORY)
     set(rocdecode_UTILS_DIR "${rocdecode_PREFIX_DIR}/share/rocdecode/utils")
     # Some rocDecode runtime packages (e.g. DEB installs) do not ship the
@@ -59,7 +61,7 @@ set_source_files_properties(${rocAL_HIP_SOURCES} PROPERTIES HIP_SOURCE_PROPERTY_
 add_library(${PROJECT_NAME} OBJECT ${rocAL_HIP_SOURCES} ${rocDecode_UTIL_SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(${PROJECT_NAME} PRIVATE __HIP_PLATFORM_AMD__)
-if(rocdecode_FOUND)
+if(rocDecode_UTIL_SOURCES)
     target_include_directories(${PROJECT_NAME} PRIVATE ${rocdecode_UTILS_DIR})
 endif()
 target_link_libraries(${PROJECT_NAME} hip::device)

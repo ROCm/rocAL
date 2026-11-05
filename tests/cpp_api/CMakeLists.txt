@@ -58,18 +58,6 @@ list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
 find_package(rocdecode 1.0.0 QUIET)
 find_package(rocjpeg 1.0.0 QUIET)
 
-# rocdecode_FOUND only reports that the package is present; the hardware video decoder is
-# actually built only when rocDecode's utility sources (roc_video_dec.cpp) are available (the
-# same check the core and plugin perform). Gate the rocDecode hardware test on this effective
-# capability so the suite does not register a test that requests an unavailable decoder.
-set(ROCAL_VIDEO_ROCDECODE_AVAILABLE OFF)
-if(rocdecode_FOUND)
-    get_filename_component(_rocdecode_prefix_dir "${rocdecode_INCLUDE_DIR}" DIRECTORY)
-    if(EXISTS "${_rocdecode_prefix_dir}/share/rocdecode/utils/rocvideodecode/roc_video_dec.cpp")
-        set(ROCAL_VIDEO_ROCDECODE_AVAILABLE ON)
-    endif()
-endif()
-
 # When this test suite is configured standalone (e.g. the installed cpp_api tests built on
 # their own), the repository top-level build does not supply ROCAL_VIDEO_TESTS_ENABLED. Default
 # it ON so a working HIP/video install still runs the video tests (the previous behavior), while
@@ -100,6 +88,23 @@ else()
 endif(NOT ROCAL_FOUND)
 
 message("-- ${BoldBlue}Test backend set to -- ${BACKEND}${ColourReset}")
+
+# rocdecode_FOUND only reports that the package is present. The top-level build passes down
+# whether the rocDecode decoder was actually built (core or plugin). When this suite is
+# configured on its own, apply the same requirements the build uses: a HIP backend and all
+# rocDecode utility sources.
+if(NOT DEFINED ROCAL_VIDEO_ROCDECODE_AVAILABLE)
+    set(ROCAL_VIDEO_ROCDECODE_AVAILABLE OFF)
+    if(rocdecode_FOUND AND "${BACKEND}" STREQUAL "HIP")
+        get_filename_component(_rocdecode_prefix_dir "${rocdecode_INCLUDE_DIR}" DIRECTORY)
+        set(_rocdecode_utils_dir "${_rocdecode_prefix_dir}/share/rocdecode/utils")
+        if(EXISTS "${_rocdecode_utils_dir}/rocvideodecode/roc_video_dec.cpp"
+           AND EXISTS "${_rocdecode_utils_dir}/resize_kernels.cpp"
+           AND EXISTS "${_rocdecode_utils_dir}/colorspace_kernels.cpp")
+            set(ROCAL_VIDEO_ROCDECODE_AVAILABLE ON)
+        endif()
+    endif()
+endif()
 if(NOT "${BACKEND}" STREQUAL "HIP")
   message("-- ${Yellow}Warning: Skipping GPU tests")
 endif()
@@ -282,7 +287,7 @@ if("${BACKEND}" STREQUAL "HIP")
                 --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/video_tests"
                                   "${CMAKE_CURRENT_BINARY_DIR}/video_tests"
                 --build-generator "${CMAKE_GENERATOR}"
-                --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" "-DROCAL_VIDEO_PLUGIN=${ROCAL_VIDEO_PLUGIN}" "-DROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR=${CMAKE_BINARY_DIR}/lib"
+                --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" "-DROCAL_VIDEO_PLUGIN=${ROCAL_VIDEO_PLUGIN}" "-DROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
                 --test-command "video_tests"
                 ${ROCAL_TEST_DATA_PATH}/videos/AMD_driving_virtual_20.mp4
     )
@@ -397,6 +402,6 @@ add_test(
             --build-generator "${CMAKE_GENERATOR}"
             --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
             --test-command "unit_tests"
-            0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet one_hot 224 224 0 0 1 2
+            0 ${ROCAL_TEST_IMAGES} one_hot 224 224 0 0 1 2
 )
 
