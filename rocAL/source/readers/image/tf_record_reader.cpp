@@ -148,6 +148,9 @@ Reader::Status TFRecordReader::folder_reading() {
         LOG("FileReader ShardID [" + TOSTR(_shard_id) + "] Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path)
     closedir(_sub_dir);
 
+    if (_file_names.empty())
+        THROW("FileReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Did not load any file from " + _full_path);
+
     size_t padded_samples = ((_shard_size > 0) ? _shard_size : largest_shard_size_without_padding()) % _batch_size;
     _last_batch_padded_size = ((_batch_size > 1) && (padded_samples > 0)) ? (_batch_size - padded_samples) : 0;
 
