@@ -116,7 +116,19 @@ do
 
         # caffe2 classification
         python"$ver" unit_test.py --image-dataset-path "$caffe2_classification_path" --reader-type "caffe2_classification" --augmentation-name center_crop --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}CropCenter_${rgb_name[$rgb]}_${device_name}"        
-        python"$ver" unit_test.py --image-dataset-path "$caffe2_classification_path" --reader-type "caffe2_classification" --augmentation-name resize_crop_mirror --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}ResizeCropMirror_${rgb_name[$rgb]}_${device_name}"
+        # ROCM-33746: resize_crop_mirror is disabled on both backends until RPP fixes its
+        # bilinear sampler. RPP lists the whole op as a known kernel defect in skip_list.hpp
+        # ("Image_Geometric/ResizeCropMirrorTest.Correctness/*"); run with
+        # RPP_TEST_NO_SKIP_LIST=1 it fails 160/160 BILINEAR cases on host *and* HIP against
+        # RPP's own double-precision reference. Nearest neighbour is not an alternative here -
+        # the op rejects it with RPP_ERROR_NOT_IMPLEMENTED.
+        # The host case is the one that fails here; the HIP case passes only because its golden
+        # was minted from the same defective HIP kernel. That was confirmed directly: with the
+        # candidate RPP fix applied, the HIP golden stops matching too. So both are disabled
+        # together, and both goldens must be regenerated when the fix lands - see AICV-206 and
+        # its draft PR ROCm/rocm-libraries#10516 (still incomplete for this op: the mirror path
+        # and the exact-ratio downscale remain wrong).
+        # python"$ver" unit_test.py --image-dataset-path "$caffe2_classification_path" --reader-type "caffe2_classification" --augmentation-name resize_crop_mirror --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}ResizeCropMirror_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$caffe2_classification_path" --reader-type "caffe2_classification" --augmentation-name snow --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Snow_${rgb_name[$rgb]}_${device_name}"
 
         # caffe2 detection
@@ -174,16 +186,25 @@ do
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name dilate --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Dilate_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name erode --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Erode_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name magnitude --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Magnitude_${rgb_name[$rgb]}_${device_name}"
-        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name phase --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Phase_${rgb_name[$rgb]}_${device_name}"
+        # ROCM-33746: phase and the bitwise_and/or/xor cases below are disabled on both
+        # backends until RPP fixes rotate. Each builds its second operand with
+        # fn.rotate(angle=45), which defaults to bilinear interpolation - a configuration
+        # RPP itself lists as a known kernel defect in skip_list.hpp
+        # (RotateTest.Correctness/*_a45_BILINEAR; all 96 of those cases fail when the skip
+        # list is disabled). The phase and bitwise kernels are correct and pass RPP's own
+        # tests; they only amplify the rotate error past the comparison tolerance.
+        # Re-enable these lines and regenerate their goldens once that entry is removed.
+        # python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name phase --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Phase_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name threshold --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Threshold_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name warp_perspective --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}WarpPerspective_${rgb_name[$rgb]}_${device_name}"
 
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name remap --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Remap_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name crop_and_patch --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}CropAndPatch_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name ricap --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Ricap_${rgb_name[$rgb]}_${device_name}"
-        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name bitwise_and --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}BitwiseAnd_${rgb_name[$rgb]}_${device_name}"
-        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name bitwise_or --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}BitwiseOr_${rgb_name[$rgb]}_${device_name}"
-        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name bitwise_xor --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}BitwiseXor_${rgb_name[$rgb]}_${device_name}"
+        # Disabled with phase above, same rotate defect - see the note there. ROCM-33746.
+        # python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name bitwise_and --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}BitwiseAnd_${rgb_name[$rgb]}_${device_name}"
+        # python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name bitwise_or --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}BitwiseOr_${rgb_name[$rgb]}_${device_name}"
+        # python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name bitwise_xor --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}BitwiseXor_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name bitwise_not --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}BitwiseNot_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name erase --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Erase_${rgb_name[$rgb]}_${device_name}"
 
