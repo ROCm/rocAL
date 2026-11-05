@@ -128,7 +128,19 @@ do
 
         # caffe2 classification
         ./unit_tests 8 "$caffe2_classification_path" "${output_path}CropCenter_${rgb_name[$rgb]}_${device_name}" $width $height 52 $device $rgb 0 $display
-        ./unit_tests 8 "$caffe2_classification_path" "${output_path}ResizeCropMirror_${rgb_name[$rgb]}_${device_name}" $width $height 53 $device $rgb 0 $display
+        # ROCM-33746: resize_crop_mirror (case 53) is disabled on both backends until RPP fixes
+        # its bilinear sampler. RPP lists the whole op as a known kernel defect in skip_list.hpp
+        # ("Image_Geometric/ResizeCropMirrorTest.Correctness/*"); run with
+        # RPP_TEST_NO_SKIP_LIST=1 it fails 160/160 BILINEAR cases on host *and* HIP against
+        # RPP's own double-precision reference. Nearest neighbour is not an alternative here -
+        # the op rejects it with RPP_ERROR_NOT_IMPLEMENTED.
+        # The host case is the one that fails here; the HIP case passes only because its golden
+        # was minted from the same defective HIP kernel. That was confirmed directly: with the
+        # candidate RPP fix applied, the HIP golden stops matching too. So both are disabled
+        # together, and both goldens must be regenerated when the fix lands - see AICV-206 and
+        # its draft PR ROCm/rocm-libraries#10516 (still incomplete for this op: the mirror path
+        # and the exact-ratio downscale remain wrong).
+        # ./unit_tests 8 "$caffe2_classification_path" "${output_path}ResizeCropMirror_${rgb_name[$rgb]}_${device_name}" $width $height 53 $device $rgb 0 $display
         ./unit_tests 8 "$caffe2_classification_path" "${output_path}Snow_${rgb_name[$rgb]}_${device_name}" $width $height 41 $device $rgb 0 $display
 
         # caffe2 detection
@@ -235,16 +247,25 @@ do
         ./unit_tests 2 "$coco_detection_path" "${output_path}Dilate_${rgb_name[$rgb]}_${device_name}" $width $height 72 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}Erode_${rgb_name[$rgb]}_${device_name}" $width $height 73 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}Magnitude_${rgb_name[$rgb]}_${device_name}" $width $height 74 $device $rgb 1 $display
-        ./unit_tests 2 "$coco_detection_path" "${output_path}Phase_${rgb_name[$rgb]}_${device_name}" $width $height 75 $device $rgb 1 $display
+        # ROCM-33746: Phase and the BitwiseAnd/Or/Xor cases below are disabled on both
+        # backends until RPP fixes rotate. Each builds its second operand with
+        # rocalRotateFixed(..., 45, ...), which defaults to ROCAL_LINEAR_INTERPOLATION - a
+        # configuration RPP itself lists as a known kernel defect in skip_list.hpp
+        # (RotateTest.Correctness/*_a45_BILINEAR; all 96 of those cases fail when the skip
+        # list is disabled). The phase and bitwise kernels are correct and pass RPP's own
+        # tests; they only amplify the rotate error past the comparison tolerance.
+        # Re-enable these lines and regenerate their goldens once that entry is removed.
+        # ./unit_tests 2 "$coco_detection_path" "${output_path}Phase_${rgb_name[$rgb]}_${device_name}" $width $height 75 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}Threshold_${rgb_name[$rgb]}_${device_name}" $width $height 76 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}WarpPerspective_${rgb_name[$rgb]}_${device_name}" $width $height 77 $device $rgb 1 $display
 
         ./unit_tests 2 "$coco_detection_path" "${output_path}Remap_${rgb_name[$rgb]}_${device_name}" $width $height 78 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}CropAndPatch_${rgb_name[$rgb]}_${device_name}" $width $height 79 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}Ricap_${rgb_name[$rgb]}_${device_name}" $width $height 80 $device $rgb 1 $display
-        ./unit_tests 2 "$coco_detection_path" "${output_path}BitwiseAnd_${rgb_name[$rgb]}_${device_name}" $width $height 81 $device $rgb 1 $display
-        ./unit_tests 2 "$coco_detection_path" "${output_path}BitwiseOr_${rgb_name[$rgb]}_${device_name}" $width $height 82 $device $rgb 1 $display
-        ./unit_tests 2 "$coco_detection_path" "${output_path}BitwiseXor_${rgb_name[$rgb]}_${device_name}" $width $height 83 $device $rgb 1 $display
+        # Disabled with Phase above, same rotate defect - see the note there. ROCM-33746.
+        # ./unit_tests 2 "$coco_detection_path" "${output_path}BitwiseAnd_${rgb_name[$rgb]}_${device_name}" $width $height 81 $device $rgb 1 $display
+        # ./unit_tests 2 "$coco_detection_path" "${output_path}BitwiseOr_${rgb_name[$rgb]}_${device_name}" $width $height 82 $device $rgb 1 $display
+        # ./unit_tests 2 "$coco_detection_path" "${output_path}BitwiseXor_${rgb_name[$rgb]}_${device_name}" $width $height 83 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}BitwiseNot_${rgb_name[$rgb]}_${device_name}" $width $height 84 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}Erase_${rgb_name[$rgb]}_${device_name}" $width $height 85 $device $rgb 1 $display
 
