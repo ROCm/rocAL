@@ -137,6 +137,10 @@ Reader::Status CaffeLMDBRecordReader::folder_reading() {
     if (!_file_names.empty())
         std::cout << "CaffeLMDBRecordReader ShardID [" << TOSTR(_shard_id) << "] Total of " << TOSTR(_file_names.size()) << " images loaded from " << _full_path << std::endl;
 
+    closedir(_sub_dir);
+    if (_file_names.empty())
+        THROW("CaffeLMDBRecordReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Did not load any file from " + _full_path);
+
     size_t padded_samples = ((_shard_size > 0) ? _shard_size : largest_shard_size_without_padding()) % _batch_size;
     _last_batch_padded_size = ((_batch_size > 1) && (padded_samples > 0)) ? (_batch_size - padded_samples) : 0;
     
@@ -146,7 +150,6 @@ Reader::Status CaffeLMDBRecordReader::folder_reading() {
     }
     _last_file_name = _file_names[_file_names.size() - 1];
     compute_start_and_end_idx_of_all_shards();
-    closedir(_sub_dir);
     return ret;
 }
 
