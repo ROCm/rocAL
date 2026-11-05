@@ -43,8 +43,9 @@ THE SOFTWARE.
                   #status + ":" + std::string(mdb_strerror(status)));                             \
     } while (0)
 // Readers never write the database. MDB_RDONLY still updates lock.mdb, so a
-// read rewrites the dataset and fails when the directory is not writable.
-// MDB_NOLOCK skips the lock file. Safe while no writer is active.
+// read rewrites that file and fails when lock.mdb cannot be created or
+// opened for writing. MDB_NOLOCK skips the lock file. Safe while no writer
+// is active.
 constexpr unsigned int kLmdbReadFlags = MDB_RDONLY | MDB_NOLOCK;
 #endif
 
