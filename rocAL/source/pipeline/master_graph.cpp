@@ -608,14 +608,13 @@ MasterGraph::output_height() {
 }
 
 size_t
-MasterGraph::output_byte_size() {
-    // This is the size copy_output() requires of the user's buffer. It cannot be rebuilt from
-    // output_width(), output_height() and output_color_format(): the color format describes
-    // image outputs only and says nothing about the data type, and it is left at its U8 default
-    // by every loader that has no colors to report, the numpy and audio readers included.
-    if (_output_tensor_list.size() != 1)
-        THROW("Cannot report a single output size, multiple output tensors present in the list")
-    return _output_tensor_list[0]->info().data_size();
+MasterGraph::output_byte_size(size_t tensor_index) {
+    // The size copy_output() requires of the user's buffer, taken from the tensor itself so that
+    // the channel count and the data type are both accounted for.
+    if (tensor_index >= _output_tensor_list.size())
+        THROW("Output tensor index " + TOSTR(tensor_index) + " is out of range, the pipeline has " +
+              TOSTR(_output_tensor_list.size()) + " output tensors")
+    return _output_tensor_list[tensor_index]->info().data_size();
 }
 
 void MasterGraph::sequence_start_frame_number(std::vector<size_t> &sequence_start_framenum) {

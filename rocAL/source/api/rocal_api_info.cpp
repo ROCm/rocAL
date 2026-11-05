@@ -54,13 +54,13 @@ int ROCAL_API_CALL rocalGetOutputColorFormat(RocalContext p_context) {
     return translate_color_format(context->master_graph->output_color_format());
 }
 
-size_t ROCAL_API_CALL rocalGetOutputByteSize(RocalContext p_context) {
+size_t ROCAL_API_CALL rocalGetOutputByteSize(RocalContext p_context, size_t tensor_index) {
     if (!p_context)
         THROW("Invalid rocal context passed to rocalGetOutputByteSize")
     auto context = static_cast<Context *>(p_context);
     size_t ret = 0;
     try {
-        ret = context->master_graph->output_byte_size();
+        ret = context->master_graph->output_byte_size(tensor_index);
     } catch (const std::exception &e) {
         context->capture_error(e.what());
         ERR(e.what());
