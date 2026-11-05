@@ -50,6 +50,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve a graph verification failure in `Pipeline.build()` by raising a `RuntimeError` instead of exiting with status 0.
 * Resolve `fn.color_jitter` being accepted on a GPU pipeline, where it has no kernel, instead of failing at the call.
 * Resolve one-hot encoded labels failing on GPU pipelines in the generic, JAX and TensorFlow iterators, which asked `rocalGetOneHotImageLabels()` to copy into a host numpy buffer as if it were device memory.
+* Resolve an out-of-bounds read in the COCO, NumPy, TFRecord, Caffe LMDB, Caffe2 LMDB, MXNet RecordIO, and WebDataset readers when a path exists but holds nothing the reader accepts. Each reader now raises an error naming that path.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.
