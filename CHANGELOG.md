@@ -9,6 +9,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Adds support for pipeline checkpointing in rocAL.
 * Adds hipFile support in rocAL numpy reader
 * Adds support for voxel augmentations, random object bbox and ROI random cropping in rocAL.
+* Adds `rocalGetOutputByteSize()`, which returns the size of an output batch in bytes as required by `rocalCopyToOutput()`.
 
 ### Removed
 * OpenCV is no longer a dependency. It has been removed from the core library, build, setup script, and C++ tests.
@@ -51,6 +52,8 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve `fn.color_jitter` being accepted on a GPU pipeline, where it has no kernel, instead of failing at the call.
 * Resolve one-hot encoded labels failing on GPU pipelines in the generic, JAX and TensorFlow iterators, which asked `rocalGetOneHotImageLabels()` to copy into a host numpy buffer as if it were device memory.
 * Resolve Caffe and Caffe2 LMDB reads rewriting `lock.mdb`, and failing when `lock.mdb` cannot be created or opened for writing. Those environments are now opened with `MDB_RDONLY | MDB_NOLOCK`.
+* Resolve `rocalCopyToOutput()` reporting success at the end of the data, where it leaves the caller's buffer untouched.
+* Resolve the `unit_tests` numpy cases sizing their buffer from the color format, which counts one channel for a three channel batch.
 * Resolve a `TypeError` from `fn.decoders.image_raw`, which called the decoder binding one argument short on every TFRecord pipeline.
 
 ### Known Issues
