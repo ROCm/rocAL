@@ -25,6 +25,7 @@ THE SOFTWARE.
 #include <unistd.h>
 
 #include <chrono>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -39,6 +40,13 @@ THE SOFTWARE.
 #include <half/half.hpp>
 #include "hip/hip_runtime_api.h"
 #include "hip/hip_runtime.h"
+
+static void check_hip(hipError_t status, const char *msg) {
+    if (status != hipSuccess) {
+        std::cerr << "HIP error in " << msg << ": " << hipGetErrorString(status) << std::endl;
+        exit(-1);
+    }
+}
 #endif
 
 #if ENABLE_OPENCV
@@ -1178,11 +1186,11 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 106: {
             std::cout << "Running tensor reduction augmentations" << std::endl;
-            auto tensor_sum = rocalTensorSum(handle, input, false, ROCAL_NONE, ROCAL_FP32);
-            auto tensor_min = rocalTensorMin(handle, input, false, ROCAL_NONE, ROCAL_UINT8);
-            auto tensor_max = rocalTensorMax(handle, input, false, ROCAL_NONE, ROCAL_UINT8);
-            auto tensor_mean = rocalTensorMean(handle, input, false, ROCAL_NONE, ROCAL_FP32);
-            auto tensor_stddev = rocalTensorStdDev(handle, input, tensor_mean, false, ROCAL_NONE, ROCAL_FP32);
+            rocalTensorSum(handle, input, true, ROCAL_NONE, ROCAL_FP32);
+            rocalTensorMin(handle, input, true, ROCAL_NONE, ROCAL_UINT8);
+            rocalTensorMax(handle, input, true, ROCAL_NONE, ROCAL_UINT8);
+            auto tensor_mean = rocalTensorMean(handle, input, true, ROCAL_NONE, ROCAL_FP32);
+            rocalTensorStdDev(handle, input, tensor_mean, true, ROCAL_NONE, ROCAL_FP32);
             output = rocalCopy(handle, input, true);
         } break;
         default:
@@ -1200,15 +1208,156 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     auto number_of_outputs = rocalGetAugmentationBranchCount(handle);
     std::cout << "\n\nAugmented copies count " << number_of_outputs << "\n";
 
-    if (number_of_outputs != 1) {
+    // test_case 106 registers the 5 tensor reduction results plus a passthrough copy of
+    // input as outputs (so the reduction values can be verified, and a PNG can still be
+    // written for the golden-image comparison) instead of the usual single output.
+    if (test_case == 106) {
+        if (number_of_outputs != 6) {
+            std::cout << "Expected 6 outputs (5 reductions + passthrough copy), got " << number_of_outputs << std::endl;
+            rocalRelease(handle);
+            return -1;
+        }
+    } else if (number_of_outputs != 1) {
         std::cout << "More than 1 output set in the pipeline";
         return -1;
+    }
+
+    if (test_case == 106) {
+#if ENABLE_OPENCV
+        rocal_test_output_open("output");
+#endif
+        while (rocalGetRemainingImages(handle) >= input_batch_size) {
+            if (rocalRun(handle) != 0) {
+                std::cout << "rocalRun Failed with runtime error" << std::endl;
+                rocalRelease(handle);
+                return -1;
+            }
+
+            RocalTensorList out_list = rocalGetOutputTensors(handle);
+            if (!out_list || out_list->size() != 6) {
+                std::cout << "Tensor reduction verification failed: expected 6 output tensors, got "
+                           << (out_list ? out_list->size() : 0) << std::endl;
+                rocalRelease(handle);
+                return -1;
+            }
+            // Order matches the registration order in case 106 above: sum, min, max, mean,
+            // stddev, passthrough copy.
+            rocalTensor *out_sum = out_list->at(0);
+            rocalTensor *out_min = out_list->at(1);
+            rocalTensor *out_max = out_list->at(2);
+            rocalTensor *out_mean = out_list->at(3);
+            rocalTensor *out_stddev = out_list->at(4);
+            rocalTensor *out_image = out_list->at(5);
+
+            // Shape is {samples, components} per compute_reduction_dims() in
+            // rocal_api_augmentation.cpp: components is 1 for grayscale or 4 (R, G, B, total)
+            // for RGB. Read it from the tensor's own dims rather than rocalGetOutputWidth/Height.
+            unsigned samples = (unsigned)out_sum->dims().at(0);
+            unsigned components = (unsigned)out_sum->dims().at(1);
+            unsigned channels = (components == 1) ? 1u : 3u;  // R,G,B slots vs the combined "total" slot
+
+            std::vector<float> sum_buf(samples * components, 0.f);
+            std::vector<float> mean_buf(samples * components, 0.f);
+            std::vector<float> stddev_buf(samples * components, 0.f);
+            std::vector<unsigned char> min_buf(samples * components, 0);
+            std::vector<unsigned char> max_buf(samples * components, 0);
+            out_sum->copy_data(sum_buf.data(), RocalOutputMemType::ROCAL_MEMCPY_HOST);
+            out_mean->copy_data(mean_buf.data(), RocalOutputMemType::ROCAL_MEMCPY_HOST);
+            out_stddev->copy_data(stddev_buf.data(), RocalOutputMemType::ROCAL_MEMCPY_HOST);
+            out_min->copy_data(min_buf.data(), RocalOutputMemType::ROCAL_MEMCPY_HOST);
+            out_max->copy_data(max_buf.data(), RocalOutputMemType::ROCAL_MEMCPY_HOST);
+
+            std::vector<int> roi_sizes(input_batch_size * 2);
+            rocalGetROIImageSizes(handle, roi_sizes.data());
+
+            bool any_nonzero = false;
+            for (unsigned i = 0; i < samples && i < input_batch_size; i++) {
+                size_t num_pixels = (size_t)roi_sizes[i * 2] * (size_t)roi_sizes[i * 2 + 1];
+                for (unsigned c = 0; c < components; c++) {
+                    size_t idx = i * components + c;
+                    float mn = (float)min_buf[idx];
+                    float mx = (float)max_buf[idx];
+                    float mean_v = mean_buf[idx];
+                    float sum_v = sum_buf[idx];
+                    float stddev_v = stddev_buf[idx];
+                    if (sum_v != 0.f || mean_v != 0.f) any_nonzero = true;
+
+                    if (!(mn - 1.f <= mean_v && mean_v <= mx + 1.f)) {
+                        std::cout << "Tensor reduction verification failed: min(" << mn
+                                   << ") <= mean(" << mean_v << ") <= max(" << mx
+                                   << ") does not hold for image " << i << " channel " << c << std::endl;
+                        rocalRelease(handle);
+                        return -1;
+                    }
+                    if (!(stddev_v >= 0.f)) {
+                        std::cout << "Tensor reduction verification failed: stddev(" << stddev_v
+                                   << ") is negative/NaN for image " << i << " channel " << c << std::endl;
+                        rocalRelease(handle);
+                        return -1;
+                    }
+                    // For the individual per-channel components (not the combined "total"
+                    // slot), sum must be consistent with mean over the image's actual ROI
+                    // pixel count.
+                    if (c < channels && num_pixels > 0) {
+                        float expected_sum = mean_v * (float)num_pixels;
+                        float tolerance = (1.0f > std::fabs(expected_sum) * 1e-3f) ? 1.0f : std::fabs(expected_sum) * 1e-3f;
+                        if (std::fabs(sum_v - expected_sum) > tolerance) {
+                            std::cout << "Tensor reduction verification failed: sum(" << sum_v
+                                       << ") inconsistent with mean(" << mean_v << ") * pixels("
+                                       << num_pixels << ") = " << expected_sum << " for image " << i
+                                       << " channel " << c << std::endl;
+                            rocalRelease(handle);
+                            return -1;
+                        }
+                    }
+                }
+            }
+            if (!any_nonzero) {
+                std::cout << "Tensor reduction verification failed: sum/mean outputs are all zero, "
+                           << "reduction tensors may not have been populated" << std::endl;
+                rocalRelease(handle);
+                return -1;
+            }
+            std::cout << "Tensor reduction outputs verified (sum/min/max/mean/stddev self-consistent)"
+                       << std::endl;
+
+#if ENABLE_OPENCV
+            // Write the passthrough copy out as a PNG, same as every other test case, so this
+            // test case still participates in the golden-image comparison (image_comparison.py).
+            auto img_shape = out_image->shape();  // {width, height} - see Tensor::shape() override
+            int img_w = (int)img_shape.at(0);
+            int img_h = (int)img_shape.at(1) * (int)input_batch_size;
+            int img_p = (rgb != 0) ? 3 : 1;
+            std::vector<unsigned char> image_buf((size_t)img_h * img_w * img_p);
+            out_image->copy_data(image_buf.data(), RocalOutputMemType::ROCAL_MEMCPY_HOST);
+
+            auto cv_color_format = (img_p == 3) ? CV_8UC3 : CV_8UC1;
+            cv::Mat mat_output(img_h, img_w, cv_color_format, image_buf.data());
+            std::string out_filename = std::string(outName) + ".png";
+            if (img_p == 3) {
+                cv::Mat mat_color;
+                cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
+                rocal_test_output_image(mat_output, mat_color, out_filename, "output", -1, 9);
+            } else {
+                rocal_test_output_image(mat_output, mat_output, out_filename, "output", -1, 9);
+            }
+#endif
+        }
+        rocalRelease(handle);
+        return 0;
     }
 
     int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * input_batch_size;
     int w = rocalGetOutputWidth(handle);
     int output_color_format = rocalGetOutputColorFormat(handle);
-    auto last_batch_padded_size = rocalGetLastBatchPaddedSize(handle);
+    size_t last_batch_padded_size = rocalGetLastBatchPaddedSize(handle);
+    // By definition last_batch_padded_size is the number of samples padded into the final
+    // batch (batch_size - padded_samples), so it can never reach/exceed the batch size itself.
+    if (last_batch_padded_size >= (size_t)input_batch_size) {
+        std::cout << "Invalid last_batch_padded_size " << last_batch_padded_size
+                   << " (batch size " << input_batch_size << ")" << std::endl;
+        return -1;
+    }
     // Use output_color_format to determine channels: 0=RGB24(3ch), 1=BGR24(3ch), 2=U8(1ch), 3=RGB_PLANAR(3ch)
     int p = ((output_color_format == 0 || output_color_format == 1 || output_color_format == 3) ? 3 : 1);
     std::vector<unsigned char> mat_input(h * w * p);
@@ -1222,10 +1371,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 #endif
     printf("Remaining images %lu \n", rocalGetRemainingImages(handle));
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
+#if ENABLE_OPENCV
     int index = 0;
+#endif
 
     while (rocalGetRemainingImages(handle) >= input_batch_size) {
+#if ENABLE_OPENCV
         index++;
+#endif
         if (rocalRun(handle) != 0) {
             std::cout << "rocalRun Failed with runtime error" << std::endl;
             rocalRelease(handle);
@@ -1343,7 +1496,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 
                 // Get output matched indices
                 if (enable_iou_matcher) {
-                    rocalGetMatchedIndices(handle); // TODO - To verify the output
+                    (void)rocalGetMatchedIndices(handle); // TODO - To verify the output
                 }
             } break;
             case 3: {   // keypoints pipeline
@@ -1470,14 +1623,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 if (memcpy_backend) {
 #if ENABLE_HIP
                     float *d_f32_batch_output;
-                    hipMalloc(&d_f32_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(float)) / 256 + 1));
+                    check_hip(hipMalloc(&d_f32_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(float)) / 256 + 1)), "hipMalloc d_f32_batch_output");
                     rocalToTensor(handle, d_f32_batch_output, (RocalTensorLayout)output_layout, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, reverse_channels, RocalOutputMemType::ROCAL_MEMCPY_GPU);
-                    hipFree(d_f32_batch_output);
+                    check_hip(hipFree(d_f32_batch_output), "hipFree d_f32_batch_output");
 
                     half *d_f16_batch_output;
-                    hipMalloc(&d_f16_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(half)) / 256 + 1));
+                    check_hip(hipMalloc(&d_f16_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(half)) / 256 + 1)), "hipMalloc d_f16_batch_output");
                     rocalToTensor(handle, d_f16_batch_output, (RocalTensorLayout)output_layout, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, reverse_channels, RocalOutputMemType::ROCAL_MEMCPY_GPU);
-                    hipFree(d_f16_batch_output);
+                    check_hip(hipFree(d_f16_batch_output), "hipFree d_f16_batch_output");
 #endif
                 } else {
                     float *f32_batch_output = (float *)aligned_alloc(256, 256 * ((input_batch_size * h * w * p * sizeof(float)) / 256 + 1));
@@ -1491,14 +1644,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             } else {
 #if ENABLE_HIP
                 float *d_f32_batch_output;
-                hipMalloc(&d_f32_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(float)) / 256 + 1));
+                check_hip(hipMalloc(&d_f32_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(float)) / 256 + 1)), "hipMalloc d_f32_batch_output");
                 rocalToTensor(handle, d_f32_batch_output, (RocalTensorLayout)output_layout, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, reverse_channels, RocalOutputMemType::ROCAL_MEMCPY_GPU);
-                hipFree(d_f32_batch_output);
+                check_hip(hipFree(d_f32_batch_output), "hipFree d_f32_batch_output");
 
                 half *d_f16_batch_output;
-                hipMalloc(&d_f16_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(half)) / 256 + 1));
+                check_hip(hipMalloc(&d_f16_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(half)) / 256 + 1)), "hipMalloc d_f16_batch_output");
                 rocalToTensor(handle, d_f16_batch_output, (RocalTensorLayout)output_layout, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, reverse_channels, RocalOutputMemType::ROCAL_MEMCPY_GPU);
-                hipFree(d_f16_batch_output);
+                check_hip(hipFree(d_f16_batch_output), "hipFree d_f16_batch_output");
 #endif
             }
         }
