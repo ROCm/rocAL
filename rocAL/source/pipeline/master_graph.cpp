@@ -607,6 +607,16 @@ MasterGraph::output_height() {
     return _output_tensor_list[0]->info().max_shape()[1];
 }
 
+size_t
+MasterGraph::output_byte_size(size_t tensor_index) {
+    // The size copy_output() requires of the user's buffer, taken from the tensor itself so that
+    // the channel count and the data type are both accounted for.
+    if (tensor_index >= _output_tensor_list.size())
+        THROW("Output tensor index " + TOSTR(tensor_index) + " is out of range, the pipeline has " +
+              TOSTR(_output_tensor_list.size()) + " output tensors")
+    return _output_tensor_list[tensor_index]->info().data_size();
+}
+
 void MasterGraph::sequence_start_frame_number(std::vector<size_t> &sequence_start_framenum) {
     sequence_start_framenum = _sequence_start_framenum_vec.back();
     _sequence_start_framenum_vec.pop_back();

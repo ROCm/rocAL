@@ -104,6 +104,7 @@ public:
     TensorList *get_output_tensors();
     size_t output_width();
     size_t output_height();
+    size_t output_byte_size(size_t tensor_index = 0);  // Size of a whole output batch in bytes, channel count and data type included
     void sequence_start_frame_number(std::vector<size_t> &sequence_start_framenum);             // Returns the starting frame number of the sequences
     void sequence_frame_timestamps(std::vector<std::vector<float>> &sequence_frame_timestamp);  // Returns the timestamps of the frames in the sequences
     size_t augmentation_branch_count();                                                         // Returns the number of output tensors from the pipeline
