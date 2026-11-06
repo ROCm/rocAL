@@ -25,25 +25,23 @@ THE SOFTWARE.
 #include <cstddef>
 #include <iostream>
 #include <vector>
-#ifdef ROCAL_VIDEO
-
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavutil/avassert.h>
-#include <libavutil/avutil.h>
-#include <libavutil/hwcontext.h>
-#include <libavutil/imgutils.h>
-#include <libavutil/opt.h>
-#include <libavutil/pixdesc.h>
-#include <libavutil/samplefmt.h>
-#include <libavutil/timestamp.h>
-#include <libswscale/swscale.h>
-}
-#endif
 #include "parameters/parameter_factory.h"
 
-#ifdef ROCAL_VIDEO
+namespace rocal {
+namespace video {
+
+enum class VideoPixelFormat {
+    UNKNOWN = 0,
+    RGB24,
+    BGR24,
+    GRAY8,
+    YUV420P,
+    NV12
+};
+
+}  // namespace video
+}  // namespace rocal
+
 class VideoDecoder {
    public:
     enum class Status {
@@ -59,10 +57,8 @@ class VideoDecoder {
         RGB,
         BGR
     };
-    virtual VideoDecoder::Status Initialize(const char *src_filename, int device_id = 0) = 0;
-    virtual VideoDecoder::Status Decode(unsigned char *output_buffer, unsigned seek_frame_number, size_t sequence_length, size_t stride, int out_width, int out_height, int out_stride, AVPixelFormat out_format) = 0;
-    virtual int SeekFrame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) = 0;
+    virtual Status Initialize(const char *src_filename, int device_id = 0) = 0;
+    virtual Status Decode(unsigned char *output_buffer, unsigned seek_frame_number, size_t sequence_length, size_t stride, int out_width, int out_height, int out_stride, rocal::video::VideoPixelFormat out_format) = 0;
     virtual void Release() = 0;
     virtual ~VideoDecoder() = default;
 };
-#endif

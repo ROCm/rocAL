@@ -38,11 +38,22 @@ list(APPEND rocAL_HIP_SOURCES
     rocal_hip_kernels.cpp
     box_encoder_hip.cpp
 )
-if (ROCDECODE_FOUND)
-    set (rocDecode_UTIL_SOURCES
-        ${ROCM_PATH}/share/rocdecode/utils/resize_kernels.cpp
-        ${ROCM_PATH}/share/rocdecode/utils/colorspace_kernels.cpp
-    )
+# With ROCAL_VIDEO_PLUGIN the rocDecode decoder and its kernels live in the plugin. Building them
+# here as well would export a second copy that the RTLD_GLOBAL-loaded plugin could bind to.
+if (rocdecode_FOUND AND NOT ROCAL_VIDEO_PLUGIN)
+    get_filename_component(rocdecode_PREFIX_DIR "${rocdecode_INCLUDE_DIR}" DIRECTORY)
+    set(rocdecode_UTILS_DIR "${rocdecode_PREFIX_DIR}/share/rocdecode/utils")
+    # Some rocDecode runtime packages (e.g. DEB installs) do not ship the
+    # utility source files.  Disable rocDecode HIP kernels if they are missing.
+    if(EXISTS "${rocdecode_UTILS_DIR}/resize_kernels.cpp" AND EXISTS "${rocdecode_UTILS_DIR}/colorspace_kernels.cpp")
+        set (rocDecode_UTIL_SOURCES
+            ${rocdecode_UTILS_DIR}/resize_kernels.cpp
+            ${rocdecode_UTILS_DIR}/colorspace_kernels.cpp
+        )
+    else()
+        message("-- ${Yellow}NOTE: rocDecode utility sources missing at ${rocdecode_UTILS_DIR}; disabling rocDecode HIP kernels${ColourReset}")
+        set(rocdecode_FOUND FALSE)
+    endif()
 endif()
 
 set_source_files_properties(${rocAL_HIP_SOURCES} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
@@ -50,4 +61,7 @@ set_source_files_properties(${rocAL_HIP_SOURCES} PROPERTIES HIP_SOURCE_PROPERTY_
 add_library(${PROJECT_NAME} OBJECT ${rocAL_HIP_SOURCES} ${rocDecode_UTIL_SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(${PROJECT_NAME} PRIVATE __HIP_PLATFORM_AMD__)
+if(rocDecode_UTIL_SOURCES)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${rocdecode_UTILS_DIR})
+endif()
 target_link_libraries(${PROJECT_NAME} hip::device)
