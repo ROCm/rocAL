@@ -2091,53 +2091,44 @@ def remap(*inputs, dest_width=0, dest_height=0, row_remap=[], col_remap=[],
 
 def erase(*inputs, anchor=None, shape=None, num_boxes=None, fill_value=None, 
           anchor_box_info=None, colors=None, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
-    """!Erases regions in images. Supports both vector-based and tensor-based APIs.
+    """!Erases regions in images, with the boxes given as vectors.
 
-        Vector-based API (when anchor, shape, num_boxes, fill_value are provided):
-        @param anchor (list of float)                                                 anchor points (x1, y1) for each box
-        @param shape (list of float)                                                  shape (w, h) for each box
+        @param anchor (list of float)                                                 top left (x1, y1) of each box
+        @param shape (list of float)                                                  bottom right (x2, y2) of each box, inclusive; despite the name this is a corner, not a width and height
         @param num_boxes (list of int)                                                number of boxes per sample
         @param fill_value (list of float)                                             fill values for erased regions
-        
-        Tensor-based API (when anchor_box_info and colors are provided):
-        @param anchor_box_info (rocalTensor)                                          tensor holding per-sample per-box LTRB anchors
-        @param colors (rocalTensor)                                                   tensor holding per-sample per-box RGB colors
-        
-        Common parameters:
+        @param anchor_box_info (rocalTensor)                                          not implemented, see below
+        @param colors (rocalTensor)                                                   not implemented, see below
         @param inputs                                                                 the input image passed to the augmentation
         @param device (string, optional, default = None)                              Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
         @return    Image with specified regions erased
+
+        Taking the boxes from rocAL tensors instead of vectors is not implemented:
+        EraseNode declares init(Tensor *anchor_box_info, Tensor *colors, ...) but it has no
+        definition, and rocalErase, the only entry point, takes the boxes as vectors. The
+        anchor_box_info and colors arguments are kept so that the gap is reported as such
+        rather than as a pybind argument mismatch.
     """
-    # Check which API is being used
-    if anchor is not None and shape is not None and num_boxes is not None and fill_value is not None:
-        # Vector-based API
-        kwargs_pybind = {
-            "input_image": inputs[0],
-            "is_output": False,
-            "anchor": anchor,
-            "shape": shape,
-            "num_boxes": num_boxes,
-            "fill_value": fill_value,
-            "output_layout": output_layout,
-            "output_dtype": output_dtype
-        }
-    elif anchor_box_info is not None and colors is not None:
-        # Tensor-based API
-        num_boxes = b.createIntParameter(num_boxes) if isinstance(num_boxes, int) else num_boxes
-        kwargs_pybind = {
-            "input_image": inputs[0],
-            "is_output": False,
-            "anchor_box_info": anchor_box_info,
-            "colors": colors,
-            "num_boxes": num_boxes,
-            "output_layout": output_layout,
-            "output_dtype": output_dtype
-        }
-    else:
-        raise RuntimeError("erase requires either (anchor, shape, num_boxes, fill_value) for vector API or (anchor_box_info, colors) for tensor API")
-    
+    if anchor_box_info is not None or colors is not None:
+        raise NotImplementedError(
+            "erase cannot take the boxes from tensors yet; pass them as vectors instead, "
+            "using anchor, shape, num_boxes and fill_value")
+    if anchor is None or shape is None or num_boxes is None or fill_value is None:
+        raise RuntimeError(
+            "erase requires anchor, shape, num_boxes and fill_value")
+
+    kwargs_pybind = {
+        "input_image": inputs[0],
+        "is_output": False,
+        "anchor": anchor,
+        "shape": shape,
+        "num_boxes": num_boxes,
+        "fill_value": fill_value,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
     output_image = b.erase(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (output_image)
 
