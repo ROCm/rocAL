@@ -51,6 +51,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve `fn.color_jitter` being accepted on a GPU pipeline, where it has no kernel, instead of failing at the call.
 * Resolve one-hot encoded labels failing on GPU pipelines in the generic, JAX and TensorFlow iterators, which asked `rocalGetOneHotImageLabels()` to copy into a host numpy buffer as if it were device memory.
 * Resolve an out-of-bounds read in the COCO, NumPy, TFRecord, Caffe LMDB, Caffe2 LMDB, MXNet RecordIO, and WebDataset readers when a path exists but holds nothing the reader accepts. Each reader now raises an error naming that path.
+* Resolve the Caffe and Caffe2 LMDB readers passing uninitialized LMDB handles to cleanup when creation fails before the read environment is opened.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.

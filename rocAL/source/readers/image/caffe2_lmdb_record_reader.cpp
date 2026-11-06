@@ -38,6 +38,10 @@ Caffe2LMDBRecordReader::Caffe2LMDBRecordReader() {
     _shuffle = false;
     _last_rec = false;
     _file_count_all_shards = 0;
+    _read_mdb_env = nullptr;
+    _read_mdb_txn = nullptr;
+    _read_mdb_cursor = nullptr;
+    _read_mdb_dbi = 0;
 }
 
 Reader::Status Caffe2LMDBRecordReader::initialize(ReaderConfig desc) {
@@ -87,9 +91,12 @@ int Caffe2LMDBRecordReader::close() {
 
 Caffe2LMDBRecordReader::~Caffe2LMDBRecordReader() {
     _open_env = 0;
-    mdb_txn_abort(_read_mdb_txn);
-    mdb_close(_read_mdb_env, _read_mdb_dbi);
-    mdb_env_close(_read_mdb_env);
+    if (_read_mdb_txn)
+        mdb_txn_abort(_read_mdb_txn);
+    if (_read_mdb_env) {
+        mdb_close(_read_mdb_env, _read_mdb_dbi);
+        mdb_env_close(_read_mdb_env);
+    }
     _read_mdb_txn = nullptr;
     _read_mdb_env = nullptr;
     release();
