@@ -41,6 +41,14 @@ CaffeLMDBRecordReader::CaffeLMDBRecordReader()
     _shuffle = false;
     _last_rec = false;
     _file_count_all_shards = 0;
+    _mdb_env = nullptr;
+    _read_mdb_env = nullptr;
+    _mdb_txn = nullptr;
+    _read_mdb_txn = nullptr;
+    _mdb_cursor = nullptr;
+    _read_mdb_cursor = nullptr;
+    _mdb_dbi = 0;
+    _read_mdb_dbi = 0;
 }
 
 Reader::Status CaffeLMDBRecordReader::initialize(ReaderConfig desc) {
@@ -91,20 +99,26 @@ int CaffeLMDBRecordReader::close() {
 
 CaffeLMDBRecordReader::~CaffeLMDBRecordReader() {
     _open_env = 0;
-    mdb_txn_abort(_read_mdb_txn);
-    mdb_close(_read_mdb_env, _read_mdb_dbi);
-    mdb_env_close(_read_mdb_env);
+    if (_read_mdb_txn)
+        mdb_txn_abort(_read_mdb_txn);
+    if (_read_mdb_env) {
+        mdb_close(_read_mdb_env, _read_mdb_dbi);
+        mdb_env_close(_read_mdb_env);
+    }
     _read_mdb_txn = nullptr;
     _read_mdb_env = nullptr;
     release();
 }
 
 int CaffeLMDBRecordReader::release() {
-    mdb_cursor_close(_mdb_cursor);
-    mdb_txn_abort(_mdb_txn);
-    mdb_close(_mdb_env, _mdb_dbi);
-
-    mdb_env_close(_mdb_env);
+    if (_mdb_cursor)
+        mdb_cursor_close(_mdb_cursor);
+    if (_mdb_txn)
+        mdb_txn_abort(_mdb_txn);
+    if (_mdb_env) {
+        mdb_close(_mdb_env, _mdb_dbi);
+        mdb_env_close(_mdb_env);
+    }
     _mdb_cursor = nullptr;
     _mdb_txn = nullptr;
     _mdb_env = nullptr;
