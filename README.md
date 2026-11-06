@@ -83,6 +83,16 @@ rocAL can be currently used to perform the following operations either with rand
 See [installation instructions](#installation-instructions) for more details and instructions on the prerequisite libraries.
 
 * MIVisionX (note different installation instructions for package and source)
+
+> [!NOTE]
+> rocAL's GPU (HIP) support specifically depends on **vx_rpp / RPP** (the MIVisionX extension
+> that implements rocAL's compute kernels), not on MIVisionX as a whole. It is possible for a
+> single MIVisionX install to have its core built with the HIP backend while vx_rpp/RPP was
+> built CPU-only (or vice versa). rocAL detects this automatically at configure time by reading
+> RPP's installed `rpp_backend.h`, and falls back to the CPU backend with a warning if vx_rpp/RPP
+> is not HIP-enabled -- see the [source install](#source-install) section below for the message
+> to look for.
+
 * CMake (Version `3.10` or later)
 * Google Protobuf (Version `3.12.4` or later)
 * TurboJPEG (Version `2.0` or later)
@@ -270,6 +280,10 @@ sudo make install
 ```
 >[!NOTE]
 > * `PyPackageInstall` used for rocal_pybind installation
+> * If `vx_rpp`/RPP was built without the HIP backend, `cmake` will print a warning during
+>   configuration (`WARNING: vx_rpp/RPP found, but built with the CPU backend...`) and rocAL will
+>   automatically fall back to `BACKEND=CPU`. If you expect a HIP build and see this message,
+>   rebuild RPP/MIVisionX with the HIP backend enabled before rebuilding rocAL.
 
 
 >[!IMPORTANT]
