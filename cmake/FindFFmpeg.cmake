@@ -54,6 +54,36 @@ find_package_handle_standard_args(
 if(FFMPEG_LIBRARIES AND FFMPEG_INCLUDE_DIR)
   set(FFMPEG_FOUND TRUE)
 else()
+  # FFMPEG_PATH is a private prefix (libavutil, libavcodec, libavformat,
+  # libswscale) with --build-suffix=-rocm-vision. Search that prefix only,
+  # so the distro libav* and libswscale are not picked up. All four
+  # libraries are required.
+  if(NOT FFMPEG_PATH AND DEFINED ENV{FFMPEG_PATH})
+    set(FFMPEG_PATH $ENV{FFMPEG_PATH})
+  endif()
+  if(FFMPEG_PATH)
+    set(_FFMPEG_LIB_DIR ${FFMPEG_PATH}/lib)
+    set(_FFMPEG_INC_DIR ${FFMPEG_PATH}/include)
+    find_path(AVCODEC_INCLUDE_DIR NAMES libavcodec/avcodec.h PATHS ${_FFMPEG_INC_DIR} NO_DEFAULT_PATH)
+    find_library(AVCODEC_LIBRARY NAMES avcodec-rocm-vision PATHS ${_FFMPEG_LIB_DIR} NO_DEFAULT_PATH)
+    find_path(AVFORMAT_INCLUDE_DIR NAMES libavformat/avformat.h PATHS ${_FFMPEG_INC_DIR} NO_DEFAULT_PATH)
+    find_library(AVFORMAT_LIBRARY NAMES avformat-rocm-vision PATHS ${_FFMPEG_LIB_DIR} NO_DEFAULT_PATH)
+    find_path(AVUTIL_INCLUDE_DIR NAMES libavutil/avutil.h PATHS ${_FFMPEG_INC_DIR} NO_DEFAULT_PATH)
+    find_library(AVUTIL_LIBRARY NAMES avutil-rocm-vision PATHS ${_FFMPEG_LIB_DIR} NO_DEFAULT_PATH)
+    find_path(SWSCALE_INCLUDE_DIR NAMES libswscale/swscale.h PATHS ${_FFMPEG_INC_DIR} NO_DEFAULT_PATH)
+    find_library(SWSCALE_LIBRARY NAMES swscale-rocm-vision PATHS ${_FFMPEG_LIB_DIR} NO_DEFAULT_PATH)
+    set(_FFMPEG_PC_DIR ${FFMPEG_PATH}/lib/pkgconfig)
+    foreach(_comp AVCODEC AVFORMAT AVUTIL SWSCALE)
+      string(TOLOWER ${_comp} _comp_lc)
+      set(_pc ${_FFMPEG_PC_DIR}/lib${_comp_lc}-rocm-vision.pc)
+      if(EXISTS ${_pc})
+        file(READ ${_pc} _pc_txt)
+        if(_pc_txt MATCHES "Version:[ \t]*([0-9]+\\.[0-9]+\\.[0-9]+)")
+          set(_FFMPEG_${_comp}_VERSION ${CMAKE_MATCH_1})
+        endif()
+      endif()
+    endforeach()
+  else()
   # use pkg-config to get the directories and then use these values
   # in the FIND_PATH() and FIND_LIBRARY() calls
   find_package(PkgConfig)
@@ -146,8 +176,9 @@ else()
       /sw/lib
   )
   mark_as_advanced(SWSCALE_LIBRARY)
+  endif() # FFMPEG_PATH
 
-  if(AVCODEC_LIBRARY AND AVFORMAT_LIBRARY)
+  if(AVCODEC_LIBRARY AND AVFORMAT_LIBRARY AND AVUTIL_LIBRARY AND SWSCALE_LIBRARY)
     set(FFMPEG_FOUND TRUE)
   endif()
   
@@ -170,11 +201,11 @@ else()
 
   if(FFMPEG_FOUND)
     set(FFMPEG_INCLUDE_DIR ${AVFORMAT_INCLUDE_DIR} CACHE INTERNAL "")
-    set(FFMPEG_LIBRARIES 
+    set(FFMPEG_LIBRARIES
       ${AVCODEC_LIBRARY}
       ${AVFORMAT_LIBRARY}
       ${AVUTIL_LIBRARY}
-      ${SWSCALE_LIBRARY} 
+      ${SWSCALE_LIBRARY}
       CACHE INTERNAL ""
     )
   endif()
