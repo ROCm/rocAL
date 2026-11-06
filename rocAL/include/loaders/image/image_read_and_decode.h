@@ -68,6 +68,10 @@ class ImageReadAndDecode {
         RocalColorFormat output_color_format,
         bool decoder_keep_original = false);
 
+    //! Unblocks a reader waiting for input that is never going to arrive, so the pipeline can be released
+    void shutdown() {
+        if (_reader) _reader->shutdown();
+    }
     //! returns timing info or other status information
     Timing timing();
     size_t last_batch_padded_size();

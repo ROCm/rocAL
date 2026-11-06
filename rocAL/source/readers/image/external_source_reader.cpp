@@ -34,10 +34,16 @@ ExternalSourceReader::ExternalSourceReader() {
     _file_count_all_shards = 0;
     _loop = false;  // loop not supported for external source
     _end_of_sequence = false;
+    _shutdown = false;
 }
 
 // return batch_size() for count_items unless end_of_sequence has been signalled.
 unsigned ExternalSourceReader::count_items() {
+    // Held for the flags and for the queue inspection below, both of which the feeding and
+    // popping threads modify concurrently.
+    std::lock_guard<std::mutex> lock(_lock);
+    if (_shutdown)  // the pipeline is being torn down, no more input will ever arrive
+        return 0;
     if (_file_mode == ExternalSourceFileMode::FILENAME) {
         if (_end_of_sequence && _file_names_queue.empty()) {
             return 0;
@@ -61,6 +67,7 @@ Reader::Status ExternalSourceReader::initialize(ReaderConfig desc) {
     _loop = desc.loop();
     _file_mode = desc.mode();
     _end_of_sequence = false;
+    _shutdown = false;
     _file_data.reserve(_batch_count);
     return ret;
 }
@@ -74,8 +81,10 @@ size_t ExternalSourceReader::open() {
     if (_file_mode == ExternalSourceFileMode::FILENAME) {
         std::string next_file_name;
         bool ret = pop_file_name(next_file_name);  // Get next file name: blocking call, will wait till next file is received from external source
-        if (_end_of_sequence && !ret)
+        if (!ret) {  // End of sequence, or the reader was shut down: no file name will ever arrive
+            _current_file_size = 0;
             return 0;
+        }
         _last_id = next_file_name;
         filesys::path pathObj(next_file_name);
         if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj)) {
@@ -99,8 +108,9 @@ size_t ExternalSourceReader::open() {
     } else {
         ExternalSourceImageInfo image_info;
         bool ret = pop_file_data(image_info);
-        if (_end_of_sequence && !ret) {
+        if (!ret) {  // End of sequence, or the reader was shut down: no data will ever arrive
             WRN(" EOS || POP FAILED ")
+            _current_file_size = 0;
             return 0;
         }
         _file_data[_curr_file_idx] = image_info;
@@ -180,8 +190,9 @@ void ExternalSourceReader::push_file_name(const std::string& file_name) {
 
 bool ExternalSourceReader::pop_file_name(std::string& file_name) {
     std::unique_lock<std::mutex> lock(_lock);
-    if (_file_names_queue.empty() && !_end_of_sequence)
-        _wait_for_input.wait(lock);
+    // Waiting on a predicate makes this immune to spurious wakeups and, more importantly, lets
+    // shutdown() wake the loader thread when the external source will never feed anything again.
+    _wait_for_input.wait(lock, [this] { return !_file_names_queue.empty() || _end_of_sequence || _shutdown; });
     if (!_file_names_queue.empty()) {
         file_name = _file_names_queue.front();
         _file_names_queue.pop();
@@ -200,8 +211,7 @@ void ExternalSourceReader::push_file_data(ExternalSourceImageInfo& image_info) {
 
 bool ExternalSourceReader::pop_file_data(ExternalSourceImageInfo& image_info) {
     std::unique_lock<std::mutex> lock(_lock);
-    if (_images_data_queue.empty() && !_end_of_sequence)
-        _wait_for_input.wait(lock);
+    _wait_for_input.wait(lock, [this] { return !_images_data_queue.empty() || _end_of_sequence || _shutdown; });
     if (!_images_data_queue.empty()) {
         image_info = _images_data_queue.front();
         _images_data_queue.pop();
@@ -214,7 +224,7 @@ void ExternalSourceReader::feed_file_names(const std::vector<std::string>& file_
     for (unsigned n = 0; n < num_images; n++) {
         push_file_name(file_names[n]);
     }
-    _end_of_sequence = eos;
+    set_end_of_sequence(eos);
 }
 
 void ExternalSourceReader::feed_data(const std::vector<unsigned char*>& images, const std::vector<size_t>& image_size, ExternalSourceFileMode mode, bool eos, const std::vector<unsigned> roi_width, const std::vector<unsigned> roi_height, unsigned int width, unsigned int height, unsigned int channels) {
@@ -229,5 +239,23 @@ void ExternalSourceReader::feed_data(const std::vector<unsigned char*>& images, 
             push_file_data(image_info);
         }
     }
+    set_end_of_sequence(eos);
+}
+
+// Publish the end of sequence flag under the queue lock and wake the loader thread, which is
+// otherwise left waiting for input that the external source is never going to send.
+void ExternalSourceReader::set_end_of_sequence(bool eos) {
+    std::unique_lock<std::mutex> lock(_lock);
     _end_of_sequence = eos;
+    lock.unlock();
+    _wait_for_input.notify_all();
+}
+
+// Wake every thread blocked waiting for external input so the pipeline can be torn down. Called
+// before the loader and output threads are joined, see MasterGraph::stop_processing().
+void ExternalSourceReader::shutdown() {
+    std::unique_lock<std::mutex> lock(_lock);
+    _shutdown = true;
+    lock.unlock();
+    _wait_for_input.notify_all();
 }

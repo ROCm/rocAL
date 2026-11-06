@@ -104,6 +104,11 @@ void ImageLoaderSharded::shut_down() {
         _loaders[i]->shut_down();
 }
 
+void ImageLoaderSharded::release_all_blocked_calls() {
+    for (unsigned i = 0; i < _loaders.size(); i++)
+        _loaders[i]->release_all_blocked_calls();
+}
+
 void ImageLoaderSharded::set_output(Tensor* output_tensor) {
     _output_tensor = output_tensor;
 }

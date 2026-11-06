@@ -74,6 +74,11 @@ class ROCALGenericIterator(object):
 
     def __next__(self):
         if (self.loader._is_external_source_operator):
+            # A source that yields nothing produces no batch to feed and no end of stream to
+            # signal, so the loader would wait for input that is never sent. End the epoch here
+            # instead of calling rocal_run() and blocking on it.
+            if self.num_batches == 0:
+                raise StopIteration
             if (self.index + 1) == self.num_batches:
                 self.eos = True
             if (self.index + 1) <= self.num_batches:
