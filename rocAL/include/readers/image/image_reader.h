@@ -36,11 +36,12 @@ THE SOFTWARE.
 #include "pipeline/enum_registry.h"
 
 #ifdef ROCAL_LMDB
-#define CHECK_LMDB_RETURN_STATUS(status)                                                          \
+#define CHECK_LMDB_RETURN_STATUS(call)                                                            \
     do {                                                                                          \
-        if (status != MDB_SUCCESS)                                                                \
+        int lmdb_status_ = (call);                                                                \
+        if (lmdb_status_ != MDB_SUCCESS)                                                          \
             THROW("LMDB error, " + std::string(__FILE__) + ":" + std::to_string(__LINE__) + " " + \
-                  #status + ":" + std::string(mdb_strerror(status)));                             \
+                  #call + ": " + std::string(mdb_strerror(lmdb_status_)));                        \
     } while (0)
 #endif
 
