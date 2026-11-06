@@ -2033,9 +2033,10 @@ extern "C" RocalTensor ROCAL_API_CALL rocalWarpPerspective(RocalContext context,
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor
  * \param [in] is_output Is the output tensor part of the graph output
- * \param [in] anchor_box_info LTRB anchors: either [4*num_boxes] replicated or [batch*4*num_boxes]
- * \param [in] colors RGB colors per box: either [3*num_boxes] replicated or [batch*3*num_boxes]
- * \param [in] num_boxes Number of boxes to be erased
+ * \param [in] anchor Top left (x1, y1) of each box: either [2*num_boxes] replicated across the batch or [2*total_boxes]
+ * \param [in] shape Bottom right (x2, y2) of each box, inclusive, sized like anchor. Note that despite the name this is a corner and not a width and height, because the boxes reach the RPP kernel as LTRB
+ * \param [in] num_boxes Number of boxes to erase per sample: either one value replicated across the batch or one per sample
+ * \param [in] fill_value Values the boxes are filled with, given per channel, per sample or per box and channel
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
