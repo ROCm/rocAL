@@ -885,9 +885,9 @@ def crop(*inputs, crop=[0, 0], crop_pos_x=0.5, crop_pos_y=0.5, crop_pos_z=0.5,
 
         @param inputs                                                                 the input image passed to the augmentation
         @param crop (list of ints, optional, default = [0, 0])                        list containing the crop dimensions of the cropped image
-        @param crop_pox_x (float, optional, default = 0.5)                            crop_x position used for crop generation
-        @param crop_pox_y (float, optional, default = 0.5)                            crop_y position used for crop generation
-        @param crop_pox_z (float, optional, default = 0.5)                            crop_z position used for crop generation
+        @param crop_pos_x (float, optional, default = 0.5)                            horizontal position of the crop, from 0.0 (left edge) to 1.0 (right edge); values outside [0, 1] are clamped
+        @param crop_pos_y (float, optional, default = 0.5)                            vertical position of the crop, from 0.0 (top edge) to 1.0 (bottom edge); values outside [0, 1] are clamped
+        @param crop_pos_z (float, optional, default = 0.5)                            crop_z position used for crop generation
         @param crop_w (int, optional, default = 0)                                    crop width
         @param crop_h (int, optional, default = 0)                                    crop height
         @param crop_d (int, optional, default = 1)                                    crop depth
