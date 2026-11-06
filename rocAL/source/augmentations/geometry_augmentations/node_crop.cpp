@@ -72,12 +72,9 @@ void CropNode::update_node() {
 void CropNode::init(unsigned int crop_h, unsigned int crop_w, float x_drift, float y_drift) {
     _crop_param->crop_w = crop_w;
     _crop_param->crop_h = crop_h;
-    _crop_param->x1 = x_drift;
-    _crop_param->y1 = y_drift;
-    FloatParam *x_drift_param = ParameterFactory::instance()->create_single_value_float_param(x_drift);
-    FloatParam *y_drift_param = ParameterFactory::instance()->create_single_value_float_param(y_drift);
-    _crop_param->set_x_drift_factor(core(x_drift_param));
-    _crop_param->set_y_drift_factor(core(y_drift_param));
+    _crop_param->x1 = 0;
+    _crop_param->y1 = 0;
+    _crop_param->set_fixed_crop(x_drift, y_drift);
 }
 
 // This init is used only for centre crop
