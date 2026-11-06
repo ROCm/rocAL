@@ -108,7 +108,8 @@ class ExternalSourceReader : public Reader, public ExternalSourceImageReader {
     volatile bool _end_of_sequence;
     //!< _shutdown Set when the pipeline is being released, so a reader waiting for input that is
     /// never going to arrive stops waiting instead of deadlocking the thread joins in release().
-    volatile bool _shutdown;
+    /// Read and written only under _lock.
+    bool _shutdown;
     ExternalSourceFileMode _file_mode;
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
     size_t _file_count_all_shards;

@@ -214,6 +214,7 @@ void ImageLoader::start_loading() {
         std::lock_guard<std::mutex> lock(_load_exception_lock);
         _load_exception = nullptr;
     }
+    _stopped = false;  // For the same reason: the loader is running again, so it must produce batches.
     _internal_thread_running = true;
     _load_thread = std::thread(&ImageLoader::load_routine, this);
 }
@@ -427,6 +428,9 @@ void ImageLoader::restore_from_state(const LoaderState& s) {
         std::lock_guard<std::mutex> lock(_load_exception_lock);
         _load_exception = nullptr;
     }
+    // A restore on a running pipeline goes through stop_processing(), which stops this loader.
+    // Clear that here or update_output_image() keeps returning without producing a batch.
+    _stopped = false;
     _internal_thread_running = true;
     _load_thread = std::thread(&ImageLoader::load_routine, this);
 }

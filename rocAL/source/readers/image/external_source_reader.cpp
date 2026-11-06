@@ -39,6 +39,9 @@ ExternalSourceReader::ExternalSourceReader() {
 
 // return batch_size() for count_items unless end_of_sequence has been signalled.
 unsigned ExternalSourceReader::count_items() {
+    // Held for the flags and for the queue inspection below, both of which the feeding and
+    // popping threads modify concurrently.
+    std::lock_guard<std::mutex> lock(_lock);
     if (_shutdown)  // the pipeline is being torn down, no more input will ever arrive
         return 0;
     if (_file_mode == ExternalSourceFileMode::FILENAME) {
