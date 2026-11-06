@@ -61,6 +61,9 @@ class ExternalSourceReader : public Reader, public ExternalSourceImageReader {
     //! Return batch_size() for count_items unless end_of_sequence has been signalled
     unsigned count_items() override;
 
+    //! Wakes any thread blocked waiting for external input, so the pipeline can be torn down
+    void shutdown() override;
+
     ~ExternalSourceReader() override;
 
     int close() override;
@@ -103,9 +106,13 @@ class ExternalSourceReader : public Reader, public ExternalSourceImageReader {
     bool _shuffle;
     int _read_counter = 0;
     volatile bool _end_of_sequence;
+    //!< _shutdown Set when the pipeline is being released, so a reader waiting for input that is
+    /// never going to arrive stops waiting instead of deadlocking the thread joins in release().
+    volatile bool _shutdown;
     ExternalSourceFileMode _file_mode;
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
     size_t _file_count_all_shards;
+    void set_end_of_sequence(bool eos);
     void push_file_name(const std::string& image_name);
     bool pop_file_name(std::string& file_name);
     void push_file_data(ExternalSourceImageInfo& image);
