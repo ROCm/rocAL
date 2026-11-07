@@ -58,7 +58,7 @@ add_executable(${PROJECT_NAME} ${My_Source_Files})
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake ${ROCM_PATH}/share/rocal/test/cmake)
 find_package(OpenCVComponents MODULE QUIET)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mf16c -Wall -pthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -pthread")
 # librocal carries Python C-API symbols (PythonFunction operator); link libpython to resolve them
 find_package(Python3 QUIET COMPONENTS Development.Embed)
 target_link_libraries(${PROJECT_NAME} rocal $<TARGET_NAME_IF_EXISTS:Python3::Python>)
