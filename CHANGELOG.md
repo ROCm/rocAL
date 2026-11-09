@@ -49,6 +49,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve `rocalVideoFileResize()` and `rocalVideoFileResizeSingleShard()` returning a null tensor on success when the frames are decoded at their native size.
 * Resolve the current pipeline being tracked process-wide, which built operators into the wrong graph when pipelines were nested or built from several threads; it is now per thread and readable through `Pipeline.current()`.
 * Resolve a graph verification failure in `Pipeline.build()` by raising a `RuntimeError` instead of exiting with status 0.
+* Resolve `fn.readers.tfrecord()` exiting with status 0 on an incomplete feature key map by raising a `ValueError` naming the missing keys.
 * Resolve `fn.color_jitter` being accepted on a GPU pipeline, where it has no kernel, instead of failing at the call.
 * Resolve one-hot encoded labels failing on GPU pipelines in the generic, JAX and TensorFlow iterators, which asked `rocalGetOneHotImageLabels()` to copy into a host numpy buffer as if it were device memory.
 * Resolve a segmentation fault in the file reader when a folder exists but contains no supported images. The reader now raises an error naming the folder.
