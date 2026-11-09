@@ -187,6 +187,11 @@ else()
   set(FFMPEG_FOUND FALSE)
 endif()
 
+# Reject FFmpeg older than 4.0.4 before find_package_handle_standard_args. That helper
+# sets FFMPEG_FOUND from the library list alone, so a rejection made before it is overwritten
+# and an old host is accepted. The searches above must stay first: the video plugin calls
+# find_package(FFmpeg REQUIRED), and the helper aborts when its required variables are still empty.
+set(FFMPEG_VERSION_REJECTED FALSE)
 if(FFMPEG_FOUND)
   if(_FFMPEG_AVCODEC_VERSION VERSION_LESS 58.18.100 OR
      _FFMPEG_AVFORMAT_VERSION VERSION_LESS 58.12.100 OR
@@ -196,6 +201,7 @@ if(FFMPEG_FOUND)
     message("-- ${White}AVFORMAT required min version - 58.12.100 Found:${_FFMPEG_AVFORMAT_VERSION}${ColourReset}")
     message("-- ${White}AVUTIL   required min version - 56.14.100 Found:${_FFMPEG_AVUTIL_VERSION}${ColourReset}")
     set(FFMPEG_FOUND FALSE)
+    set(FFMPEG_VERSION_REJECTED TRUE)
     message("-- ${Yellow}NOTE: FindFFmpeg failed to find -- FFMPEG${ColourReset}")
   endif()
 endif()
@@ -208,30 +214,37 @@ else()
   set(FFMPEG_VERSION_4 FALSE CACHE INTERNAL "")
 endif()
 
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(
-  FFmpeg
-  FOUND_VAR FFMPEG_FOUND
-  REQUIRED_VARS
-    FFMPEG_LIBRARIES
-    FFMPEG_INCLUDE_DIR
-    AVCODEC_INCLUDE_DIR
-    AVCODEC_LIBRARY
-    AVFORMAT_INCLUDE_DIR
-    AVFORMAT_LIBRARY
-    AVUTIL_INCLUDE_DIR
-    AVUTIL_LIBRARY
-    SWSCALE_INCLUDE_DIR
-    SWSCALE_LIBRARY
-  VERSION_VAR FFMPEG_VERSION
-)
+# find_package() sets FFmpeg_FIND_REQUIRED and FFmpeg_FIND_QUIETLY from the package name.
+if(FFMPEG_VERSION_REJECTED)
+  if(FFmpeg_FIND_REQUIRED)
+    message(FATAL_ERROR "${Red}FindFFmpeg -- FFmpeg ${FFMPEG_VERSION} is older than the minimum 4.0.4 (libavcodec >= 58.18.100, libavformat >= 58.12.100, libavutil >= 56.14.100). Found libavcodec ${_FFMPEG_AVCODEC_VERSION}, libavformat ${_FFMPEG_AVFORMAT_VERSION}, libavutil ${_FFMPEG_AVUTIL_VERSION}.${ColourReset}")
+  endif()
+else()
+  include(FindPackageHandleStandardArgs)
+  find_package_handle_standard_args(
+    FFmpeg
+    FOUND_VAR FFMPEG_FOUND
+    REQUIRED_VARS
+      FFMPEG_LIBRARIES
+      FFMPEG_INCLUDE_DIR
+      AVCODEC_INCLUDE_DIR
+      AVCODEC_LIBRARY
+      AVFORMAT_INCLUDE_DIR
+      AVFORMAT_LIBRARY
+      AVUTIL_INCLUDE_DIR
+      AVUTIL_LIBRARY
+      SWSCALE_INCLUDE_DIR
+      SWSCALE_LIBRARY
+    VERSION_VAR FFMPEG_VERSION
+  )
+endif()
 
 if(FFMPEG_FOUND)
-  if(NOT FFMPEG_FIND_QUIETLY)
+  if(NOT FFmpeg_FIND_QUIETLY)
     message("-- ${White}Using FFMPEG -- \n\tLibraries:${FFMPEG_LIBRARIES} \n\tIncludes:${FFMPEG_INCLUDE_DIR}${ColourReset}")
   endif()
 else()
-  if(FFMPEG_FIND_REQUIRED)
+  if(FFmpeg_FIND_REQUIRED AND NOT FFMPEG_VERSION_REJECTED)
     message(FATAL_ERROR "${Red}FindFFmpeg -- libavcodec or libavformat or libavutil or libswscale NOT FOUND${ColourReset}")
   endif()
 endif()
