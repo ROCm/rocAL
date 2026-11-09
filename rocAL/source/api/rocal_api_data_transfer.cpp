@@ -55,13 +55,20 @@ rocalCopyToOutput(
     size_t out_size) {
     auto context = static_cast<Context*>(p_context);
     try {
-        // Report a size mismatch instead of silently copying nothing.
-        if (context->master_graph->copy_output(out_ptr, out_size) == MasterGraph::Status::INVALID_ARGUMENTS) {
+        // Report the reason nothing was copied instead of leaving the user's buffer untouched.
+        const auto status = context->master_graph->copy_output(out_ptr, out_size);
+        if (status == MasterGraph::Status::INVALID_ARGUMENTS) {
             const std::string err_msg = "rocalCopyToOutput: the output buffer of " + std::to_string(out_size) +
-                                        " bytes does not match the size of the output tensor";
+                                        " bytes does not match the output batch size of " +
+                                        std::to_string(context->master_graph->output_byte_size()) + " bytes";
             context->capture_error(err_msg);
             ERR(err_msg)
             return ROCAL_INVALID_PARAMETER_TYPE;
+        } else if (status != MasterGraph::Status::OK) {
+            const std::string err_msg = "rocalCopyToOutput: there is no processed batch left to copy";
+            context->capture_error(err_msg);
+            ERR(err_msg)
+            return ROCAL_RUNTIME_ERROR;
         }
     } catch (const std::exception& e) {
         context->capture_error(e.what());
