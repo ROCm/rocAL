@@ -21,6 +21,8 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include <algorithm>
+
 #include "pipeline/graph.h"
 
 #include "parameters/parameter_factory.h"
@@ -58,8 +60,8 @@ class CropParam {
     void set_fixed_crop(float anchor_x, float anchor_y) {
         _is_fixed_crop = true;
         _random = false;
-        _crop_anchor[0] = anchor_x;
-        _crop_anchor[1] = anchor_y;
+        _crop_anchor[0] = std::clamp(anchor_x, 0.0f, 1.0f);
+        _crop_anchor[1] = std::clamp(anchor_y, 0.0f, 1.0f);
     }
     void set_x_drift_factor(Parameter<float> *x_drift);
     void set_y_drift_factor(Parameter<float> *y_drift);

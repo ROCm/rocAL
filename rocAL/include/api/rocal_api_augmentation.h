@@ -1284,8 +1284,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalCrop(RocalContext context, RocalTenso
  * \param [in] crop_height crop width of the tensor
  * \param [in] crop_width crop height of the tensor
  * \param [in] crop_depth crop depth of the tensor
- * \param [in] crop_pox_x x-coordinate, start of the input tensor to be cropped
- * \param [in] crop_pos_y y-coordinate, start of the input tensor to be cropped
+ * \param [in] crop_pos_x horizontal position of the crop as a fraction of the space left beside it: 0.0 is the left edge, 0.5 the centre and 1.0 the right edge. Values outside [0, 1] are clamped
+ * \param [in] crop_pos_y vertical position of the crop as a fraction of the space left above and below it: 0.0 is the top edge, 0.5 the centre and 1.0 the bottom edge. Values outside [0, 1] are clamped
  * \param [in] crop_pos_z z-coordinate, start of the input tensor to be cropped
  * \param [in] is_output is the output tensor part of the graph output
  * \param [in] output_layout the layout of the output tensor
@@ -1297,7 +1297,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalCropFixed(RocalContext context, Rocal
                                                      unsigned crop_height,
                                                      unsigned crop_depth,
                                                      bool is_output,
-                                                     float crop_pox_x,
+                                                     float crop_pos_x,
                                                      float crop_pos_y,
                                                      float crop_pos_z,
                                                      RocalTensorLayout output_layout = ROCAL_NONE,
