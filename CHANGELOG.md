@@ -9,6 +9,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Adds support for pipeline checkpointing in rocAL.
 * Adds hipFile support in rocAL numpy reader
 * Adds support for voxel augmentations, random object bbox and ROI random cropping in rocAL.
+* Adds `rocalGetOutputByteSize()`, which returns the size of an output batch in bytes as required by `rocalCopyToOutput()`.
 
 ### Removed
 * OpenCV is no longer a dependency. It has been removed from the core library, build, setup script, and C++ tests.
@@ -29,6 +30,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Update EnumRegistry to support enum value lookup by type name.
 * Adds new method in Argument class for type-safe value retrieval of arguments.
 * `RocalPipelineParams` struct to represent pipeline configuration parameters used during serialization and deserialization.
+* The `Phase`, Bitwise AND/OR/XOR and `ResizeCropMirror` unit test cases are disabled, pending a fix to the RPP bilinear sampler they depend on.
 
 ### Resolved issues
 * Resolve the off-by-one in `rocalGetOneHotImageLabels()`, which encoded the 0 based labels the readers produce as the wrong class.
@@ -49,6 +51,13 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve a graph verification failure in `Pipeline.build()` by raising a `RuntimeError` instead of exiting with status 0.
 * Resolve `fn.color_jitter` being accepted on a GPU pipeline, where it has no kernel, instead of failing at the call.
 * Resolve one-hot encoded labels failing on GPU pipelines in the generic, JAX and TensorFlow iterators, which asked `rocalGetOneHotImageLabels()` to copy into a host numpy buffer as if it were device memory.
+* Resolve a segmentation fault in the file reader when a folder exists but contains no supported images. The reader now raises an error naming the folder.
+* Resolve Caffe and Caffe2 LMDB reads rewriting `lock.mdb`, and failing when `lock.mdb` cannot be created or opened for writing. Those environments are now opened with `MDB_RDONLY | MDB_NOLOCK`.
+* Resolve a `TypeError` from the tensor based API `fn.erase` documents, which has no implementation to call.
+* Resolve `CHECK_LMDB_RETURN_STATUS` running a failing LMDB call a second time and reporting that second result. The macro now stores the return code and reports the first failure.
+* Resolve `rocalCopyToOutput()` reporting success at the end of the data, where it leaves the caller's buffer untouched.
+* Resolve the `unit_tests` numpy cases sizing their buffer from the color format, which counts one channel for a three channel batch.
+* Resolve a `TypeError` from `fn.decoders.image_raw`, which called the decoder binding one argument short on every TFRecord pipeline.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.
