@@ -356,7 +356,6 @@ if(${BUILD_ROCAL})
     if(LMDB_FOUND)
         target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_LMDB)
     else()
-        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_LMDB=0)
         message("-- ${Yellow}NOTE: rocAL built without LMDB - Caffe/Caffe2 LMDB readers will not be supported${ColourReset}")
     endif()
 
