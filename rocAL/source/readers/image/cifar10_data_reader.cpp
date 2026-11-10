@@ -184,6 +184,9 @@ Reader::Status CIFAR10DataReader::subfolder_reading() {
         entry_name_list.push_back(entry_name);
         LOG("CIFAR10DataReader  Got entry name " + entry_name)
     }
+    // Closed here so the throws below do not leak the stream.
+    closedir(_sub_dir);
+
     if (entry_name_list.empty())
         THROW("CIFAR10DataReader ERROR: Did not find any entry in " + _full_path);
 
@@ -242,7 +245,6 @@ Reader::Status CIFAR10DataReader::subfolder_reading() {
         }
     }
     compute_start_and_end_idx_of_all_shards();
-    closedir(_sub_dir);
     return ret;
 }
 
