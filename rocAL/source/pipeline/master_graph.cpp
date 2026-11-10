@@ -1034,17 +1034,17 @@ bool MasterGraph::is_out_of_data() {
 
 void MasterGraph::output_routine() {
     INFO("Output routine started with " + TOSTR(_remaining_count) + " to load");
-#if ENABLE_HIP
-    // Set device ID for output routine thread once
-    if (!_set_device_id) {
-        hipError_t hip_status = hipSetDevice(_gpu_id);
-        if (hip_status != hipSuccess) {
-            THROW("hipSetDevice failed");
-        }
-        _set_device_id = true;
-    }
-#endif
     try {
+#if ENABLE_HIP
+        // Set device ID for output routine thread once. A CPU pipeline has no device to select.
+        if (_affinity == RocalAffinity::GPU && !_set_device_id) {
+            hipError_t hip_status = hipSetDevice(_gpu_id);
+            if (hip_status != hipSuccess) {
+                THROW("hipSetDevice failed for device " + TOSTR(_gpu_id) + ", " + STR(hipGetErrorName(hip_status)));
+            }
+            _set_device_id = true;
+        }
+#endif
         while (_processing) {
             if (_loader_module->remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size)) {
                 // If the internal process routine ,output_routine(), has finished processing all the images, and last
@@ -1169,17 +1169,17 @@ void MasterGraph::output_routine() {
 
 void MasterGraph::output_routine_multiple_loaders() {
     INFO("Output routine for multiple loaders started with " + TOSTR(_remaining_count) + " to load");
-#if ENABLE_HIP
-    // Set device ID for output routine thread once
-    if (!_set_device_id) {
-        hipError_t hip_status = hipSetDevice(_gpu_id);
-        if (hip_status != hipSuccess) {
-            THROW("hipSetDevice failed");
-        }
-        _set_device_id = true;
-    }
-#endif
     try {
+#if ENABLE_HIP
+        // Set device ID for output routine thread once. A CPU pipeline has no device to select.
+        if (_affinity == RocalAffinity::GPU && !_set_device_id) {
+            hipError_t hip_status = hipSetDevice(_gpu_id);
+            if (hip_status != hipSuccess) {
+                THROW("hipSetDevice failed for device " + TOSTR(_gpu_id) + ", " + STR(hipGetErrorName(hip_status)));
+            }
+            _set_device_id = true;
+        }
+#endif
         while (_processing) {
             if (is_out_of_data()) {
                 // If the internal process routine ,output_routine(), has finished processing all the images, and last
