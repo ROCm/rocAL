@@ -49,6 +49,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve `rocalVideoFileResize()` and `rocalVideoFileResizeSingleShard()` returning a null tensor on success when the frames are decoded at their native size.
 * Resolve the current pipeline being tracked process-wide, which built operators into the wrong graph when pipelines were nested or built from several threads; it is now per thread and readable through `Pipeline.current()`.
 * Resolve a graph verification failure in `Pipeline.build()` by raising a `RuntimeError` instead of exiting with status 0.
+* Resolve `fn.readers.tfrecord()` exiting with status 0 on an incomplete feature key map by raising a `ValueError` naming the missing keys.
 * Resolve `fn.color_jitter` being accepted on a GPU pipeline, where it has no kernel, instead of failing at the call.
 * Resolve one-hot encoded labels failing on GPU pipelines in the generic, JAX and TensorFlow iterators, which asked `rocalGetOneHotImageLabels()` to copy into a host numpy buffer as if it were device memory.
 * Resolve a segmentation fault in the file reader when a folder exists but contains no supported images. The reader now raises an error naming the folder.
@@ -60,6 +61,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve a `TypeError` from `fn.decoders.image_raw`, which called the decoder binding one argument short on every TFRecord pipeline.
 * Resolve `rocalRelease()` blocking forever when an external source pipeline is left before the end of an epoch, because it joined threads that were still waiting for input the user had stopped feeding.
 * Resolve `rocalRun()` blocking forever on an external source that yields no samples, which fed neither a batch nor an end of stream; the iterators now end the epoch instead.
+* Resolve a segmentation fault in `rocalSetOutputs()` when an augmentation that rejected its input returns a null tensor, by reporting the error instead of setting any output.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.
