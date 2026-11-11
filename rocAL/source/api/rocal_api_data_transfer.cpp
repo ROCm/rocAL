@@ -84,6 +84,10 @@ void
     if (!p_context)
         THROW("Invalid rocal context passed to rocalSetOutputs")
     auto context = static_cast<Context*>(p_context);
+    // A rejected augmentation returns a null tensor, which set_output() dereferences. Checked
+    // up front so a call naming one sets no output at all.
+    if (std::find(output_tensors.begin(), output_tensors.end(), nullptr) != output_tensors.end())
+        THROW("Null output tensor passed to rocalSetOutputs")
     for (auto& it : output_tensors) {
         auto tensor = static_cast<Tensor*>(it);
         context->master_graph->set_output(tensor);
