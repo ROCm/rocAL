@@ -2599,9 +2599,10 @@ rocalPreEmphasisFilter(RocalContext p_context,
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<Tensor*>(p_input);
-    auto preemph_coeff = static_cast<FloatParam*>(p_preemph_coeff);
     try {
+#ifdef ROCAL_AUDIO
+        auto input = static_cast<Tensor*>(p_input);
+        auto preemph_coeff = static_cast<FloatParam*>(p_preemph_coeff);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
         if (op_tensor_datatype != RocalTensorDataType::FP32) {
             THROW("Only FP32 dtype is supported for PreEmphasis filter augmentation.")
@@ -2610,6 +2611,9 @@ rocalPreEmphasisFilter(RocalContext p_context,
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<PreemphasisFilterNode>({input}, {output})->init(preemph_coeff, static_cast<AudioBorderType>(preemph_border_type));
+#else
+        THROW("rocAL was built without audio support: it needs SndFile, and a vx_rpp built against an RPP that has audio augmentations")
+#endif
     } catch (const std::exception& e) {
         ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
@@ -2634,8 +2638,9 @@ rocalSpectrogram(
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<Tensor*>(p_input);
     try {
+#ifdef ROCAL_AUDIO
+        auto input = static_cast<Tensor*>(p_input);
         RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(output_datatype);
         if (op_tensor_data_type != RocalTensorDataType::FP32) {
             WRN("Only FP32 data-type is supported for Spectrogram augmentation.")
@@ -2670,6 +2675,9 @@ rocalSpectrogram(
         context->master_graph->add_node<SpectrogramNode>({input}, {output})->init(center_windows, reflect_padding,
                                                                                   power, nfft, window_length,
                                                                                   window_step, window_fn);
+#else
+        THROW("rocAL was built without audio support: it needs SndFile, and a vx_rpp built against an RPP that has audio augmentations")
+#endif
     } catch(const std::exception& e) {
         ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
@@ -2689,8 +2697,9 @@ rocalToDecibels(
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<Tensor*>(p_input);
     try {
+#ifdef ROCAL_AUDIO
+        auto input = static_cast<Tensor*>(p_input);
         RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(output_datatype);
         TensorInfo output_info = input->info();
         if (op_tensor_data_type != RocalTensorDataType::FP32) {
@@ -2701,6 +2710,9 @@ rocalToDecibels(
             output_info.set_tensor_layout(RocalTensorlayout::NHW);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ToDecibelsNode>({input}, {output})->init(cutoff_db, multiplier, reference_magnitude);
+#else
+        THROW("rocAL was built without audio support: it needs SndFile, and a vx_rpp built against an RPP that has audio augmentations")
+#endif
     } catch (const std::exception& e) {
         ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
@@ -2722,9 +2734,10 @@ rocalResample(RocalContext p_context,
     }
     Tensor* resampled_output = nullptr;
     auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<Tensor*>(p_input);
-    auto output_resample_rate = static_cast<Tensor*>(p_output_resample_rate);
     try {
+#ifdef ROCAL_AUDIO
+        auto input = static_cast<Tensor*>(p_input);
+        auto output_resample_rate = static_cast<Tensor*>(p_output_resample_rate);
         TensorInfo output_info = input->info();
         RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(output_datatype);
         if (op_tensor_data_type != RocalTensorDataType::FP32) {
@@ -2742,6 +2755,9 @@ rocalResample(RocalContext p_context,
         }
         resampled_output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ResampleNode>({input}, {resampled_output})->init(output_resample_rate, quality);
+#else
+        THROW("rocAL was built without audio support: it needs SndFile, and a vx_rpp built against an RPP that has audio augmentations")
+#endif
     } catch (const std::exception& e) {
         ROCAL_HANDLE_EXCEPTION(context, e, resampled_output);
     }
@@ -3004,8 +3020,9 @@ rocalNonSilentRegionDetection(
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<Tensor*>(p_input);
     try {
+#ifdef ROCAL_AUDIO
+        auto input = static_cast<Tensor*>(p_input);
         std::vector<size_t> dims1 = {context->user_batch_size(), 1};
         auto info1 = TensorInfo(std::vector<size_t>(std::move(dims1)),
                                 context->master_graph->mem_type(),
@@ -3021,6 +3038,9 @@ rocalNonSilentRegionDetection(
         context->master_graph->add_node<NonSilentRegionDetectionNode>({input}, {anchor_output, shape_output})->init(cutoff_db, reference_power, window_length, reset_interval);
         output.anchor = anchor_output;
         output.shape = shape_output;
+#else
+        THROW("rocAL was built without audio support: it needs SndFile, and a vx_rpp built against an RPP that has audio augmentations")
+#endif
     } catch (const std::exception& e) {
         // Open-coded rather than ROCAL_HANDLE_EXCEPTION because this is the one entry point whose
         // result is a struct of two tensors. Discarded newest first: discard_tensor() identifies an
@@ -3152,8 +3172,9 @@ rocalMelFilterBank(
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<Tensor*>(p_input);
     try {
+#ifdef ROCAL_AUDIO
+        auto input = static_cast<Tensor*>(p_input);
         RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
         if (op_tensor_data_type != RocalTensorDataType::FP32) {
             THROW("Only FP32 dtype is supported for MelFilterBank augmentation.")
@@ -3168,6 +3189,9 @@ rocalMelFilterBank(
         output_info.set_data_type(op_tensor_data_type);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<MelFilterBankNode>({input}, {output})->init(freq_high, freq_low, static_cast<MelScaleFormula>(mel_formula), nfilter, normalize, sample_rate);
+#else
+        THROW("rocAL was built without audio support: it needs SndFile, and a vx_rpp built against an RPP that has audio augmentations")
+#endif
     } catch (const std::exception& e) {
         ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
