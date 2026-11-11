@@ -60,6 +60,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve the `unit_tests` numpy cases sizing their buffer from the color format, which counts one channel for a three channel batch.
 * Resolve a `TypeError` from `fn.decoders.image_raw`, which called the decoder binding one argument short on every TFRecord pipeline.
 * Resolve a process abort when a metadata getter is called before the output copy, by making the getters wait for the current batch instead of reporting it as never loaded.
+* Resolve a segmentation fault in `rocalSetOutputs()` when an augmentation that rejected its input returns a null tensor, by reporting the error instead of setting any output.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.
