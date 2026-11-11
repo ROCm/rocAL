@@ -84,6 +84,51 @@ def file(file_root, file_filters=None, file_list='', stick_to_shard=False, pad_l
     return (label_reader_meta_data, labels)
 
 
+#: Feature keys a classification TFRecord pipeline looks up in the user feature key map.
+#: "image/encoded" and "image/filename" are read by the decoder nodes, the rest by the reader.
+_TFRECORD_CLASSIFICATION_KEYS = (
+    "image/encoded",
+    "image/class/label",
+    "image/filename",
+)
+
+#: Feature keys a detection TFRecord pipeline looks up in the user feature key map.
+_TFRECORD_DETECTION_KEYS = _TFRECORD_CLASSIFICATION_KEYS + (
+    "image/class/text",
+    "image/object/bbox/xmin",
+    "image/object/bbox/ymin",
+    "image/object/bbox/xmax",
+    "image/object/bbox/ymax",
+)
+
+
+def _validate_tfrecord_feature_key_map(user_feature_key_map, features, reader_name, required_keys):
+    """!Checks that a TFRecord feature key map can satisfy every key the pipeline will look up.
+
+        @param user_feature_key_map    User-provided feature key mapping.
+        @param features                Features the caller asked to load from the TFRecords.
+        @param reader_name             Human readable reader name used in the error message.
+        @param required_keys           Feature keys the reader and decoder nodes look up.
+
+        @raise ValueError If a required key, or a key the caller requested in features,
+                          is missing from user_feature_key_map.
+    """
+    required_message = (
+        f"For {reader_name}, ROCAL TFRecordReader needs all the following keys in the "
+        f"featureKeyMap: {', '.join(required_keys)}")
+    missing_required = [
+        key for key in required_keys if key not in user_feature_key_map]
+    if missing_required:
+        raise ValueError(
+            f"{required_message}. Missing: {', '.join(missing_required)}")
+    missing_requested = [
+        key for key in features if key not in user_feature_key_map]
+    if missing_requested:
+        raise ValueError(
+            f"{required_message}. The features argument also requests keys that the "
+            f"featureKeyMap does not map: {', '.join(missing_requested)}")
+
+
 def tfrecord(path, user_feature_key_map, features, reader_type=0, stick_to_shard=False, pad_last_batch=False):
     """!Creates a TFRecordReader node for loading TFRecord dataset.
 
@@ -95,32 +140,26 @@ def tfrecord(path, user_feature_key_map, features, reader_type=0, stick_to_shard
         @param pad_last_batch          If set to True, pads the shard by repeating the last sample.
 
         @return    Features loaded from TFRecords.
+
+        @raise ValueError If user_feature_key_map is missing a key the pipeline needs.
     """
     labels = []
     if reader_type == 1:
+        _validate_tfrecord_feature_key_map(
+            user_feature_key_map, features, "Object Detection", _TFRECORD_DETECTION_KEYS)
         Pipeline.current()._reader = "TFRecordReaderDetection"
         kwargs_pybind = {"path": path, "is_output": True, "user_key_for_label": user_feature_key_map["image/class/label"],
                          "user_key_for_text": user_feature_key_map["image/class/text"], "user_key_for_xmin": user_feature_key_map["image/object/bbox/xmin"],
                          "user_key_for_ymin": user_feature_key_map["image/object/bbox/ymin"], "user_key_for_xmax": user_feature_key_map["image/object/bbox/xmax"],
                          "user_key_for_ymax": user_feature_key_map["image/object/bbox/ymax"], "user_key_for_filename": user_feature_key_map["image/filename"]}
-        for key in features.keys():
-            if key not in user_feature_key_map.keys():
-                print(
-                    "For Object Detection, ROCAL TFRecordReader needs all the following keys in the featureKeyMap:")
-                print("image/encoded\nimage/class/label\nimage/class/text\nimage/object/bbox/xmin\nimage/object/bbox/ymin\nimage/object/bbox/xmax\nimage/object/bbox/ymax\n")
-                exit()
         tf_meta_data = b.tfReaderDetection(
             Pipeline.current()._handle, *(kwargs_pybind.values()))
     else:
+        _validate_tfrecord_feature_key_map(
+            user_feature_key_map, features, "Image Classification", _TFRECORD_CLASSIFICATION_KEYS)
         Pipeline.current()._reader = "TFRecordReaderClassification"
         kwargs_pybind = {"path": path, "is_output": True, "user_key_for_label": user_feature_key_map["image/class/label"],
                          "user_key_for_filename": user_feature_key_map["image/filename"]}
-        for key in features.keys():
-            if key not in user_feature_key_map.keys():
-                print(
-                    "For Image Classification, ROCAL TFRecordReader needs all the following keys in the featureKeyMap:")
-                print("image/encoded\nimage/class/label\n")
-                exit()
         tf_meta_data = b.tfReader(
             Pipeline.current()._handle, *(kwargs_pybind.values()))
     features["image/encoded"] = tf_meta_data
