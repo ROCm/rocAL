@@ -204,21 +204,27 @@ def image_raw(*inputs, user_feature_key_map=None, path='', random_shuffle=False,
     Pipeline.current()._last_batch_policy = last_batch_policy
     sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch, stick_to_shard, shard_size)
 
-    if (reader == "TFRecordReaderClassification" or reader == "TFRecordReaderDetection"):
-        kwargs_pybind = {
-            "source_path": path,
-            "user_key_for_encoded": user_feature_key_map["image/encoded"],
-            "user_key_for_filename": user_feature_key_map["image/filename"],
-            "color_format": output_type,
-            'is_output': False,
-            "shuffle": random_shuffle,
-            "loop": False,
-            "max_width": max_decoded_width,
-            "max_height": max_decoded_height,
-            "sharding_info": sharding_info}
-        decoded_image = b.tfImageDecoderRaw(
-            Pipeline.current()._handle, *(kwargs_pybind.values()))
-        return (decoded_image)
+    if (reader != "TFRecordReaderClassification" and reader != "TFRecordReaderDetection"):
+        raise RuntimeError(
+            "decoders.image_raw supports the TFRecord readers only, but the pipeline reader is " + str(reader))
+
+    kwargs_pybind = {
+        "source_path": path,
+        "user_key_for_encoded": user_feature_key_map["image/encoded"],
+        "user_key_for_filename": user_feature_key_map["image/filename"],
+        "color_format": output_type,
+        'is_output': False,
+        "shuffle": random_shuffle,
+        "loop": False,
+        "max_width": max_decoded_width,
+        "max_height": max_decoded_height,
+        # rocalRawTFRecordSource takes record_name_prefix between max_height and the sharding
+        # info; the binding has no py::arg defaults, so every argument has to be passed here.
+        "record_name_prefix": "",
+        "sharding_info": sharding_info}
+    decoded_image = b.tfImageDecoderRaw(
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
+    return (decoded_image)
 
 
 def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='', annotations_file='', num_shards=1, shard_id=0,
