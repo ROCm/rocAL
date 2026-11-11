@@ -253,7 +253,8 @@ Reader::Status CIFAR10DataReader::open_folder() {
         THROW("CIFAR10DataReader ERROR: Failed opening the directory at " + _folder_path);
 
     while ((_entity = readdir(_src_dir)) != nullptr) {
-        if (_entity->d_type != DT_REG)
+        std::error_code ec;
+        if (!filesys::is_regular_file(filesys::path(_folder_path) / _entity->d_name, ec))
             continue;
         std::string file_path = _folder_path;
         // check if the filename has the _file_name_prefix

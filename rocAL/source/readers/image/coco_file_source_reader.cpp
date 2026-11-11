@@ -269,7 +269,8 @@ Reader::Status COCOFileSourceReader::open_folder() {
         THROW("FileReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _folder_path);
 
     while ((_entity = readdir(_src_dir)) != nullptr) {
-        if (_entity->d_type != DT_REG)
+        std::error_code ec;
+        if (!filesys::is_regular_file(filesys::path(_folder_path) / _entity->d_name, ec))
             continue;
         if (!_meta_data_reader || _meta_data_reader->exists(_entity->d_name)) {
             std::string file_path = _folder_path;
