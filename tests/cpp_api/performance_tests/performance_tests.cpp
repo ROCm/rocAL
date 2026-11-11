@@ -36,7 +36,6 @@ THE SOFTWARE.
 using namespace cv;
 #endif
 
-#define DISPLAY
 using namespace std::chrono;
 
 int test(int test_case, const char* path, int rgb, int processing_device, int width, int height, int batch_size, int shards, int shuffle);

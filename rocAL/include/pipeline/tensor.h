@@ -400,15 +400,31 @@ class TensorList : public rocalTensorList {
     uint64_t size() override { return _tensor_list.size(); }
     bool empty() { return _tensor_list.empty(); }
     Tensor* front() { return _tensor_list.front(); }
+    Tensor* back() { return _tensor_list.back(); }
     void push_back(Tensor* tensor) {
         _tensor_list.emplace_back(tensor);
         _tensor_data_size.emplace_back(tensor->info().data_size());
         _tensor_roi_size.emplace_back(tensor->info().roi().roi_buffer_size());
     }
+    // Undoes the most recent push_back(), keeping the three vectors in step. Used to roll back an
+    // output tensor that an entry point registered here and then failed to attach to a node.
+    void pop_back() {
+        _tensor_list.pop_back();
+        _tensor_data_size.pop_back();
+        _tensor_roi_size.pop_back();
+    }
     std::vector<uint64_t>& data_size() { return _tensor_data_size; }
     std::vector<uint64_t>& roi_size() { return _tensor_roi_size; }
     void release() {
         for (auto& tensor : _tensor_list) delete tensor;
+        // A TensorList can be reachable from more than one TensorListVector: the
+        // box encoder registers _labels_tensor_list and _bbox_tensor_list in both
+        // _metadata_output_tensor_list and _bbox_encoded_output_tensor_list, and
+        // MasterGraph::release() releases both vectors. Drop the pointers here so
+        // a second release is a no-op instead of deleting every tensor twice.
+        _tensor_list.clear();
+        _tensor_data_size.clear();
+        _tensor_roi_size.clear();
     }
     Tensor* operator[](size_t index) { return _tensor_list[index]; }
     Tensor* at(size_t index) override { return _tensor_list[index]; }

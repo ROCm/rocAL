@@ -193,6 +193,11 @@ void ImageLoader::start_loading() {
 
     _remaining_image_count = _image_loader->count();
     _dataset_size = _remaining_image_count;  // Capture the dataset size once for stable restore semantics
+    {
+        // Drop any error left by a previous run so a restarted loader is not reported as failed.
+        std::lock_guard<std::mutex> lock(_load_exception_lock);
+        _load_exception = nullptr;
+    }
     _internal_thread_running = true;
     _load_thread = std::thread(&ImageLoader::load_routine, this);
 }
@@ -203,68 +208,96 @@ ImageLoader::load_routine() {
     LoaderModuleStatus last_load_status = LoaderModuleStatus::OK;
     // Initially record number of all the images that are going to be loaded, this is used to know how many still there
 
-    while (_internal_thread_running) {
-        auto data = _circ_buff.get_write_buffer();
-        if (!_internal_thread_running)
-            break;
+    try {
+        while (_internal_thread_running) {
+            auto data = _circ_buff.get_write_buffer();
+            if (!_internal_thread_running)
+                break;
 
-        auto load_status = LoaderModuleStatus::NO_MORE_DATA_TO_READ;
-        {
-            load_status = _image_loader->load(data,
-                                              _decoded_data_info._data_names,
-                                              _max_tensor_width,
-                                              _max_tensor_height,
-                                              _decoded_data_info._roi_width,
-                                              _decoded_data_info._roi_height,
-                                              _decoded_data_info._original_width,
-                                              _decoded_data_info._original_height,
-                                              _output_tensor->info().color_format(), _decoder_keep_original);
+            auto load_status = LoaderModuleStatus::NO_MORE_DATA_TO_READ;
+            {
+                load_status = _image_loader->load(data,
+                                                  _decoded_data_info._data_names,
+                                                  _max_tensor_width,
+                                                  _max_tensor_height,
+                                                  _decoded_data_info._roi_width,
+                                                  _decoded_data_info._roi_height,
+                                                  _decoded_data_info._original_width,
+                                                  _decoded_data_info._original_height,
+                                                  _output_tensor->info().color_format(), _decoder_keep_original);
 
-            if (load_status == LoaderModuleStatus::OK) {
-                // Save state after a successful load for correct checkpoint restoration.
-                if (_is_checkpointing_enabled) {
-                    _decoded_data_info._loader_state.epoch_number = _epoch_count;
-                    _decoded_data_info._loader_state.iteration_number = _iteration_count;
-                    try {
-                        _decoded_data_info._loader_state.rng = _image_loader->get_rng_state();
-                    } catch (...) {
-                        _decoded_data_info._loader_state.rng = std::mt19937{};
-                        ERR("Checkpointing: reader RNG state not available, using default RNG state");
+                if (load_status == LoaderModuleStatus::OK) {
+                    // Save state after a successful load for correct checkpoint restoration.
+                    if (_is_checkpointing_enabled) {
+                        _decoded_data_info._loader_state.epoch_number = _epoch_count;
+                        _decoded_data_info._loader_state.iteration_number = _iteration_count;
+                        try {
+                            _decoded_data_info._loader_state.rng = _image_loader->get_rng_state();
+                        } catch (...) {
+                            _decoded_data_info._loader_state.rng = std::mt19937{};
+                            ERR("Checkpointing: reader RNG state not available, using default RNG state");
+                        }
+                        _decoded_data_info._loader_state.curr_file_idx = _image_loader->get_curr_file_idx();
                     }
-                    _decoded_data_info._loader_state.curr_file_idx = _image_loader->get_curr_file_idx();
+                    if (_randombboxcrop_meta_data_reader) {
+                        _crop_image_info._crop_image_coords = _image_loader->get_batch_random_bbox_crop_coords();
+                        _circ_buff.set_crop_image_info(_crop_image_info);
+                    }
+                    _circ_buff.set_decoded_data_info(_decoded_data_info);
+                    _circ_buff.push();
+                    _image_counter += _output_tensor->info().batch_size();
+                    _iteration_count++;
                 }
-                if (_randombboxcrop_meta_data_reader) {
-                    _crop_image_info._crop_image_coords = _image_loader->get_batch_random_bbox_crop_coords();
-                    _circ_buff.set_crop_image_info(_crop_image_info);
+            }
+            if (load_status != LoaderModuleStatus::OK) {
+                if (last_load_status != load_status) {
+                    if (load_status == LoaderModuleStatus::NO_MORE_DATA_TO_READ ||
+                        load_status == LoaderModuleStatus::NO_FILES_TO_READ) {
+                        LOG("Cycled through all images, count " + TOSTR(_image_counter));
+                    } else {
+                        ERR("ERROR: Detected error in reading the images");
+                    }
+                    last_load_status = load_status;
                 }
-                _circ_buff.set_decoded_data_info(_decoded_data_info);
-                _circ_buff.push();
-                _image_counter += _output_tensor->info().batch_size();
-                _iteration_count++;
+
+                // Here it sets the out-of-data flag and signal the circular buffer's internal
+                // read semaphore using release() call
+                // , and calls the release() allows the reader thread to wake up and handle
+                // the out-of-data case properly
+                // It also slows down the reader thread since there is no more data to read,
+                // till program ends or till reset is called
+                _circ_buff.unblock_reader();
+                std::this_thread::sleep_for(std::chrono::seconds(1));
             }
         }
-        if (load_status != LoaderModuleStatus::OK) {
-            if (last_load_status != load_status) {
-                if (load_status == LoaderModuleStatus::NO_MORE_DATA_TO_READ ||
-                    load_status == LoaderModuleStatus::NO_FILES_TO_READ) {
-                    LOG("Cycled through all images, count " + TOSTR(_image_counter));
-                } else {
-                    ERR("ERROR: Detected error in reading the images");
-                }
-                last_load_status = load_status;
-            }
-
-            // Here it sets the out-of-data flag and signal the circular buffer's internal
-            // read semaphore using release() call
-            // , and calls the release() allows the reader thread to wake up and handle
-            // the out-of-data case properly
-            // It also slows down the reader thread since there is no more data to read,
-            // till program ends or till reset is called
+    } catch (const std::exception &e) {
+        // Without this handler the exception would cross the std::thread boundary and call
+        // std::terminate, ending the process. Hand it to the consumer instead, which rethrows
+        // it from load_next().
+        ERR("Exception thrown in the loader thread: " + STR(e.what()) + STR("\n"));
+        {
+            std::lock_guard<std::mutex> lock(_load_exception_lock);
+            _load_exception = std::current_exception();
+        }
+        // Loading has stopped, so this costs nothing. Keep nudging the reader the way the
+        // out-of-data path above does, so a wake-up that races with the consumer entering its
+        // wait is not lost. reset(), shut_down() and restore_from_state() all clear
+        // _internal_thread_running before joining this thread.
+        while (_internal_thread_running) {
             _circ_buff.unblock_reader();
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }
     return LoaderModuleStatus::OK;
+}
+
+void ImageLoader::rethrow_load_exception() {
+    std::exception_ptr load_exception;
+    {
+        std::lock_guard<std::mutex> lock(_load_exception_lock);
+        load_exception = _load_exception;
+    }
+    if (load_exception) std::rethrow_exception(load_exception);
 }
 
 bool ImageLoader::is_out_of_data() {
@@ -279,6 +312,7 @@ LoaderModuleStatus
 ImageLoader::update_output_image() {
     LoaderModuleStatus status = LoaderModuleStatus::OK;
 
+    rethrow_load_exception();
     if (is_out_of_data())
         return LoaderModuleStatus::NO_MORE_DATA_TO_READ;
     if (_stopped)
@@ -301,6 +335,9 @@ ImageLoader::update_output_image() {
     if (_stopped)
         return LoaderModuleStatus::OK;
 
+    // The loader may have failed while this thread was blocked above. Check before reading the
+    // batch info, which would otherwise be taken from an empty queue.
+    rethrow_load_exception();
     _output_decoded_data_info = _circ_buff.get_decoded_data_info();
     if (_randombboxcrop_meta_data_reader) {
         _output_cropped_img_info = _circ_buff.get_cropped_image_info();
@@ -370,6 +407,10 @@ void ImageLoader::restore_from_state(const LoaderState& s) {
     }
 
     // Restart loading thread to resume prefetching from the restored state.
+    {
+        std::lock_guard<std::mutex> lock(_load_exception_lock);
+        _load_exception = nullptr;
+    }
     _internal_thread_running = true;
     _load_thread = std::thread(&ImageLoader::load_routine, this);
 }

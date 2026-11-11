@@ -37,16 +37,14 @@ THE SOFTWARE.
 #include "rocal_api.h"
 #include "rocal_api_types.h"
 #if ENABLE_OPENCV
-#include <opencv2/opencv.hpp>
+#include "image_output.h"
 using namespace cv;
 
 #define CV_RGB2BGR COLOR_RGB2BGR
-#define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
 #endif
 
 #define PRINT_NAMES_AND_LABELS 0  // uncomment for printing names and labels
 // #define ROCAL_MEMCPY_TO_HOST 0 //For HOST 0 / GPU 1
-#define DISPLAY 0
 using namespace std::chrono;
 std::mutex g_mtx;  // mutex for critical section
 
@@ -136,8 +134,7 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
     names.resize(effective_batch_size);
     std::vector<int> image_name_length(effective_batch_size);
 #if ENABLE_OPENCV
-    if (DISPLAY)
-        cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
+    rocal_test_output_open("output");
 #endif
 
     while (!rocalIsEmpty(handle)) {
@@ -170,10 +167,7 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
         cv::Mat mat_in_view(h, w, cv_color_format, mat_input.data());
         mat_in_view.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
         cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
-        if (DISPLAY)
-            cv::imshow("output.png", mat_color);
-        else
-            cv::imwrite("output.png", mat_color);
+        rocal_test_output_image(mat_color, mat_color, "output.png", "output.png");
 
         col_counter = (col_counter + 1) % number_of_cols;
 #endif
