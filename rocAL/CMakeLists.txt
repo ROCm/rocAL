@@ -55,7 +55,10 @@ find_package(MIVisionX QUIET)
 find_package(TurboJpeg QUIET)
 find_package(Protobuf QUIET)
 find_package(OpenMP COMPONENTS CXX QUIET)
-find_package(LMDB QUIET)	
+# rocAL's LMDB readers are only validated against 0.9.31, and LMDB's on-disk format is
+# not compatible across the 0.9.x and 1.0.x lines, so a mismatched version is treated the
+# same as LMDB not being found at all (see the LMDB (optional) block below).
+find_package(LMDB 0.9.31 EXACT QUIET)	
 find_package(RapidJSON QUIET)
 find_package(StdFilesystem QUIET)
 find_package(HALF QUIET)
