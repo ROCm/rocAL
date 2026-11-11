@@ -59,6 +59,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve `rocalCopyToOutput()` reporting success at the end of the data, where it leaves the caller's buffer untouched.
 * Resolve the `unit_tests` numpy cases sizing their buffer from the color format, which counts one channel for a three channel batch.
 * Resolve a `TypeError` from `fn.decoders.image_raw`, which called the decoder binding one argument short on every TFRecord pipeline.
+* Resolve the raw TFRecord source reporting success while discarding part of each record, by failing when a record does not fit the output slot.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.
