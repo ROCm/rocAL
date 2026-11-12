@@ -60,6 +60,9 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve the `unit_tests` numpy cases sizing their buffer from the color format, which counts one channel for a three channel batch.
 * Resolve a `TypeError` from `fn.decoders.image_raw`, which called the decoder binding one argument short on every TFRecord pipeline.
 * Resolve a segmentation fault in `rocalSetOutputs()` when an augmentation that rejected its input returns a null tensor, by reporting the error instead of setting any output.
+* Resolve an out-of-bounds read in the COCO, NumPy, TFRecord, Caffe LMDB, Caffe2 LMDB, MXNet RecordIO, and WebDataset readers when a path exists but holds nothing the reader accepts. Each reader now raises an error naming that path.
+* Resolve the TFRecord reader passing directories to the record parser. The scan now skips anything that is not a regular file, so an empty subdirectory no longer fails a directory that also holds records, and a root whose only child is an empty subdirectory raises the empty-scan error.
+* Resolve the Caffe and Caffe2 LMDB readers passing uninitialized LMDB handles to cleanup when creation fails before the read environment is opened.
 * Resolve readers skipping image files that are symbolic links. A labelled folder of links crashed while the pipeline was built in Python and failed the label lookup in C++. The readers now keep a link whose target is a regular file.
 * Document that the output of `rocalNop()` and `fn.nop()` is undefined rather than a copy of the input, so that `rocalCopy()` and `fn.copy()` are used where the data matters.
 

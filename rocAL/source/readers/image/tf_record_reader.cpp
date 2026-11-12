@@ -26,6 +26,7 @@ THE SOFTWARE.
 #include <sstream>
 #include <string>
 #include <vector>
+#include "pipeline/filesystem.h"
 
 TFRecordReader::TFRecordReader() {
     _src_dir = nullptr;
@@ -139,6 +140,8 @@ Reader::Status TFRecordReader::folder_reading() {
     std::sort(entry_name_list.begin(), entry_name_list.end());
     for (unsigned dir_count = 0; dir_count < entry_name_list.size(); ++dir_count) {
         std::string subfolder_path = _full_path + "/" + entry_name_list[dir_count];
+        if (!filesys::is_regular_file(subfolder_path))
+            continue;
         _folder_path = subfolder_path;
         if (tf_record_reader() != Reader::Status::OK)
             WRN("FileReader ShardID [" + TOSTR(_shard_id) + "] File reader cannot access the storage at " + _folder_path);
@@ -147,6 +150,9 @@ Reader::Status TFRecordReader::folder_reading() {
     if (!_file_names.empty())
         LOG("FileReader ShardID [" + TOSTR(_shard_id) + "] Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path)
     closedir(_sub_dir);
+
+    if (_file_names.empty())
+        THROW("FileReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Did not load any file from " + _full_path);
 
     size_t padded_samples = ((_shard_size > 0) ? _shard_size : largest_shard_size_without_padding()) % _batch_size;
     _last_batch_padded_size = ((_batch_size > 1) && (padded_samples > 0)) ? (_batch_size - padded_samples) : 0;
