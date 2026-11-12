@@ -91,7 +91,7 @@ def main():
         sys.exit()
 
     sys.dont_write_bytecode = True
-    build_folder_path = os.getcwd()
+    build_folder_path = script_path
 
     args = audio_test_suite_parser_and_validator()
     gpu = args.gpu

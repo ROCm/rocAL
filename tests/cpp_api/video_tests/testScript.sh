@@ -27,10 +27,11 @@ if [ -z "$READER_CASE" ]
 fi
 
 # Building video unit test
-sudo rm -rvf build*
-mkdir build
-cd build || exit
-cmake ..
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+rm -rf "$SCRIPT_DIR/build"
+mkdir "$SCRIPT_DIR/build"
+cd "$SCRIPT_DIR/build" || exit
+cmake "$SCRIPT_DIR"
 make
 
 # Arguments used in video unit test

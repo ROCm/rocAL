@@ -1,12 +1,9 @@
 #!/bin/bash
-cwd=$(pwd)
-if [ -d build ];then 
-    sudo rm -rf ./build/*
-else
-    mkdir build
-fi
-cd build || exit
-cmake ..
+cwd="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+rm -rf "$cwd/build"
+mkdir "$cwd/build"
+cd "$cwd/build" || exit
+cmake "$cwd"
 make -j"$(nproc)"
 
 if [[ $ROCAL_DATA_PATH == "" ]]
