@@ -38,6 +38,10 @@ Caffe2LMDBRecordReader::Caffe2LMDBRecordReader() {
     _shuffle = false;
     _last_rec = false;
     _file_count_all_shards = 0;
+    _read_mdb_env = nullptr;
+    _read_mdb_txn = nullptr;
+    _read_mdb_cursor = nullptr;
+    _read_mdb_dbi = 0;
 }
 
 Reader::Status Caffe2LMDBRecordReader::initialize(ReaderConfig desc) {
@@ -87,9 +91,12 @@ int Caffe2LMDBRecordReader::close() {
 
 Caffe2LMDBRecordReader::~Caffe2LMDBRecordReader() {
     _open_env = 0;
-    mdb_txn_abort(_read_mdb_txn);
-    mdb_close(_read_mdb_env, _read_mdb_dbi);
-    mdb_env_close(_read_mdb_env);
+    if (_read_mdb_txn)
+        mdb_txn_abort(_read_mdb_txn);
+    if (_read_mdb_env) {
+        mdb_close(_read_mdb_env, _read_mdb_dbi);
+        mdb_env_close(_read_mdb_env);
+    }
     _read_mdb_txn = nullptr;
     _read_mdb_env = nullptr;
     release();
@@ -124,6 +131,10 @@ Reader::Status Caffe2LMDBRecordReader::folder_reading() {
     if (!_file_names.empty())
         LOG("Caffe2LMDBRecordReader ShardID [" + TOSTR(_shard_id) + "] Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path)
 
+    closedir(_sub_dir);
+    if (_file_names.empty())
+        THROW("Caffe2LMDBRecordReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Did not load any file from " + _full_path);
+
     size_t padded_samples = ((_shard_size > 0) ? _shard_size : largest_shard_size_without_padding()) % _batch_size;
     _last_batch_padded_size = ((_batch_size > 1) && (padded_samples > 0)) ? (_batch_size - padded_samples) : 0;
     
@@ -134,7 +145,6 @@ Reader::Status Caffe2LMDBRecordReader::folder_reading() {
     _last_file_name = _file_names[_file_names.size() - 1];
     _last_file_size = _file_size[_last_file_name];
     compute_start_and_end_idx_of_all_shards();
-    closedir(_sub_dir);
     return ret;
 }
 
