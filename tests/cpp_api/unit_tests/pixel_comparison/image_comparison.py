@@ -71,7 +71,7 @@ def main():
         print("Please pass ref_output_folder_path rocal_ouput_folder_path")
         logging.error(
             "Please pass ref_output_folder_path rocal_ouput_folder_path")
-        exit(0)
+        exit(1)
 
     # Open the two images
     ref_output_path = sys.argv[1]
@@ -79,7 +79,7 @@ def main():
 
     if not (os.path.exists(ref_output_path) and os.path.exists(rocal_output_path)):
         logging.error("Path does not Exists")
-        exit()
+        exit(1)
 
     total_case_count = 0
     passed_case_count = 0
@@ -118,7 +118,7 @@ def main():
                 if img1.size != img2.size:
                     logging.info(
                         "Golden output and augmentation outputs are having different sizes. Exiting!")
-                    exit()
+                    exit(1)
 
                 # Compare the pixel values for each image
                 pixel_diff = None
@@ -180,6 +180,7 @@ def main():
         "Total case passed --> {} / {} ".format(passed_case_count, total_case_count))
     logging.info(
         "Total case failed --> {} / {} ".format(failed_case_count, total_case_count))
+    exit(1 if failed_case_count else 0)
 
 
 if __name__ == "__main__":
