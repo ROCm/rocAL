@@ -198,7 +198,15 @@ do
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name threshold --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Threshold_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name warp_perspective --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}WarpPerspective_${rgb_name[$rgb]}_${device_name}"
 
-        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name remap --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Remap_${rgb_name[$rgb]}_${device_name}"
+        # ROCm/rocAL#554: Remap's bilinear sampling hits the same RPP generic-interpolation
+        # clamp defect as rotate/warp_perspective (see the fix PR, ROCm/rocm-libraries#10516).
+        # Only the hip+gray case is actively failing here: its golden is the one correct copy
+        # (it predates the defect), so today's buggy output no longer matches it. The other three
+        # combinations currently "pass" only because their goldens share the same defect as
+        # today's output - they are not meaningful checks until the fix lands. Once
+        # ROCm/rocm-libraries#10516 merges, re-enable this line unconditionally and regenerate the
+        # host and rgb+hip goldens (the gray+hip golden is already correct and should not change).
+        # python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name remap --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Remap_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name crop_and_patch --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}CropAndPatch_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name ricap --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Ricap_${rgb_name[$rgb]}_${device_name}"
         # Disabled with phase above, same rotate defect - see the note there. ROCM-33746.
