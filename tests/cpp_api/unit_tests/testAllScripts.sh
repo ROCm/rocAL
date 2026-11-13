@@ -1,12 +1,17 @@
 #!/bin/bash
-cwd=$(pwd)
-if [ -d build ];then 
-    sudo rm -rf ./build/*
+cwd="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+if [ -w "$cwd" ]; then
+    build_dir="$cwd/build"
+    rm -rf "$build_dir"
+    mkdir "$build_dir"
 else
-    mkdir build
+    # $cwd is not writable (for example, an installed, root-owned test tree):
+    # build in a private scratch directory instead of failing outright.
+    build_dir="$(mktemp -d -t rocal_unit_test_build.XXXXXX)"
+    echo "NOTE: $cwd is not writable; building in $build_dir instead."
 fi
-cd build || exit
-cmake ..
+cd "$build_dir" || exit
+cmake "$cwd"
 make -j"$(nproc)"
 
 if [[ $ROCAL_DATA_PATH == "" ]]
