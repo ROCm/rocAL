@@ -298,6 +298,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     rocalVerify(handle);
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Could not verify the augmentation graph " << rocalGetErrorMessage(handle);
+        rocalRelease(handle);
         return -1;
     }
 

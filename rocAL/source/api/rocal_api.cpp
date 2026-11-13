@@ -109,6 +109,7 @@ rocalVerify(RocalContext p_context) {
     try {
         context->master_graph->build();
     } catch (const std::exception& e) {
+        context->master_graph->release();
         context->capture_error(e.what());
         ERR(e.what())
         return ROCAL_RUNTIME_ERROR;
