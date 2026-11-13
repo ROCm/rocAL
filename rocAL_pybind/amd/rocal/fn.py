@@ -1080,10 +1080,16 @@ def color_temp(*inputs, adjustment_value=50, device=None, output_layout=types.NH
 def nop(*inputs, device=None):
     """!Performs no operation
 
+        The returned tensor is allocated but never written, so its contents are undefined: it
+        holds whatever the allocator last left in that memory, which differs between runs on the
+        CPU backend and reads back as zeros on GPU. It is not a copy of the input. Use this
+        operator only to measure pipeline overhead, and use copy() when the output has to carry
+        the input's data.
+
         @param inputs                                    the input image passed to the augmentation
         @param device (string, optional, default = None)  Parameter unused for augmentation
 
-        @return    Nop Output
+        @return    Nop Output, a tensor shaped like the input with undefined contents
     """
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0], "is_output": False}
