@@ -1286,6 +1286,12 @@ void MasterGraph::stop_processing() {
     _processing = false;
     _ring_buffer.unblock_reader();
     _ring_buffer.unblock_writer();
+    // Unblock the loaders only after _processing is cleared, so the output thread leaves its loop
+    // rather than coming round and blocking again. Without this the join() below deadlocks whenever
+    // the output thread is waiting on a loader whose reader is in turn waiting for an external
+    // source the user has stopped feeding.
+    for (auto &loader_module : _loader_modules)
+        loader_module->release_all_blocked_calls();
     if (_output_thread.joinable())
         _output_thread.join();
 }

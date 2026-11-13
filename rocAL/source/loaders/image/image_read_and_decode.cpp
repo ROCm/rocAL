@@ -336,6 +336,15 @@ ImageReadAndDecode::load(unsigned char *buff,
 
     _file_load_time.end();  // Debug timing
 
+    // The count_items() guard above is evaluated before the loops, which then block in open()
+    // waiting for the next item, so a reader that runs dry while they wait leaves the batch
+    // short. A partially filled batch is padded by the decoder below, which substitutes a
+    // sibling for every image that fails, but an empty one has no sibling to substitute and
+    // would throw from inside the OpenMP region, terminating the process instead of being
+    // handled. Nothing was read, so report it as the end of the data.
+    if (file_counter == 0)
+        return LoaderModuleStatus::NO_MORE_DATA_TO_READ;
+
     _decode_time.start();  // Debug timing
     if (!skip_decode) {
         for (size_t i = 0; i < _batch_size; i++)

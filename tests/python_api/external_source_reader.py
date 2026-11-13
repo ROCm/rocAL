@@ -16,8 +16,8 @@ def main():
         exit(0)
     batch_size = int(sys.argv[2])
     device = "cpu" if sys.argv[1] == "cpu" else "gpu"
-    data_dir = os.environ["ROCAL_DATA_PATH"] + \
-        "rocal_data/coco/coco_10_img/images/"
+    data_dir = os.path.join(
+        os.environ["ROCAL_DATA_PATH"], "rocal_data/coco/coco_10_img/images/")
     try:
         path_mode0 = "output_folder/external_source_reader/mode0/"
         isExist = os.path.exists(path_mode0)

@@ -22,6 +22,7 @@ THE SOFTWARE.
 
 #pragma once
 
+#include <atomic>
 #include <exception>
 #include <mutex>
 #include <string>
@@ -53,6 +54,7 @@ class ImageLoader : public LoaderModule {
     CropImageInfo get_crop_image_info() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     void shut_down() override;
+    void release_all_blocked_calls() override;
     void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer,
                              const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override;
     size_t last_batch_padded_size() override;
@@ -85,7 +87,10 @@ class ImageLoader : public LoaderModule {
     CircularBuffer _circ_buff;
     TimingDbg _swap_handle_time;
     bool _is_initialized;
-    bool _stopped = false;
+    //!< _stopped Cleared whenever the load thread is (re)started, so a loader paused by
+    /// stop_processing() and resumed, as a checkpoint restore does, keeps producing batches.
+    /// Atomic because release_all_blocked_calls() sets it while the output thread reads it.
+    std::atomic<bool> _stopped{false};
     std::mutex _load_exception_lock;
     std::exception_ptr _load_exception = nullptr;  //!< Exception raised on the loader thread, rethrown by load_next()
     bool _loop;                     //<! If true the reader will wrap around at the end of the media (files/images/...) and wouldn't stop
