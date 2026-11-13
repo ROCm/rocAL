@@ -259,7 +259,8 @@ do
         ./unit_tests 2 "$coco_detection_path" "${output_path}Threshold_${rgb_name[$rgb]}_${device_name}" $width $height 76 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}WarpPerspective_${rgb_name[$rgb]}_${device_name}" $width $height 77 $device $rgb 1 $display
 
-        ./unit_tests 2 "$coco_detection_path" "${output_path}Remap_${rgb_name[$rgb]}_${device_name}" $width $height 78 $device $rgb 1 $display
+        # Disable until RPP fix is merged
+        # ./unit_tests 2 "$coco_detection_path" "${output_path}Remap_${rgb_name[$rgb]}_${device_name}" $width $height 78 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}CropAndPatch_${rgb_name[$rgb]}_${device_name}" $width $height 79 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}Ricap_${rgb_name[$rgb]}_${device_name}" $width $height 80 $device $rgb 1 $display
         # Disabled with Phase above, same rotate defect - see the note there. ROCM-33746.
