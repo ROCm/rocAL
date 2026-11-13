@@ -240,16 +240,17 @@ ImageReadAndDecode::load(unsigned char *buff,
                 continue;
             }
 
-            // Bound the read by the capacity of this slot rather than by the record size.
-            // The record is stored raw, so it is larger than the slot whenever the output
-            // color format has fewer planes than the stored data (for example a U8
-            // grayscale output for a 3 plane record), which would otherwise overrun buff.
+            // The record is stored raw and nothing on this path converts it, so a slot smaller
+            // than the record (a U8 output for a 3 plane record, say) does not narrow it, it
+            // discards the tail and mislabels the rest. The read below is still bound by the
+            // slot, which is what keeps a record this size from overrunning buff.
             if (fsize > image_size)
-                WRN("Raw record " + _reader->id() + " of size " + TOSTR(fsize) +
-                    " bytes exceeds the output slot of " + TOSTR(image_size) + " bytes (" +
-                    TOSTR(max_decoded_width) + "x" + TOSTR(max_decoded_height) + "x" +
-                    TOSTR(output_planes) + "), it will be truncated. Check that the output"
-                    " color format matches the raw data.");
+                THROW("Raw record " + _reader->id() + " of size " + TOSTR(fsize) +
+                      " bytes exceeds the output slot of " + TOSTR(image_size) + " bytes (" +
+                      TOSTR(max_decoded_width) + "x" + TOSTR(max_decoded_height) + "x" +
+                      TOSTR(output_planes) + "). The raw source copies records without"
+                      " converting; load them in a format that matches the stored data and"
+                      " convert afterwards.")
 
             _actual_read_size[file_counter] = _reader->read_data(read_ptr, image_size);
             if (_actual_read_size[file_counter] < fsize)
