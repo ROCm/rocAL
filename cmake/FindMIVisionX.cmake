@@ -102,6 +102,24 @@ if(MIVisionX_FOUND)
             set(VX_EXT_RPP_VERSION_PATCH 0)
             set(VX_EXT_RPP_VERSION "0.0.0" CACHE INTERNAL "")
         endif()
+
+        # vx_rpp includes its audio kernels only when the RPP it was built against has audio
+        # augmentations, and from 3.3.3 it reports that here. Earlier versions write no such
+        # header and offer no other way to ask -- the audio entry points are declared and
+        # exported either way -- so assume audio there and leave their behaviour unchanged.
+        set(VX_EXT_RPP_AUDIO_SUPPORT_FOUND 1)
+        if(VX_EXT_RPP_VERSION VERSION_GREATER_EQUAL "3.3.3")
+            if(NOT EXISTS "${MIVisionX_INCLUDE_DIRS}/vx_ext_rpp_audio_support.h")
+                message(FATAL_ERROR "${Red}ERROR: ${MIVisionX_INCLUDE_DIRS}/vx_ext_rpp_audio_support.h file Not Found. vx_rpp ${VX_EXT_RPP_VERSION} installs it${ColourReset}")
+            endif()
+            file(READ "${MIVisionX_INCLUDE_DIRS}/vx_ext_rpp_audio_support.h" VX_EXT_RPP_AUDIO_SUPPORT_FILE)
+            if(VX_EXT_RPP_AUDIO_SUPPORT_FILE MATCHES "VX_EXT_RPP_AUDIO_SUPPORT ([0-9]+)")
+                set(VX_EXT_RPP_AUDIO_SUPPORT_FOUND ${CMAKE_MATCH_1})
+            else()
+                message(FATAL_ERROR "${Red}ERROR: ${MIVisionX_INCLUDE_DIRS}/vx_ext_rpp_audio_support.h defines no VX_EXT_RPP_AUDIO_SUPPORT${ColourReset}")
+            endif()
+        endif()
+        set(VX_EXT_RPP_AUDIO_SUPPORT_FOUND ${VX_EXT_RPP_AUDIO_SUPPORT_FOUND} CACHE INTERNAL "")
     else()
         message("-- ${Yellow}VX RPP - Not Found${ColourReset}")
     endif()

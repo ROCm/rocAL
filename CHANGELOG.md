@@ -64,6 +64,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve the TFRecord reader passing directories to the record parser. The scan now skips anything that is not a regular file, so an empty subdirectory no longer fails a directory that also holds records, and a root whose only child is an empty subdirectory raises the empty-scan error.
 * Resolve the Caffe and Caffe2 LMDB readers passing uninitialized LMDB handles to cleanup when creation fails before the read environment is opened.
 * Resolve readers skipping image files that are symbolic links. A labelled folder of links crashed while the pipeline was built in Python and failed the label lookup in C++. The readers now keep a link whose target is a regular file.
+* Resolve every audio augmentation failing at `rocalVerify()` with `Invalid layout` when vx_rpp was built without audio kernels, by building without audio support in that case and rejecting the audio operators where they are called, with the reason. Needs vx_rpp 3.3.3 or later, which reports whether it has audio.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.
