@@ -50,8 +50,30 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../cmake)
 
 find_package(AMDRPP QUIET)
 
-include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rocal)
-link_directories(${ROCM_PATH}/lib/)
+# Prefer CMAKE_INSTALL_PREFIX/include/rocal when building against a local install,
+# falling back to the system ROCm layout.
+if(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/include/rocal/rocal_api.h")
+    set(ROCAL_INCLUDE_ROOT ${CMAKE_INSTALL_PREFIX}/include/rocal)
+else()
+    set(ROCAL_INCLUDE_ROOT ${ROCM_PATH}/include/rocal)
+endif()
+include_directories(${ROCM_PATH}/include ${ROCAL_INCLUDE_ROOT})
+
+# Prefer the freshly built rocAL library directory when one is passed in.  This
+# lets the video_tests binary link against the in-tree librocal.so and lets the
+# runtime plugin loader find librocal_video_plugin.so next to it.
+if(ROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR AND EXISTS "${ROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR}")
+    link_directories(${ROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR})
+    # Make the in-tree librocal.so and librocal_video_plugin.so discoverable at
+    # runtime without relying on LD_LIBRARY_PATH.
+    list(APPEND CMAKE_BUILD_RPATH ${ROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR})
+    list(APPEND CMAKE_INSTALL_RPATH ${ROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR})
+elseif(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/lib")
+    link_directories(${CMAKE_INSTALL_PREFIX}/lib ${ROCM_PATH}/lib)
+else()
+    link_directories(${ROCM_PATH}/lib/)
+endif()
+
 file(GLOB My_Source_Files ./*.cpp)
 add_executable(${PROJECT_NAME} ${My_Source_Files})
 

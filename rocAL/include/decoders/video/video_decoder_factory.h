@@ -22,9 +22,7 @@ THE SOFTWARE.
 
 #pragma once
 #include <memory>
-#include "video_decoder.h"
 #include "decoders/image/decoder.h"
+#include "decoders/video/video_decoder.h"
 
-#ifdef ROCAL_VIDEO
 std::shared_ptr<VideoDecoder> create_video_decoder(DecoderConfig config);
-#endif

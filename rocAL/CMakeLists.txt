@@ -53,6 +53,9 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 # Find Dependency
 find_package(MIVisionX QUIET)
 find_package(TurboJpeg QUIET)
+# Classic libjpeg API (jpeg_std_error, jpeg_create_decompress, ...) is used directly by
+# source/decoders/libjpeg/libjpeg_extra.cpp. Those symbols live in libjpeg, not libturbojpeg.
+find_package(JPEG QUIET)
 find_package(Protobuf QUIET)
 find_package(OpenMP COMPONENTS CXX QUIET)
 find_package(LMDB QUIET)	
@@ -62,7 +65,6 @@ find_package(HALF QUIET)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads QUIET)
 # optional packages
-find_package(FFmpeg QUIET)
 find_package(SndFile QUIET)
 find_package(LibTar QUIET)
 find_package(rocdecode 1.0.0 QUIET)
@@ -210,6 +212,13 @@ if(${BUILD_ROCAL})
     # TurboJPEG
     include_directories(${TurboJpeg_INCLUDE_DIRS})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${TurboJpeg_LIBRARIES})
+    # libjpeg (classic API) -- libjpeg_extra.cpp calls jpeg_std_error()/jpeg_read_header() etc.,
+    # which are exported by libjpeg.so, not libturbojpeg.so. Link it explicitly so librocal does
+    # not depend on another library (e.g. FFmpeg in the old monolithic build) pulling it in.
+    if(JPEG_FOUND)
+        include_directories(${JPEG_INCLUDE_DIRS})
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${JPEG_LIBRARIES})
+    endif()
     # Protobuf
     include_directories(${PROTOBUF_INCLUDE_DIRS})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${PROTOBUF_LIBRARIES})
@@ -227,10 +236,26 @@ if(${BUILD_ROCAL})
     include_directories(${HALF_INCLUDE_DIRS})
     #rocDecode
     if ("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND rocdecode_FOUND)
-        include_directories(${rocdecode_INCLUDE_DIR} ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode)
-        include_directories(${ROCM_PATH}/share/rocdecode/utils)
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} rocdecode::rocdecode)
-        set(rocdecode_SRCS ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode/roc_video_dec.cpp)
+        # rocDecode utility kernels live under share/rocdecode/utils. In monolithic builds
+        # they are compiled into the rocAL_hip object library; with ROCAL_VIDEO_PLUGIN the
+        # plugin compiles them instead.
+        get_filename_component(rocdecode_PREFIX_DIR "${rocdecode_INCLUDE_DIR}" DIRECTORY)
+        set(rocdecode_UTILS_DIR "${rocdecode_PREFIX_DIR}/share/rocdecode/utils")
+        set(rocdecode_ROCVIDEODECODE_DIR "${rocdecode_UTILS_DIR}/rocvideodecode")
+        # The rocDecode runtime package does not ship the utility source files
+        # (resize_kernels.cpp / roc_video_dec.cpp).  If they are missing, disable
+        # rocDecode support instead of failing configure.
+        if(EXISTS "${rocdecode_UTILS_DIR}/resize_kernels.cpp" AND EXISTS "${rocdecode_ROCVIDEODECODE_DIR}/roc_video_dec.cpp")
+            include_directories(${rocdecode_INCLUDE_DIR} ${rocdecode_ROCVIDEODECODE_DIR})
+            include_directories(${rocdecode_UTILS_DIR})
+            if(NOT ROCAL_VIDEO_PLUGIN)
+                set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} rocdecode::rocdecode)
+                set(rocdecode_SRCS ${rocdecode_ROCVIDEODECODE_DIR}/roc_video_dec.cpp)
+            endif()
+        else()
+            message("-- ${Yellow}NOTE: rocDecode utility sources missing at ${rocdecode_UTILS_DIR}; disabling rocDecode video decode support${ColourReset}")
+            set(rocdecode_FOUND FALSE)
+        endif()
     endif()
     # rocJPEG
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND rocjpeg_FOUND)
@@ -260,6 +285,26 @@ if(${BUILD_ROCAL})
     link_directories(${AMDRPP_LIBRARIES_DIRS} ${TurboJpeg_LIBRARIES_DIRS} ${PROTOBUF_LIBRARY_DIRS} /usr/local/lib/)
 
     file(GLOB_RECURSE SOURCES "source/*.cpp")
+    # Exclude FFmpeg-dependent decoder sources from core when using the plugin.
+    if(ROCAL_VIDEO_PLUGIN)
+        list(FILTER SOURCES EXCLUDE REGEX ".*/decoders/video/ffmpeg_video_decoder\\.cpp$")
+        list(FILTER SOURCES EXCLUDE REGEX ".*/decoders/video/rocdec_video_decoder\\.cpp$")
+    endif()
+
+    # In monolithic (default) mode, compile the plugin sources directly into
+    # librocal.so so FFmpeg video support is part of the core library as before.
+    # The plugin headers are also needed by those sources.
+    if(NOT ROCAL_VIDEO_PLUGIN AND FFMPEG_FOUND)
+        include_directories(${CMAKE_SOURCE_DIR}/plugins/video/include)
+        list(APPEND SOURCES
+            ${CMAKE_SOURCE_DIR}/plugins/video/source/register.cpp
+            ${CMAKE_SOURCE_DIR}/plugins/video/source/ffmpeg_video_decoder.cpp
+            ${CMAKE_SOURCE_DIR}/plugins/video/source/video_properties.cpp)
+        if(rocdecode_FOUND AND "${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
+            list(APPEND SOURCES ${CMAKE_SOURCE_DIR}/plugins/video/source/rocdec_video_decoder.cpp)
+        endif()
+    endif()
+
     add_library(${PROJECT_NAME} SHARED ${SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} 
                                 ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS} ${rocdecode_SRCS} ${ROCAL_PROTO_SRCS} ${ROCAL_PROTO_HEADERS})
 
@@ -277,8 +322,9 @@ if(${BUILD_ROCAL})
             message("-- ${White}hipFile not found; rocAL will be built without hipFile GPU Direct I/O support for numpy reader (install hipFile and rebuild to enable)${ColourReset}")
         endif()
 
-        if(rocdecode_FOUND)
+        if(rocdecode_FOUND AND NOT ROCAL_VIDEO_PLUGIN)
             target_compile_definitions(${PROJECT_NAME} PUBLIC -DENABLE_ROCDECODE)
+            set(ROCAL_VIDEO_ROCDECODE_AVAILABLE ON PARENT_SCOPE)
             message("-- ${White}rocAL built with rocDecode video decode capabilities${ColourReset}")
         endif()
         if(rocjpeg_FOUND)
@@ -291,16 +337,37 @@ if(${BUILD_ROCAL})
         message("-- ${White}rocAL built with CPU only Backend${ColourReset}")
     endif()
 
+    # The video plugin is compiled against rocAL's internal headers, whose class layouts depend
+    # on ENABLE_HIP. Record the backend so a plugin built later (in-tree or from the installed
+    # sources) uses the same value instead of guessing from the build host.
+    if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
+        set(ROCAL_CONFIG_ENABLE_HIP 1)
+    else()
+        set(ROCAL_CONFIG_ENABLE_HIP 0)
+    endif()
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rocal_build_config.h
+         "#pragma once\n#define ROCAL_CONFIG_ENABLE_HIP ${ROCAL_CONFIG_ENABLE_HIP}\n")
+
     target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_SIMD=1)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE "ROCM_PATH=\"${ROCM_PATH}\"")
     target_compile_definitions(${PROJECT_NAME} PUBLIC DBG_TIMING=1)
     target_compile_definitions(${PROJECT_NAME} PUBLIC DBGINFO=0)
     target_compile_definitions(${PROJECT_NAME} PUBLIC DBGLOG=0 WRNLOG=0)
     target_compile_definitions(${PROJECT_NAME} PUBLIC TFRECORD_ENABLE=0)
     message("-- ${White}rocAL built with ENABLE_SIMD")
 
-    # FFMPEG
-    if(NOT FFMPEG_FOUND)
-        message("-- ${Yellow}NOTE: rocAL built without FFmpeg video decode functionality${ColourReset}")
+    # Video pipeline
+    # The neutral video pipeline (loader nodes, readers, decoder registry) has no FFmpeg
+    # dependency and is always compiled so the public video APIs are always available; the
+    # decoder registry simply reports no available decoder at runtime when none is present.
+    # The actual FFmpeg/rocDecode decoder comes from the runtime plugin (ROCAL_VIDEO_PLUGIN=ON)
+    # or is compiled into the core library (monolithic, when FFmpeg is found).
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_VIDEO)
+    if(ROCAL_VIDEO_PLUGIN)
+        message("-- ${White}rocAL built without FFmpeg in core; FFmpeg video support is provided by the rocal_video_plugin runtime plugin${ColourReset}")
+        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_VIDEO_PLUGIN)
+    elseif(NOT FFMPEG_FOUND)
+        message("-- ${Yellow}NOTE: rocAL built without an FFmpeg video decoder in core; video APIs will report no available decoder at runtime${ColourReset}")
     else()
         # FFMPEG multi-version support
         if(_FFMPEG_AVCODEC_VERSION VERSION_LESS_EQUAL 58.134.100)
@@ -311,7 +378,6 @@ if(${BUILD_ROCAL})
         include_directories(${AVUTIL_INCLUDE_DIR} ${AVCODEC_INCLUDE_DIR} ${SWSCALE_INCLUDE_DIR} ${AVFORMAT_INCLUDE_DIR})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${FFMPEG_LIBRARIES})
         message("-- ${White}rocAL built with FFmpeg video decode functionality${ColourReset}")
-        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_VIDEO)
     endif()
     # Filesystem
     if(STD_FILESYSTEM_PRESENT)
@@ -381,7 +447,8 @@ if(${BUILD_ROCAL})
     # Use the LINK_FLAGS string property rather than target_link_options so the core build keeps
     # working on the declared CMake 3.10 minimum (target_link_options requires 3.13).
     set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS " ${OpenMP_CXX_FLAGS}")
-    target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST})
+    # CMAKE_DL_LIBS provides libdl for the runtime video-plugin dlopen loader when ROCAL_VIDEO_PLUGIN is ON.
+    target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST} ${CMAKE_DL_LIBS})
     message("-- ${White}rocAL -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
 
     set_target_properties(rocal PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
@@ -402,6 +469,22 @@ if(${BUILD_ROCAL})
             include/api/rocal_api_meta_data.h
             include/api/rocal_api_tensor.h
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocal COMPONENT dev)
+    # install internal rocAL headers so the optional FFmpeg video plugin can be built
+    # from installed sources on the target machine.
+    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocal
+            COMPONENT dev
+            FILES_MATCHING
+            PATTERN "*.h"
+            PATTERN "*.hpp"
+            PATTERN "api/*" EXCLUDE)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/rocal_build_config.h
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocal COMPONENT dev)
+    # install generated protobuf headers needed by some internal headers
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/rocAL/
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocal
+            COMPONENT dev
+            FILES_MATCHING PATTERN "*.pb.h")
 else()
     message(FATAL_ERROR "-- ${Red}rocAL dependencies not satisfied${ColourReset}")
 endif()

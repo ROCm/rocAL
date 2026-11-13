@@ -22,9 +22,8 @@ THE SOFTWARE.
 
 #pragma once
 #include "pipeline/exception.h"
-#include "video_decoder.h"
+#include "decoders/video/video_decoder.h"
 
-#ifdef ROCAL_VIDEO
 #if ENABLE_HIP && ENABLE_ROCDECODE
 
 #include "video_demuxer.h"
@@ -48,8 +47,7 @@ class RocDecVideoDecoder : public VideoDecoder {
         RocDecVideoDecoder() {}
         RocDecVideoDecoder(hipStream_t &stream) { _hip_stream = stream; }
         VideoDecoder::Status Initialize(const char *src_filename, int device_id = 0) override;
-        VideoDecoder::Status Decode(unsigned char *output_buffer, unsigned seek_frame_number, size_t sequence_length, size_t stride, int out_width, int out_height, int out_stride, AVPixelFormat out_format) override;
-        int SeekFrame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) override { return 0; }
+        VideoDecoder::Status Decode(unsigned char *output_buffer, unsigned seek_frame_number, size_t sequence_length, size_t stride, int out_width, int out_height, int out_stride, rocal::video::VideoPixelFormat out_format) override;
         void Release() override {}
         ~RocDecVideoDecoder() override;
 
@@ -62,5 +60,4 @@ class RocDecVideoDecoder : public VideoDecoder {
         hipStream_t _hip_stream = nullptr;
 };
 
-#endif
 #endif
