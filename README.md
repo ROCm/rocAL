@@ -82,26 +82,38 @@ rocAL can be currently used to perform the following operations either with rand
 ### Libraries
 See [installation instructions](#installation-instructions) for more details and instructions on the prerequisite libraries.
 
+#### Required
 * MIVisionX (note different installation instructions for package and source)
 * CMake (Version `3.10` or later)
 * Google Protobuf (Version `3.12.4` or later)
 * TurboJPEG (Version `2.0` or later)
 * Python3 and Python3 PIP
 * Python3 Wheel
-* LMDB Library (Optional, needed only for Caffe/Caffe2 LMDB reader support)
-* FFMPEG
 * pkg-config
 * PyBind11
 * RapidJSON
 
-Additional required libraries for  source install only:
+Additional required libraries for source install only:
 * rocDecode test package
 
 Additional required libraries for package install only (for source install, these are provided by ROCm `7.13` or later):
 * HIP
 * Half-precision floating-point library (Version `1.12.0` or higher)
-* rocDecode
-* rocJPEG
+
+#### Optional (feature-enabling)
+These libraries are not required to build rocAL. If a library below isn't found at build/configure time, the corresponding feature is simply disabled and the rest of rocAL builds and works normally.
+
+* LMDB Library (Optional, needed only for Caffe/Caffe2 LMDB reader support)
+* FFMPEG (Optional, needed only for software video decode support)
+* rocDecode (Optional, needed only for hardware-accelerated video decode; falls back to software decode via FFMPEG if absent)
+* rocJPEG (Optional, needed only for hardware-accelerated JPEG decode; falls back to TurboJPEG if absent)
+* libsndfile (Optional, needed only for audio pipeline support; also requires MIVisionX `vx_rpp` version `3.1.0` or later)
+* Libtar (Optional, needed only for WebDataset reader support)
+* DLPack (Optional, pybind-only, enables zero-copy tensor interop with TensorFlow/JAX/generic frameworks)
+* hipFile (Optional, HIP backend only, enables GPU Direct Storage I/O for the numpy reader; even when installed, it is disabled at runtime unless `ROCAL_USE_HIPFILE=1` is set)
+
+> [!NOTE]
+> * Building the Python bindings (`rocAL_pybind`) links the system Python3 runtime library directly into the core `librocal.so`, not just into the separate pybind module. If you only need the C++ API, be aware that `librocal.so` will still depend on `libpython3.x` whenever Python3/PyBind11 are found at build time.
 
 > [!IMPORTANT]
 > * Required compiler support
@@ -156,15 +168,6 @@ Follow the [ROCm install guide](https://rocm.docs.amd.com/en/latest/install/rocm
   ```shell
   sudo apt install python3-wheel
   ```
-* [LMDB Library](http://www.lmdb.tech/doc/) - **Optional**: needed only for Caffe/Caffe2 LMDB reader support
-  ```shell
-  sudo apt install liblmdb-dev
-  ```
-
-* [FFMPEG](https://www.ffmpeg.org)
-  ```shell
-  sudo apt install ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
-  ```
 
 Required manual installs:
 * [PyBind11](https://github.com/pybind/pybind11) - Manual install
@@ -175,10 +178,44 @@ Required manual installs:
   * Source: `https://github.com/Tencent/rapidjson.git`
   * Tag: `master`
 
+### Install optional prerequisites (feature-enabling)
+None of the libraries below are required to build rocAL. Install only the ones needed for the optional features you want to use; if a library isn't found at configure time, CMake simply disables the corresponding feature and the rest of the build proceeds normally.
+
+* [LMDB Library](http://www.lmdb.tech/doc/) - needed only for Caffe/Caffe2 LMDB reader support
+  ```shell
+  sudo apt install liblmdb-dev
+  ```
+
+* [FFMPEG](https://www.ffmpeg.org) - needed only for software video decode support
+  ```shell
+  sudo apt install ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
+  ```
+
+* [libsndfile](https://github.com/libsndfile/libsndfile) - Version [1.0.31](https://github.com/libsndfile/libsndfile/releases/tag/1.0.31) or later - needed only for audio pipeline support (also requires MIVisionX `vx_rpp` version `3.1.0` or later)
+  ```shell
+  sudo apt install libsndfile1-dev
+  ```
+
+* [Libtar](https://repo.or.cz/libtar.git) - needed only for WebDataset reader support
+  > [!NOTE]
+  > Libtar has no standard Ubuntu/distribution package and must be built from source.
+  ```shell
+  git clone -b v1.2.20 https://repo.or.cz/libtar.git && cd libtar
+  autoreconf --force --install && CFLAGS="-fPIC" ./configure
+  make -j$(nproc) && sudo make install
+  ```
+
+* [DLPack](https://github.com/dmlc/dlpack) - pybind-only, enables zero-copy tensor interop with TensorFlow/JAX/generic frameworks
+  ```shell
+  sudo apt install libdlpack-dev
+  ```
+
+* hipFile - HIP backend only, enables GPU Direct Storage I/O for the numpy reader (provided by ROCm; even when installed, this feature stays off at runtime unless `ROCAL_USE_HIPFILE=1` is set)
+
 ### Package install
 Available for **ROCm `7.2.x` and below**.
 
-#### Install the additional prerequisite libraries:
+#### Install the additional required prerequisite libraries:
 * HIP
   ```shell
   sudo apt install hip-dev
@@ -193,12 +230,14 @@ Available for **ROCm `7.2.x` and below**.
   ```shell
   sudo apt install half
   ```
-* rocDecode
+
+#### Install the additional optional prerequisite libraries (hardware-accelerated decode):
+* rocDecode - needed only for hardware-accelerated video decode; falls back to FFMPEG software decode if absent
   ```shell
   sudo apt install rocdecode-dev
   ```
 
-* [rocJPEG](https://github.com/ROCm/rocJPEG)
+* [rocJPEG](https://github.com/ROCm/rocJPEG) - needed only for hardware-accelerated JPEG decode; falls back to TurboJPEG if absent
   ```shell
   sudo apt install rocjpeg-dev
   ```
