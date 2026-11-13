@@ -23,6 +23,7 @@ import sys
 import subprocess  # nosec
 import shutil
 import argparse
+import tempfile
 
 test_case_augmentation_map = {
     0: "audio_decoder",
@@ -91,7 +92,13 @@ def main():
         sys.exit()
 
     sys.dont_write_bytecode = True
-    build_folder_path = script_path
+    if os.access(script_path, os.W_OK):
+        build_folder_path = script_path
+    else:
+        # script_path is not writable (for example, an installed, root-owned test tree):
+        # build in a private scratch directory instead of failing outright.
+        build_folder_path = tempfile.mkdtemp(prefix="rocal_audio_test_build_")
+        print(f"NOTE: {script_path} is not writable; building in {build_folder_path} instead.")
 
     args = audio_test_suite_parser_and_validator()
     gpu = args.gpu

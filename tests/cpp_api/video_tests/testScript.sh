@@ -28,9 +28,17 @@ fi
 
 # Building video unit test
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
-rm -rf "$SCRIPT_DIR/build"
-mkdir "$SCRIPT_DIR/build"
-cd "$SCRIPT_DIR/build" || exit
+if [ -w "$SCRIPT_DIR" ]; then
+    BUILD_DIR="$SCRIPT_DIR/build"
+    rm -rf "$BUILD_DIR"
+    mkdir "$BUILD_DIR"
+else
+    # SCRIPT_DIR is not writable (for example, an installed, root-owned test tree):
+    # build in a private scratch directory instead of failing outright.
+    BUILD_DIR="$(mktemp -d -t rocal_video_test_build.XXXXXX)"
+    echo "NOTE: $SCRIPT_DIR is not writable; building in $BUILD_DIR instead."
+fi
+cd "$BUILD_DIR" || exit
 cmake "$SCRIPT_DIR"
 make
 
