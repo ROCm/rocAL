@@ -169,6 +169,8 @@ def main():
                         logging.info("Percentage of %d pixel mismatch %0.2f", pix_diff, round(
                             (pixel_diff[pix_diff] / total_pixel_diff) * 100, 2))
             else:
+                failed_case_list.append(golden_file_path)
+                failed_case_count = failed_case_count + 1
                 logging.info(
                     "Skipping the testcase as file not found %s", rocal_file_path)
         else:
