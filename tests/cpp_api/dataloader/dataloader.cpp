@@ -41,7 +41,7 @@ int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
-        printf("Usage: dataloader <image_dataset_folder [required]> <processing_device=1/cpu=0>  decode_width decode_height batch_size display_on_off <nhwc=0/nchw=1> <reverse_channels=0/1> \n");
+        printf("Usage: dataloader <cifar10_dataset_folder, holding the data_batch_* binaries [required]> <processing_device=1/cpu=0>  decode_width decode_height batch_size display_on_off <nhwc=0/nchw=1> <reverse_channels=0/1> \n");
         return -1;
     }
     int argIdx = 1;
