@@ -164,21 +164,14 @@ def main():
                                        random_shuffle=False)
 
         elif reader_type == "tf_classification":
-            try:
-                import tensorflow as tf
-            except ImportError:
-                print('Install tensorflow to run tf_classification tests')
-                exit()
             featureKeyMap = {
                 'image/encoded': 'image/encoded',
                 'image/class/label': 'image/class/label',
                 'image/filename': 'image/filename'
             }
-            features = {
-                'image/encoded': tf.io.FixedLenFeature((), tf.string, ""),
-                'image/class/label': tf.io.FixedLenFeature([1], tf.int64,  -1),
-                'image/filename': tf.io.FixedLenFeature((), tf.string, "")
-            }
+            # fn.readers.tfrecord() only checks the keys of features against featureKeyMap; the
+            # values are never read, so there is no need to import tensorflow just to build them.
+            features = dict.fromkeys(featureKeyMap)
             inputs = fn.readers.tfrecord(
                 data_path, featureKeyMap, features, reader_type=0)
             jpegs = inputs["image/encoded"]
@@ -191,11 +184,6 @@ def main():
                                        random_shuffle=False)
 
         elif reader_type == "tf_detection":
-            try:
-                import tensorflow as tf
-            except ImportError:
-                print('Install tensorflow to run tf_detection tests')
-                exit()
             featureKeyMap = {
                 'image/encoded': 'image/encoded',
                 'image/class/label': 'image/object/class/label',
@@ -206,16 +194,9 @@ def main():
                 'image/object/bbox/ymax': 'image/object/bbox/ymax',
                 'image/filename': 'image/filename'
             }
-            features = {
-                'image/encoded': tf.io.FixedLenFeature((), tf.string, ""),
-                'image/class/label': tf.io.FixedLenFeature([1], tf.int64,  -1),
-                'image/class/text': tf.io.FixedLenFeature([], tf.string, ''),
-                'image/object/bbox/xmin': tf.io.VarLenFeature(dtype=tf.float32),
-                'image/object/bbox/ymin': tf.io.VarLenFeature(dtype=tf.float32),
-                'image/object/bbox/xmax': tf.io.VarLenFeature(dtype=tf.float32),
-                'image/object/bbox/ymax': tf.io.VarLenFeature(dtype=tf.float32),
-                'image/filename': tf.io.FixedLenFeature((), tf.string, "")
-            }
+            # fn.readers.tfrecord() only checks the keys of features against featureKeyMap; the
+            # values are never read, so there is no need to import tensorflow just to build them.
+            features = dict.fromkeys(featureKeyMap)
             inputs = fn.readers.tfrecord(
                 path=data_path, reader_type=1, features=features, user_feature_key_map=featureKeyMap)
             jpegs = inputs["image/encoded"]
