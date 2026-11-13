@@ -259,14 +259,7 @@ do
         ./unit_tests 2 "$coco_detection_path" "${output_path}Threshold_${rgb_name[$rgb]}_${device_name}" $width $height 76 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}WarpPerspective_${rgb_name[$rgb]}_${device_name}" $width $height 77 $device $rgb 1 $display
 
-        # ROCm/rocAL#554: Remap's bilinear sampling hits the same RPP generic-interpolation
-        # clamp defect as rotate/warp_perspective (see the fix PR, ROCm/rocm-libraries#10516).
-        # Only the hip+gray case is actively failing here: its golden is the one correct copy
-        # (it predates the defect), so today's buggy output no longer matches it. The other three
-        # combinations currently "pass" only because their goldens share the same defect as
-        # today's output - they are not meaningful checks until the fix lands. Once
-        # ROCm/rocm-libraries#10516 merges, re-enable this line unconditionally and regenerate the
-        # host and rgb+hip goldens (the gray+hip golden is already correct and should not change).
+        # Disable until RPP fix is merged
         # ./unit_tests 2 "$coco_detection_path" "${output_path}Remap_${rgb_name[$rgb]}_${device_name}" $width $height 78 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}CropAndPatch_${rgb_name[$rgb]}_${device_name}" $width $height 79 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}Ricap_${rgb_name[$rgb]}_${device_name}" $width $height 80 $device $rgb 1 $display
