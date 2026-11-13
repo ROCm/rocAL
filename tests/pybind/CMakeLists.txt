@@ -56,49 +56,49 @@ if(Python3_FOUND AND ROCAL_PYBIND_SCRIPTS)
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/decoders_test.py
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
-  set_property(TEST rocal_pybind_test_decoders PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$PYTHONPATH")
+  set_property(TEST rocal_pybind_test_decoders PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$ENV{PYTHONPATH}")
   # 2 - functions test
   add_test(NAME rocal_pybind_test_functions
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/functions_test.py
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
-  set_property(TEST rocal_pybind_test_functions PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$PYTHONPATH")
+  set_property(TEST rocal_pybind_test_functions PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$ENV{PYTHONPATH}")
   # 3 - pipelines test
   add_test(NAME rocal_pybind_test_pipelines
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/pipelines_test.py
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
-  set_property(TEST rocal_pybind_test_pipelines PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$PYTHONPATH")
+  set_property(TEST rocal_pybind_test_pipelines PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$ENV{PYTHONPATH}")
   # 4 - randoms test
   add_test(NAME rocal_pybind_test_randoms
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/randoms_test.py
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
-  set_property(TEST rocal_pybind_test_randoms PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$PYTHONPATH")
+  set_property(TEST rocal_pybind_test_randoms PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$ENV{PYTHONPATH}")
   # 5 - readers test
   add_test(NAME rocal_pybind_test_readers
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/readers_test.py
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
-  set_property(TEST rocal_pybind_test_readers PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$PYTHONPATH")
+  set_property(TEST rocal_pybind_test_readers PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$ENV{PYTHONPATH}")
   # 6 - types test
   add_test(NAME rocal_pybind_test_types
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/types_test.py
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
-  set_property(TEST rocal_pybind_test_types PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$PYTHONPATH")
+  set_property(TEST rocal_pybind_test_types PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$ENV{PYTHONPATH}")
   # 7 - pipeline scope test
   add_test(NAME rocal_pybind_test_pipeline_scope
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/pipeline_scope_test.py
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
-  set_property(TEST rocal_pybind_test_pipeline_scope PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$PYTHONPATH")
+  set_property(TEST rocal_pybind_test_pipeline_scope PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$ENV{PYTHONPATH}")
   # 8 - rejected operator test
   add_test(NAME rocal_pybind_test_rejected_operator
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/rejected_operator_test.py
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
-  set_property(TEST rocal_pybind_test_rejected_operator PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$PYTHONPATH")
+  set_property(TEST rocal_pybind_test_rejected_operator PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$ENV{PYTHONPATH}")
 else()
   if(NOT Python3_FOUND)
     message("-- NOTE: rocAL pybind requires Python3 - NOT FOUND")
