@@ -201,6 +201,9 @@ def main():
                 logging.info(
                     "Skipping the testcase as file not found %s", rocal_file_path)
         else:
+            total_case_count = total_case_count + 1
+            failed_case_list.append(golden_file_path)
+            failed_case_count = failed_case_count + 1
             logging.info("File not found in ref_output_folder %s",
                          golden_file_path)
     if len(failed_case_list) != 0:
