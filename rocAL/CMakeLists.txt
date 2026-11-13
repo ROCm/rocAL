@@ -376,7 +376,11 @@ if(${BUILD_ROCAL})
     # -mf16c -- Support F16C built-in functions and code generation
     # -Wno-deprecated-declarations -- Do not warn about uses of functions, variables, and types marked as deprecated by using the deprecated attribute
     # OpenMP compile flags come from the linked OpenMP::OpenMP_CXX imported target below.
-    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -mavx2 -mfma -mf16c -Wno-deprecated-declarations)
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64|i.86)$")
+        target_compile_options(${PROJECT_NAME} PRIVATE -Wall -mavx2 -mfma -mf16c -Wno-deprecated-declarations)
+    else()
+        target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wno-deprecated-declarations)
+    endif()
     # Keep -fopenmp on the link line so the OpenMP runtime (libomp) rpath is recorded on librocal.
     # Use the LINK_FLAGS string property rather than target_link_options so the core build keeps
     # working on the declared CMake 3.10 minimum (target_link_options requires 3.13).
