@@ -73,6 +73,7 @@ def run_unit_test(rocal_data_path, qa_mode, gpu, downmix, build_folder_path, cas
         print("Number of FAILED:", num_failed)
         print(failed_cases)
     print("------------------------------------------------------------------------------------------")
+    return num_failed
 
 def audio_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
@@ -104,7 +105,7 @@ def main():
     if test_case is not None: 
         if test_case not in case_list:
             print(" Invalid Test Case! ")
-            exit()
+            exit(1)
         else:
             case_list = [test_case]
 
@@ -118,7 +119,8 @@ def main():
     subprocess.run(["cmake", script_path], cwd=".")   # nosec
     subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
-    run_unit_test(rocal_data_path, qa_mode, gpu, downmix, build_folder_path, case_list)
+    num_failed = run_unit_test(rocal_data_path, qa_mode, gpu, downmix, build_folder_path, case_list)
+    sys.exit(1 if num_failed else 0)
 
 if __name__ == "__main__":
     main()

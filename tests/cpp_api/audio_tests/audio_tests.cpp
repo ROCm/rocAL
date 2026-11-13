@@ -186,7 +186,12 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     }
 
     std::string file_list_path;  // User can modify this with the file list path if required
-    std::string rocal_data_path = std::getenv("ROCAL_DATA_PATH");
+    const char* rocal_data_path_env = std::getenv("ROCAL_DATA_PATH");
+    std::string rocal_data_path = rocal_data_path_env ? rocal_data_path_env : "";
+    if (qa_mode && rocal_data_path.empty()) {
+        std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
+        exit(1);
+    }
     if (qa_mode && test_case != 3) {  // setting the default file list path from ROCAL_DATA_PATH
         file_list_path = rocal_data_path + "rocal_data/audio/wav_file_list.txt";
     }
@@ -344,18 +349,16 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         }
     }
 
+    bool qa_failed = false;
     if (qa_mode) {
         std::cout << "\n *****************************Verifying Audio output**********************************\n";
-        if (rocal_data_path.empty()) {
-            std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
-            exit(0);
-        }
         if (test_case != 8 && (verify_output(buffer, frames, channels, case_name, max_samples, max_channels, buffer_size, rocal_data_path, gpu) == 0)) {
             std::cout << "PASSED!\n\n";
         } else if (test_case == 8 && (verify_non_silent_region_output(nsr_begin, nsr_length, case_name, rocal_data_path) == 0)) {
             std::cout << "PASSED!\n\n";
         } else {
             std::cout << "FAILED!\n\n";
+            qa_failed = true;
         }
     }
 
@@ -369,5 +372,5 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     std::cout << "Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
     rocalResetLoaders(handle);
     rocalRelease(handle);
-    return 0;
+    return qa_failed ? 1 : 0;
 }
