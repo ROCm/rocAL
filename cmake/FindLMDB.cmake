@@ -68,21 +68,43 @@ if(LMDB_LIBRARIES AND LMDB_INCLUDE_DIRS)
     set(LMDB_FOUND TRUE)
 endif( )
 
+# lmdb.h defines its own version as three plain integer macros (no config header),
+# e.g. MDB_VERSION_MAJOR 0, MDB_VERSION_MINOR 9, MDB_VERSION_PATCH 31. Extract them so
+# callers can pin find_package(LMDB <version> EXACT): rocAL's LMDB readers are only
+# validated against 0.9.31, and the on-disk format is not compatible across LMDB's
+# 0.9.x and 1.0.x lines.
+if(LMDB_INCLUDE_DIRS AND EXISTS "${LMDB_INCLUDE_DIRS}/lmdb.h")
+    file(STRINGS "${LMDB_INCLUDE_DIRS}/lmdb.h" _lmdb_version_major_line REGEX "^#define[ \t]+MDB_VERSION_MAJOR[ \t]+[0-9]+")
+    file(STRINGS "${LMDB_INCLUDE_DIRS}/lmdb.h" _lmdb_version_minor_line REGEX "^#define[ \t]+MDB_VERSION_MINOR[ \t]+[0-9]+")
+    file(STRINGS "${LMDB_INCLUDE_DIRS}/lmdb.h" _lmdb_version_patch_line REGEX "^#define[ \t]+MDB_VERSION_PATCH[ \t]+[0-9]+")
+    string(REGEX REPLACE ".*MDB_VERSION_MAJOR[ \t]+([0-9]+).*" "\\1" LMDB_VERSION_MAJOR "${_lmdb_version_major_line}")
+    string(REGEX REPLACE ".*MDB_VERSION_MINOR[ \t]+([0-9]+).*" "\\1" LMDB_VERSION_MINOR "${_lmdb_version_minor_line}")
+    string(REGEX REPLACE ".*MDB_VERSION_PATCH[ \t]+([0-9]+).*" "\\1" LMDB_VERSION_PATCH "${_lmdb_version_patch_line}")
+    unset(_lmdb_version_major_line)
+    unset(_lmdb_version_minor_line)
+    unset(_lmdb_version_patch_line)
+    if(LMDB_VERSION_MAJOR MATCHES "^[0-9]+$" AND LMDB_VERSION_MINOR MATCHES "^[0-9]+$" AND LMDB_VERSION_PATCH MATCHES "^[0-9]+$")
+        set(LMDB_VERSION_STRING "${LMDB_VERSION_MAJOR}.${LMDB_VERSION_MINOR}.${LMDB_VERSION_PATCH}")
+    endif()
+endif()
+
 include( FindPackageHandleStandardArgs )
 find_package_handle_standard_args( LMDB 
     FOUND_VAR  LMDB_FOUND 
     REQUIRED_VARS
         LMDB_LIBRARIES 
         LMDB_INCLUDE_DIRS 
+    VERSION_VAR LMDB_VERSION_STRING
 )
 
 set(LMDB_FOUND ${LMDB_FOUND} CACHE INTERNAL "")
 set(LMDB_LIBRARIES ${LMDB_LIBRARIES} CACHE INTERNAL "")
 set(LMDB_INCLUDE_DIRS ${LMDB_INCLUDE_DIRS} CACHE INTERNAL "")
 set(LMDB_LIBRARIES_DIRS ${LMDB_LIBRARIES_DIRS} CACHE INTERNAL "")
+set(LMDB_VERSION_STRING ${LMDB_VERSION_STRING} CACHE INTERNAL "")
 
 if(LMDB_FOUND)
-    message("-- ${White}Using LMDB -- \n\tLibraries:${LMDB_LIBRARIES} \n\tIncludes:${LMDB_INCLUDE_DIRS}${ColourReset}")    
+    message("-- ${White}Using LMDB ${LMDB_VERSION_STRING} -- \n\tLibraries:${LMDB_LIBRARIES} \n\tIncludes:${LMDB_INCLUDE_DIRS}${ColourReset}")    
 else()
     if(LMDB_FIND_REQUIRED)
         message(FATAL_ERROR "{Red}FindLMDB -- NOT FOUND${ColourReset}")
