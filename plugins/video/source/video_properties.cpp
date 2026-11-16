@@ -123,6 +123,8 @@ void ffmpeg_get_video_properties_from_txt_file(VideoProperties &video_props, con
             video_props.start_end_frame_num.push_back(std::make_tuple(start_frame_number, end_frame_number));
             video_props.start_end_timestamps.push_back(std::make_tuple(start_time, end_time));
             video_props.frames_count.push_back(end_frame_number - start_frame_number);
+            if (props.avg_frame_rate_den == 0)
+                THROW("Video frame rate is unavailable")
             float video_frame_rate = std::floor(props.avg_frame_rate_num / props.avg_frame_rate_den);
             if (video_props.frame_rate != 0 && video_frame_rate != video_props.frame_rate)
                 THROW("Variable frame rate videos cannot be processed")

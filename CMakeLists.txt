@@ -204,10 +204,8 @@ endif()
 # monolithic and FFmpeg was found.
 if("${BACKEND}" STREQUAL "HIP")
     if(ROCAL_VIDEO_PLUGIN)
-        # The video tests link only rocal and rely on the runtime loader dlopen-ing the shared
-        # plugin, so a static-only plugin build cannot register a decoder for them. Only enable
-        # them when a shared plugin was actually built.
-        if(ROCAL_VIDEO_PLUGIN_BUILT AND NOT ROCAL_VIDEO_PLUGIN_STATIC)
+        # The video tests link only rocal and rely on the runtime loader dlopen-ing the shared plugin.
+        if(ROCAL_VIDEO_PLUGIN_BUILT)
             set(ROCAL_VIDEO_TESTS_ENABLED ON)
         else()
             set(ROCAL_VIDEO_TESTS_ENABLED OFF)

@@ -42,8 +42,6 @@ project(rocal_video_plugin LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-option(ROCAL_VIDEO_PLUGIN_STATIC "Build rocal_video_plugin as a static library" OFF)
-
 # Detect whether we are building inside the full rocAL source tree or standalone
 # from the sources shipped with the rocAL dev package.
 if(EXISTS ${CMAKE_SOURCE_DIR}/rocAL/include)
@@ -205,11 +203,7 @@ if(ROCAL_VIDEO_PLUGIN_IN_TREE)
     set(ROCAL_VIDEO_ROCDECODE_AVAILABLE ${ROCAL_VIDEO_PLUGIN_ROCDECODE} PARENT_SCOPE)
 endif()
 
-if(ROCAL_VIDEO_PLUGIN_STATIC)
-    add_library(${PROJECT_NAME} STATIC ${ROCAL_VIDEO_PLUGIN_SOURCES})
-else()
-    add_library(${PROJECT_NAME} SHARED ${ROCAL_VIDEO_PLUGIN_SOURCES})
-endif()
+add_library(${PROJECT_NAME} SHARED ${ROCAL_VIDEO_PLUGIN_SOURCES})
 
 # FFMPEG multi-version support
 if(_FFMPEG_AVCODEC_VERSION VERSION_LESS_EQUAL 58.134.100)
