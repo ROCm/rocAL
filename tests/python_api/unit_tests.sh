@@ -198,7 +198,8 @@ do
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name threshold --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Threshold_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name warp_perspective --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}WarpPerspective_${rgb_name[$rgb]}_${device_name}"
 
-        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name remap --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Remap_${rgb_name[$rgb]}_${device_name}"
+        # Disable until RPP fix is merged
+        # python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name remap --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Remap_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name crop_and_patch --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}CropAndPatch_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name ricap --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Ricap_${rgb_name[$rgb]}_${device_name}"
         # Disabled with phase above, same rotate defect - see the note there. ROCM-33746.
