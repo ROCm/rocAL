@@ -49,6 +49,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve `rocalVideoFileResize()` and `rocalVideoFileResizeSingleShard()` returning a null tensor on success when the frames are decoded at their native size.
 * Resolve the current pipeline being tracked process-wide, which built operators into the wrong graph when pipelines were nested or built from several threads; it is now per thread and readable through `Pipeline.current()`.
 * Resolve a graph verification failure in `Pipeline.build()` by raising a `RuntimeError` instead of exiting with status 0.
+* Resolve `fn.readers.tfrecord()` exiting with status 0 on an incomplete feature key map by raising a `ValueError` naming the missing keys.
 * Resolve `fn.color_jitter` being accepted on a GPU pipeline, where it has no kernel, instead of failing at the call.
 * Resolve one-hot encoded labels failing on GPU pipelines in the generic, JAX and TensorFlow iterators, which asked `rocalGetOneHotImageLabels()` to copy into a host numpy buffer as if it were device memory.
 * Resolve a segmentation fault in the file reader when a folder exists but contains no supported images. The reader now raises an error naming the folder.
@@ -58,6 +59,12 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve `rocalCopyToOutput()` reporting success at the end of the data, where it leaves the caller's buffer untouched.
 * Resolve the `unit_tests` numpy cases sizing their buffer from the color format, which counts one channel for a three channel batch.
 * Resolve a `TypeError` from `fn.decoders.image_raw`, which called the decoder binding one argument short on every TFRecord pipeline.
+* Resolve CPU pipelines aborting on a host with no GPU, where the output thread selected a HIP device whatever the pipeline's affinity.
+* Resolve a segmentation fault in `rocalSetOutputs()` when an augmentation that rejected its input returns a null tensor, by reporting the error instead of setting any output.
+* Resolve an out-of-bounds read in the COCO, NumPy, TFRecord, Caffe LMDB, Caffe2 LMDB, MXNet RecordIO, and WebDataset readers when a path exists but holds nothing the reader accepts. Each reader now raises an error naming that path.
+* Resolve the TFRecord reader passing directories to the record parser. The scan now skips anything that is not a regular file, so an empty subdirectory no longer fails a directory that also holds records, and a root whose only child is an empty subdirectory raises the empty-scan error.
+* Resolve the Caffe and Caffe2 LMDB readers passing uninitialized LMDB handles to cleanup when creation fails before the read environment is opened.
+* Resolve readers skipping image files that are symbolic links. A labelled folder of links crashed while the pipeline was built in Python and failed the label lookup in C++. The readers now keep a link whose target is a regular file.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.

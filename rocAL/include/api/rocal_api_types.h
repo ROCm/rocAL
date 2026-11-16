@@ -45,6 +45,8 @@ THE SOFTWARE.
  * \brief The AMD rocAL Types.
  */
 
+// half/half.hpp is installed at $ROCM_PATH/include/half/half.hpp, outside the rocal include
+// directory. A standalone consumer needs both -I$ROCM_PATH/include/rocal and -I$ROCM_PATH/include.
 #include <half/half.hpp>
 using half_float::half;
 
