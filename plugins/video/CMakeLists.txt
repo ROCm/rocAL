@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2025 Advanced Micro Devices, Inc.
+# Copyright (c) 2026 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -246,12 +246,15 @@ if(ROCAL_VIDEO_PLUGIN_HIP AND ROCAL_VIDEO_PLUGIN_ROCDECODE)
     target_link_libraries(${PROJECT_NAME} PUBLIC rocdecode::rocdecode)
 endif()
 
-if(NOT DEFINED rocal_VERSION)
-    set(rocal_VERSION "2.5.0")
+# The core's loader searches for the plugin by SONAME, so the plugin version must be the version
+# of the rocAL it was built against, not of this source copy.
+file(STRINGS "${ROCAL_BUILD_CONFIG_HEADER}" ROCAL_CONFIG_VERSION_LINE REGEX "^#define ROCAL_CONFIG_VERSION \"[0-9]+(\\.[0-9]+)*\"$")
+string(REGEX MATCH "[0-9]+(\\.[0-9]+)*" ROCAL_CONFIG_VERSION "${ROCAL_CONFIG_VERSION_LINE}")
+if(NOT ROCAL_CONFIG_VERSION)
+    message(FATAL_ERROR "-- ${Red}rocal_video_plugin: ROCAL_CONFIG_VERSION not found in ${ROCAL_BUILD_CONFIG_HEADER}; rebuild and reinstall rocAL${ColourReset}")
 endif()
-if(NOT DEFINED rocal_VERSION_MAJOR)
-    string(REGEX MATCH "^([0-9]+)" rocal_VERSION_MAJOR "${rocal_VERSION}")
-endif()
+set(rocal_VERSION "${ROCAL_CONFIG_VERSION}")
+string(REGEX MATCH "^([0-9]+)" rocal_VERSION_MAJOR "${rocal_VERSION}")
 
 # Match the core library install layout (lib, not lib64) so the runtime loader's library
 # search paths line up with where the plugin is installed. Honor an explicit user override.

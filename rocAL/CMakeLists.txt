@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2023 - 2025 Advanced Micro Devices, Inc.
+# Copyright (c) 2023 - 2026 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -348,8 +348,10 @@ if(${BUILD_ROCAL})
     else()
         set(ROCAL_CONFIG_ENABLE_HIP 0)
     endif()
+    # The version is recorded as well so a standalone plugin build gets the SOVERSION that this
+    # core's loader searches for.
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rocal_build_config.h
-         "#pragma once\n#define ROCAL_CONFIG_ENABLE_HIP ${ROCAL_CONFIG_ENABLE_HIP}\n")
+         "#pragma once\n#define ROCAL_CONFIG_ENABLE_HIP ${ROCAL_CONFIG_ENABLE_HIP}\n#define ROCAL_CONFIG_VERSION \"${PROJECT_VERSION}\"\n")
 
     target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_SIMD=1)
     target_compile_definitions(${PROJECT_NAME} PRIVATE "ROCM_PATH=\"${ROCM_PATH}\"")
@@ -369,6 +371,11 @@ if(${BUILD_ROCAL})
     if(ROCAL_VIDEO_PLUGIN)
         message("-- ${White}rocAL built without FFmpeg in core; FFmpeg video support is provided by the rocal_video_plugin runtime plugin${ColourReset}")
         target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_VIDEO_PLUGIN)
+        # The plugin's SOVERSION follows the core's major version; the runtime package ships
+        # only the SONAME, so the loader must search for the versioned name of this build.
+        target_compile_definitions(${PROJECT_NAME} PRIVATE
+            "ROCAL_VIDEO_PLUGIN_FILENAME=\"${CMAKE_SHARED_LIBRARY_PREFIX}rocal_video_plugin${CMAKE_SHARED_LIBRARY_SUFFIX}\""
+            "ROCAL_VIDEO_PLUGIN_SONAME=\"${CMAKE_SHARED_LIBRARY_PREFIX}rocal_video_plugin${CMAKE_SHARED_LIBRARY_SUFFIX}.${PROJECT_VERSION_MAJOR}\"")
     elseif(NOT FFMPEG_FOUND)
         message("-- ${Yellow}NOTE: rocAL built without an FFmpeg video decoder in core; video APIs will report no available decoder at runtime${ColourReset}")
     else()

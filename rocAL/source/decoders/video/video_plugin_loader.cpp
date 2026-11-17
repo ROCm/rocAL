@@ -1,5 +1,5 @@
 /**
-Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2026 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -50,12 +50,16 @@ namespace video {
 
 namespace {
 
-const char kPluginName[] = "librocal_video_plugin.so";
-const char kPluginNameVersioned[] = "librocal_video_plugin.so.2";
+#if !defined(ROCAL_VIDEO_PLUGIN_FILENAME) || !defined(ROCAL_VIDEO_PLUGIN_SONAME)
+#error "ROCAL_VIDEO_PLUGIN_FILENAME and ROCAL_VIDEO_PLUGIN_SONAME must be defined by the build"
+#endif
+
+const char kPluginName[] = ROCAL_VIDEO_PLUGIN_FILENAME;
+const char kPluginNameVersioned[] = ROCAL_VIDEO_PLUGIN_SONAME;
 
 // Append a directory and both the versioned and unversioned plugin names to the
 // search list.  Runtime packages use NAMELINK_SKIP, so the .so symlink may be
-// absent and only the .so.2 SONAME is present.
+// absent and only the versioned SONAME is present.
 void append_plugin_candidates(std::vector<std::string> &paths, const std::string &dir) {
     if (dir.empty()) return;
     paths.emplace_back(dir + "/" + kPluginNameVersioned);

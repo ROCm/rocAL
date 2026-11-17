@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2026 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -50,8 +50,8 @@ VideoReadAndDecode::timing() {
     return t;
 }
 
-VideoReadAndDecode::VideoReadAndDecode() : _file_load_time("FileLoadTime", true),
-                                           _decode_time("DecodeTime", true) {
+VideoReadAndDecode::VideoReadAndDecode() : _file_load_time("FileLoadTime", DBG_TIMING),
+                                           _decode_time("DecodeTime", DBG_TIMING) {
 }
 
 VideoReadAndDecode::~VideoReadAndDecode() {
