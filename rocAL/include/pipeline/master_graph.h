@@ -211,6 +211,8 @@ private:
     void notify_user_thread();
     /// no_more_processed_data() is logically linked to the notify_user_thread() and is used to tell the user they've already consumed all the processed tensors
     bool no_more_processed_data();
+    //! Waits for the batch run() made current, then throws if the pipeline has no metadata to give
+    void wait_for_meta_data();
     // is_out_of_data() is called to check the remaining batch count from each loader module, if any of the loader module has consumed all the batches it returns true.
     bool is_out_of_data();
     // Generates a unique identifier for tensor naming by incrementing and returning the _tensor_idx counter.
