@@ -677,7 +677,7 @@ Reader::Status NumpyDataReader::generate_file_names() {
     }
 
     if (_file_names.empty())
-        ERR("NumpyDataReader ShardID [" + TOSTR(_shard_id) + "] Did not load any file from " + _folder_path)
+        THROW("NumpyDataReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Did not load any file from " + full_path);
 
     size_t padded_samples = ((_shard_size > 0) ? _shard_size : largest_shard_size_without_padding()) % _batch_size;
     _last_batch_padded_size = ((_batch_size > 1) && (padded_samples > 0)) ? (_batch_size - padded_samples) : 0;
