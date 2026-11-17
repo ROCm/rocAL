@@ -1,6 +1,6 @@
 # dataloader application
 
-This application demonstrates a basic usage of rocAL's C API to load RAW images from the disk and modify them in different possible ways and displays the output images.
+This application demonstrates a basic usage of rocAL's C API to load RAW images from the disk and modify them in different possible ways and displays the output images. It reads the CIFAR-10 binary format, so the folder it is given must hold the `data_batch_*` files.
 <p align="center"><img width="90%" src="https://www.github.com/ROCm/rocAL/docs/data/image_augmentation.png" /></p>
 
 ## Pre-requisites
@@ -23,5 +23,5 @@ This application demonstrates a basic usage of rocAL's C API to load RAW images 
 ### running the application
 
   ````shell
-  ./dataloader <image_dataset_folder> <processing_device=1/cpu=0>  decode_width decode_height batch_size display_on_off <nhwc=0/nchw=1> <reverse_channels=0/1>
+  ./dataloader <cifar10_dataset_folder> <processing_device=1/cpu=0>  decode_width decode_height batch_size display_on_off <nhwc=0/nchw=1> <reverse_channels=0/1>
   ````
