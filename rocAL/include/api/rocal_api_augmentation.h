@@ -1173,9 +1173,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalCopy(RocalContext context, RocalTenso
 
 /*! \brief Performs no operation.
  * \ingroup group_rocal_augmentations
- * \note The returned tensor is allocated but never written, so its contents are undefined: it
- * holds whatever the allocator last left in that memory, which differs between runs on the CPU
- * backend and reads back as zeros on HIP. It is not a copy of the input. Use this operator only
+ * \note The returned tensor is allocated but never written, so its contents are undefined and can
+ * differ between runs and between backends. It is not a copy of the input. Use this operator only
  * to measure pipeline overhead, and use rocalCopy() when the output has to carry the input's data.
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor
