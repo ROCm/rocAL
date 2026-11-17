@@ -58,13 +58,22 @@ def run_unit_test(rocal_data_path, qa_mode, gpu, downmix, build_folder_path, cas
             # Handle the error by replacing or ignoring problematic characters
             decoded_stdout = result.stdout.decode('utf-8', errors='replace')
 
-        # check the QA status of the test case
-        if "PASSED" in decoded_stdout:
-            num_passed += 1
-            passed_cases.append(test_case_augmentation_map[case])
+        if qa_mode:
+            # check the QA status of the test case - the binary only prints this marker in QA mode
+            if "PASSED" in decoded_stdout:
+                num_passed += 1
+                passed_cases.append(test_case_augmentation_map[case])
+            else:
+                num_failed += 1
+                failed_cases.append(test_case_augmentation_map[case])
         else:
-            num_failed += 1
-            failed_cases.append(test_case_augmentation_map[case])
+            # Non-QA mode never prints a PASSED/FAILED marker; fall back to the process's own exit code.
+            if result.returncode == 0:
+                num_passed += 1
+                passed_cases.append(test_case_augmentation_map[case])
+            else:
+                num_failed += 1
+                failed_cases.append(test_case_augmentation_map[case])
         print(decoded_stdout)
 
     if qa_mode:
