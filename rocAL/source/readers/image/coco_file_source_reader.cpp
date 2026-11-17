@@ -234,6 +234,11 @@ Reader::Status COCOFileSourceReader::subfolder_reading() {
     }
     std::sort(entry_name_list.begin(), entry_name_list.end());
 
+    if (entry_name_list.empty()) {
+        closedir(_sub_dir);
+        THROW("FileReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Did not load any file from " + _full_path);
+    }
+
     std::string subfolder_path = _full_path + "/" + entry_name_list[0];
 
     filesys::path pathObj(subfolder_path);
@@ -252,6 +257,9 @@ Reader::Status COCOFileSourceReader::subfolder_reading() {
         LOG("FileReader ShardID [" + TOSTR(_shard_id) + "] Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path)
     closedir(_sub_dir);
 
+    if (_file_names.empty())
+        THROW("FileReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Did not load any file from " + _full_path);
+
     size_t padded_samples = ((_shard_size > 0) ? _shard_size : largest_shard_size_without_padding()) % _batch_size;
     _last_batch_padded_size = ((_batch_size > 1) && (padded_samples > 0)) ? (_batch_size - padded_samples) : 0;
 
@@ -269,7 +277,8 @@ Reader::Status COCOFileSourceReader::open_folder() {
         THROW("FileReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _folder_path);
 
     while ((_entity = readdir(_src_dir)) != nullptr) {
-        if (_entity->d_type != DT_REG)
+        std::error_code ec;
+        if (!filesys::is_regular_file(filesys::path(_folder_path) / _entity->d_name, ec))
             continue;
         if (!_meta_data_reader || _meta_data_reader->exists(_entity->d_name)) {
             std::string file_path = _folder_path;
