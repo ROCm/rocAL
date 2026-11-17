@@ -266,6 +266,9 @@ void MXNetRecordIOReader::read_image_names() {
             THROW(record_length_error(_clength, _data_size_to_read));
         }
         delete[] _data;
+        // The loader skips a zero-byte image without advancing this reader, so it would retry the record forever.
+        if (image_size == 0)
+            THROW("MXNetRecordIOReader ERROR: Record " + _image_key + " holds no image data");
 
         _file_names.push_back(_image_key.c_str());
         _last_file_name = _image_key.c_str();
