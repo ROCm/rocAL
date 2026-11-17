@@ -67,6 +67,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve the TFRecord reader passing directories to the record parser. The scan now skips anything that is not a regular file, so an empty subdirectory no longer fails a directory that also holds records, and a root whose only child is an empty subdirectory raises the empty-scan error.
 * Resolve the Caffe and Caffe2 LMDB readers passing uninitialized LMDB handles to cleanup when creation fails before the read environment is opened.
 * Resolve readers skipping image files that are symbolic links. A labelled folder of links crashed while the pipeline was built in Python and failed the label lookup in C++. The readers now keep a link whose target is a regular file.
+* Resolve a heap over-read in the MXNet RecordIO reader when a record's length is shorter than the 24-byte header or longer than the bytes just read. The reader now rejects that record with an error naming the length and the number of bytes read.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.
