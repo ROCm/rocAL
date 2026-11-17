@@ -31,6 +31,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Adds new method in Argument class for type-safe value retrieval of arguments.
 * `RocalPipelineParams` struct to represent pipeline configuration parameters used during serialization and deserialization.
 * The `Phase`, Bitwise AND/OR/XOR and `ResizeCropMirror` unit test cases are disabled, pending a fix to the RPP bilinear sampler they depend on.
+* The `Remap` unit test case's hip+gray combination is disabled, pending the same RPP bilinear sampler fix.
 
 ### Resolved issues
 * Resolve the off-by-one in `rocalGetOneHotImageLabels()`, which encoded the 0 based labels the readers produce as the wrong class.
@@ -60,6 +61,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve the `unit_tests` numpy cases sizing their buffer from the color format, which counts one channel for a three channel batch.
 * Resolve a `TypeError` from `fn.decoders.image_raw`, which called the decoder binding one argument short on every TFRecord pipeline.
 * Resolve a process abort when a metadata getter is called before the output copy, by making the getters wait for the current batch instead of reporting it as never loaded.
+* Resolve a segmentation fault in the CIFAR-10 reader on a folder holding no `data_batch_*` files, by raising an error naming the folder and the prefix instead of indexing an empty file list.
 * Resolve CPU pipelines aborting on a host with no GPU, where the output thread selected a HIP device whatever the pipeline's affinity.
 * Resolve a segmentation fault in `rocalSetOutputs()` when an augmentation that rejected its input returns a null tensor, by reporting the error instead of setting any output.
 * Resolve an out-of-bounds read in the COCO, NumPy, TFRecord, Caffe LMDB, Caffe2 LMDB, MXNet RecordIO, and WebDataset readers when a path exists but holds nothing the reader accepts. Each reader now raises an error naming that path.
