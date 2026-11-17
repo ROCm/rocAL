@@ -31,6 +31,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Adds new method in Argument class for type-safe value retrieval of arguments.
 * `RocalPipelineParams` struct to represent pipeline configuration parameters used during serialization and deserialization.
 * The `Phase`, Bitwise AND/OR/XOR and `ResizeCropMirror` unit test cases are disabled, pending a fix to the RPP bilinear sampler they depend on.
+* The `Remap` unit test case's hip+gray combination is disabled, pending the same RPP bilinear sampler fix.
 
 ### Resolved issues
 * Resolve the off-by-one in `rocalGetOneHotImageLabels()`, which encoded the 0 based labels the readers produce as the wrong class.
@@ -59,6 +60,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve `rocalCopyToOutput()` reporting success at the end of the data, where it leaves the caller's buffer untouched.
 * Resolve the `unit_tests` numpy cases sizing their buffer from the color format, which counts one channel for a three channel batch.
 * Resolve a `TypeError` from `fn.decoders.image_raw`, which called the decoder binding one argument short on every TFRecord pipeline.
+* Resolve a segmentation fault in the CIFAR-10 reader on a folder holding no `data_batch_*` files, by raising an error naming the folder and the prefix instead of indexing an empty file list.
 * Resolve CPU pipelines aborting on a host with no GPU, where the output thread selected a HIP device whatever the pipeline's affinity.
 * Resolve a segmentation fault in `rocalSetOutputs()` when an augmentation that rejected its input returns a null tensor, by reporting the error instead of setting any output.
 * Resolve an out-of-bounds read in the COCO, NumPy, TFRecord, Caffe LMDB, Caffe2 LMDB, MXNet RecordIO, and WebDataset readers when a path exists but holds nothing the reader accepts. Each reader now raises an error naming that path.
@@ -66,6 +68,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve the Caffe and Caffe2 LMDB readers passing uninitialized LMDB handles to cleanup when creation fails before the read environment is opened.
 * Resolve readers skipping image files that are symbolic links. A labelled folder of links crashed while the pipeline was built in Python and failed the label lookup in C++. The readers now keep a link whose target is a regular file.
 * Resolve every audio augmentation failing at `rocalVerify()` with `Invalid layout` when vx_rpp was built without audio kernels, by building without audio support in that case and rejecting the audio operators where they are called, with the reason. Needs vx_rpp 3.3.3 or later, which reports whether it has audio.
+* Document that the output of `rocalNop()` and `fn.nop()` is undefined rather than a copy of the input, so that `rocalCopy()` and `fn.copy()` are used where the data matters.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.
