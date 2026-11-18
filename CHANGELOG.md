@@ -21,6 +21,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Introduce `NodeFactory` for dynamic node registration and creation.
 
 ### Changes
+* The FFmpeg and rocDecode video decoders are now built as a runtime plugin, `librocal_video_plugin.so.2`, instead of being compiled into `librocal.so`. `ROCAL_VIDEO_PLUGIN` is ON by default. The plugin is loaded on the first video call from the directory of `librocal.so`, then from `ROCM_PATH/lib`. A deployment that ships only `librocal.so` must install the plugin beside it, or build with `-DROCAL_VIDEO_PLUGIN=OFF` to keep the single-library layout.
 * The PythonFunction operator (`fn.python_function`) is disabled by default. It embedded the CPython C-API in `librocal.so`, which left the core library with unresolved `Py*` symbols and unusable from C/C++ applications. It can be re-enabled with `-DROCAL_PYTHON_FUNCTION=ON`, which reintroduces that limitation.
 * Optimized data distribution for the rocJPEG backend to improve multi-threaded decode throughput.
 * LMDB is now an optional dependency. When liblmdb is present at configure time, rocAL builds with Caffe/Caffe2 LMDB reader support; otherwise it builds without it.
@@ -60,6 +61,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve `rocalCopyToOutput()` reporting success at the end of the data, where it leaves the caller's buffer untouched.
 * Resolve the `unit_tests` numpy cases sizing their buffer from the color format, which counts one channel for a three channel batch.
 * Resolve a `TypeError` from `fn.decoders.image_raw`, which called the decoder binding one argument short on every TFRecord pipeline.
+* Resolve a process abort when a metadata getter is called before the output copy, by making the getters wait for the current batch instead of reporting it as never loaded.
 * Resolve a segmentation fault in the CIFAR-10 reader on a folder holding no `data_batch_*` files, by raising an error naming the folder and the prefix instead of indexing an empty file list.
 * Resolve CPU pipelines aborting on a host with no GPU, where the output thread selected a HIP device whatever the pipeline's affinity.
 * Resolve a segmentation fault in `rocalSetOutputs()` when an augmentation that rejected its input returns a null tensor, by reporting the error instead of setting any output.
@@ -68,6 +70,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve the Caffe and Caffe2 LMDB readers passing uninitialized LMDB handles to cleanup when creation fails before the read environment is opened.
 * Resolve readers skipping image files that are symbolic links. A labelled folder of links crashed while the pipeline was built in Python and failed the label lookup in C++. The readers now keep a link whose target is a regular file.
 * Resolve a heap over-read in the MXNet RecordIO reader when a record's length is shorter than the 24-byte header or longer than the bytes just read. The reader now rejects that record with an error naming the length and the number of bytes read. The MXNet label reader rejects a record shorter than the header, and a record with no image data raises an error instead of hanging the loader. `rocalCreateMXNetReader()` reports a label reader error through `rocalGetStatus()` instead of terminating the process, and `fn.readers.mxnet` raises it as a `RuntimeError`.
+* Document that the output of `rocalNop()` and `fn.nop()` is undefined rather than a copy of the input, so that `rocalCopy()` and `fn.copy()` are used where the data matters.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.
