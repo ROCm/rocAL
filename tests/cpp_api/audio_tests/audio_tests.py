@@ -98,7 +98,7 @@ def main():
     rocal_data_path = os.environ.get("ROCAL_DATA_PATH")
     if rocal_data_path is None:
         print("Need to export ROCAL_DATA_PATH")
-        sys.exit()
+        sys.exit(1)
 
     sys.dont_write_bytecode = True
     build_folder_path = os.getcwd()
