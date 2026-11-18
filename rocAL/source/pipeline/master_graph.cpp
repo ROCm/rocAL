@@ -629,6 +629,12 @@ void MasterGraph::sequence_frame_timestamps(std::vector<std::vector<float>> &seq
 
 MasterGraph::Status
 MasterGraph::reset() {
+    // A reset with no run() since the previous one has nothing to rewind. Readers do not roll
+    // their read pointer back over prefetched but undelivered samples, and this function
+    // restarts prefetching, so a second reset would drop those batches while leaving the
+    // pointer past them, starting the next epoch part way through the shard.
+    if (_first_run)
+        return Status::OK;
     // stop the internal processing thread so that the
     _processing = false;
     _ring_buffer.unblock_writer();
