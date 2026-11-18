@@ -2330,7 +2330,7 @@ rocalAudioFileSourceSingleShard(
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 #else
-        THROW("Audio decoder is not enabled since sndfile is not present")
+        THROW("rocAL was built without audio support: it needs SndFile, and a vx_rpp built against an RPP that has audio augmentations")
 #endif
     } catch (const std::exception& e) {
         ROCAL_HANDLE_EXCEPTION(context, e, output);
@@ -2396,7 +2396,7 @@ rocalAudioFileSource(
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 #else
-        THROW("Audio decoder is not enabled since sndfile is not present")
+        THROW("rocAL was built without audio support: it needs SndFile, and a vx_rpp built against an RPP that has audio augmentations")
 #endif
     } catch (const std::exception& e) {
         ROCAL_HANDLE_EXCEPTION(context, e, output);
