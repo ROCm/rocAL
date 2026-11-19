@@ -322,7 +322,7 @@ def main():
     if test_case is not None: 
         if test_case not in case_list:
             print(" Invalid Test Case! ")
-            exit()
+            exit(1)
         else:
             case_list = [test_case]
 
@@ -337,7 +337,7 @@ def main():
 
     if rocal_data_path is None:
         print("Need to export ROCAL_DATA_PATH")
-        sys.exit()
+        sys.exit(1)
     if not audio_path and not file_list:
         audio_path = f'{rocal_data_path}/rocal_data/audio/'
         file_list = f'{rocal_data_path}/rocal_data/audio/wav_file_list.txt'
@@ -422,6 +422,7 @@ def main():
         print(passed_cases)
         print("Number of FAILED tests:", len(failed_cases))
         print(failed_cases)
+        sys.exit(1 if failed_cases else 0)
 
 
 if __name__ == "__main__":
