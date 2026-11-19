@@ -632,10 +632,10 @@ MasterGraph::reset() {
     // A reset with no run() since the previous one has nothing to rewind. Readers do not roll
     // their read pointer back over prefetched but undelivered samples, and this function
     // restarts prefetching, so a second reset would drop those batches while leaving the
-    // pointer past them, starting the next epoch part way through the shard. A stored
-    // processing error is cleared only by start_processing(), so a reset that has one to clear
-    // still has to run.
-    if (_first_run) {
+    // pointer past them, starting the next epoch part way through the shard. Only skip when the
+    // pipeline is otherwise healthy: a stopped worker, or a stored processing error that only
+    // start_processing() clears, still needs the reset to recover.
+    if (_first_run && _processing) {
         std::lock_guard<std::mutex> lock(_process_exception_lock);
         if (!_process_exception)
             return Status::OK;
