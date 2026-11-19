@@ -262,7 +262,12 @@ do
         # Re-enable these lines and regenerate their goldens once that entry is removed.
         # ./unit_tests 2 "$coco_detection_path" "${output_path}Phase_${rgb_name[$rgb]}_${device_name}" $width $height 75 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}Threshold_${rgb_name[$rgb]}_${device_name}" $width $height 76 $device $rgb 1 $display
-        ./unit_tests 2 "$coco_detection_path" "${output_path}WarpPerspective_${rgb_name[$rgb]}_${device_name}" $width $height 77 $device $rgb 1 $display
+        # WarpPerspective on the host backend is disabled: a known RPP bug blackens
+        # in-bounds output under a genuine-perspective matrix (m6/m7 != 0, which this
+        # test's matrix uses)
+        if [ $device -eq 1 ]; then
+            ./unit_tests 2 "$coco_detection_path" "${output_path}WarpPerspective_${rgb_name[$rgb]}_${device_name}" $width $height 77 $device $rgb 1 $display
+        fi
 
         # Disable until RPP fix is merged
         # ./unit_tests 2 "$coco_detection_path" "${output_path}Remap_${rgb_name[$rgb]}_${device_name}" $width $height 78 $device $rgb 1 $display

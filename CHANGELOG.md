@@ -32,6 +32,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Adds new method in Argument class for type-safe value retrieval of arguments.
 * `RocalPipelineParams` struct to represent pipeline configuration parameters used during serialization and deserialization.
 * The `Phase`, Bitwise AND/OR/XOR and `ResizeCropMirror` unit test cases are disabled, pending a fix to the RPP bilinear sampler they depend on.
+* The `WarpPerspective` unit test case's host backend is disabled, pending a fix to a known RPP perspective-divide defect that blackens in-bounds output under a genuine-perspective matrix.
 * The `Remap` unit test case's hip+gray combination is disabled, pending the same RPP bilinear sampler fix.
 
 ### Resolved issues
