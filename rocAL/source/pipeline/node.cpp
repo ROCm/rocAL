@@ -20,6 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include <algorithm>
+
 #include "pipeline/node.h"
 
 Node::~Node() {
@@ -48,6 +50,10 @@ void Node::add_next(const std::shared_ptr<Node> &node) {
     // Set graph ID to the Node, to denote the graph to which it belongs to
     if (node->get_graph_id() < 0) node->set_graph_id(_graph_id);
     _next.emplace_back(node);
+}
+
+void Node::remove_next(const std::shared_ptr<Node> &node) {
+    _next.erase(std::remove(_next.begin(), _next.end(), node), _next.end());
 }
 
 void Node::add_previous(const std::shared_ptr<Node> &node) {

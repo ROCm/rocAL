@@ -67,7 +67,6 @@ Returns:
 - VX_ERROR_INVALID_REFERENCE if src_ptr, dst_ptr, or params is null
 */
 vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr, const RocalPyExecParams* params);
-#endif
 
 class PythonFunctionNode : public Node {
    public:
@@ -83,3 +82,4 @@ class PythonFunctionNode : public Node {
    private:
     unsigned long long _function_id = 0;
 };
+#endif

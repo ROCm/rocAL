@@ -41,6 +41,14 @@ CaffeLMDBRecordReader::CaffeLMDBRecordReader()
     _shuffle = false;
     _last_rec = false;
     _file_count_all_shards = 0;
+    _mdb_env = nullptr;
+    _read_mdb_env = nullptr;
+    _mdb_txn = nullptr;
+    _read_mdb_txn = nullptr;
+    _mdb_cursor = nullptr;
+    _read_mdb_cursor = nullptr;
+    _mdb_dbi = 0;
+    _read_mdb_dbi = 0;
 }
 
 Reader::Status CaffeLMDBRecordReader::initialize(ReaderConfig desc) {
@@ -91,20 +99,26 @@ int CaffeLMDBRecordReader::close() {
 
 CaffeLMDBRecordReader::~CaffeLMDBRecordReader() {
     _open_env = 0;
-    mdb_txn_abort(_read_mdb_txn);
-    mdb_close(_read_mdb_env, _read_mdb_dbi);
-    mdb_env_close(_read_mdb_env);
+    if (_read_mdb_txn)
+        mdb_txn_abort(_read_mdb_txn);
+    if (_read_mdb_env) {
+        mdb_close(_read_mdb_env, _read_mdb_dbi);
+        mdb_env_close(_read_mdb_env);
+    }
     _read_mdb_txn = nullptr;
     _read_mdb_env = nullptr;
     release();
 }
 
 int CaffeLMDBRecordReader::release() {
-    mdb_cursor_close(_mdb_cursor);
-    mdb_txn_abort(_mdb_txn);
-    mdb_close(_mdb_env, _mdb_dbi);
-
-    mdb_env_close(_mdb_env);
+    if (_mdb_cursor)
+        mdb_cursor_close(_mdb_cursor);
+    if (_mdb_txn)
+        mdb_txn_abort(_mdb_txn);
+    if (_mdb_env) {
+        mdb_close(_mdb_env, _mdb_dbi);
+        mdb_env_close(_mdb_env);
+    }
     _mdb_cursor = nullptr;
     _mdb_txn = nullptr;
     _mdb_env = nullptr;
@@ -137,6 +151,10 @@ Reader::Status CaffeLMDBRecordReader::folder_reading() {
     if (!_file_names.empty())
         std::cout << "CaffeLMDBRecordReader ShardID [" << TOSTR(_shard_id) << "] Total of " << TOSTR(_file_names.size()) << " images loaded from " << _full_path << std::endl;
 
+    closedir(_sub_dir);
+    if (_file_names.empty())
+        THROW("CaffeLMDBRecordReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Did not load any file from " + _full_path);
+
     size_t padded_samples = ((_shard_size > 0) ? _shard_size : largest_shard_size_without_padding()) % _batch_size;
     _last_batch_padded_size = ((_batch_size > 1) && (padded_samples > 0)) ? (_batch_size - padded_samples) : 0;
     
@@ -146,7 +164,6 @@ Reader::Status CaffeLMDBRecordReader::folder_reading() {
     }
     _last_file_name = _file_names[_file_names.size() - 1];
     compute_start_and_end_idx_of_all_shards();
-    closedir(_sub_dir);
     return ret;
 }
 
@@ -175,7 +192,7 @@ void CaffeLMDBRecordReader::read_image_names() {
     // The size of the memory map is also the maximum size of the database.
     CHECK_LMDB_RETURN_STATUS(mdb_env_set_mapsize(_mdb_env, _file_byte_size));
     // Opening an environment handle.
-    CHECK_LMDB_RETURN_STATUS(mdb_env_open(_mdb_env, _path.c_str(), MDB_RDONLY, 0664));
+    CHECK_LMDB_RETURN_STATUS(mdb_env_open(_mdb_env, _path.c_str(), kLmdbReadFlags, 0664));
     // Creating a transaction for use with the environment
     CHECK_LMDB_RETURN_STATUS(mdb_txn_begin(_mdb_env, NULL, MDB_RDONLY, &_mdb_txn));
     // Opening a database in the environment.
@@ -216,7 +233,7 @@ void CaffeLMDBRecordReader::open_env_for_read_image() {
     // The size of the memory map is also the maximum size of the database.
     CHECK_LMDB_RETURN_STATUS(mdb_env_set_mapsize(_read_mdb_env, _file_byte_size));
     // Opening an environment handle.
-    CHECK_LMDB_RETURN_STATUS(mdb_env_open(_read_mdb_env, _path.c_str(), MDB_RDONLY, 0664));
+    CHECK_LMDB_RETURN_STATUS(mdb_env_open(_read_mdb_env, _path.c_str(), kLmdbReadFlags, 0664));
     // Creating a transaction for use with the environment
     CHECK_LMDB_RETURN_STATUS(mdb_txn_begin(_read_mdb_env, NULL, MDB_RDONLY, &_read_mdb_txn));
     // Opening a database in the environment.

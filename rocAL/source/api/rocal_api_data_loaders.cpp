@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2026 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -40,10 +40,8 @@ THE SOFTWARE.
 #include "loaders/audio/node_audio_loader_single_shard.h"
 #include "augmentations/audio_augmentations/node_downmix.h"
 #endif
-#ifdef ROCAL_VIDEO
 #include "loaders/video/node_video_loader.h"
 #include "loaders/video/node_video_loader_single_shard.h"
-#endif
 #include "augmentations/geometry_augmentations/node_resize.h"
 #include "rocal_api.h"
 
@@ -246,7 +244,7 @@ rocalJpegFileSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -307,7 +305,7 @@ rocalJpegFileSource(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -373,7 +371,7 @@ rocalSequenceReader(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -440,7 +438,7 @@ rocalSequenceReaderSingleShard(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -502,7 +500,7 @@ rocalJpegCaffe2LMDBRecordSource(
 #endif
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -568,7 +566,7 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
 #endif
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -632,7 +630,7 @@ rocalJpegCaffeLMDBRecordSource(
 #endif
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -698,7 +696,7 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
 #endif
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -768,7 +766,7 @@ rocalJpegCaffeLMDBRecordSourcePartialSingleShard(
 #endif
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -837,7 +835,7 @@ rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(
 #endif
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -898,7 +896,7 @@ rocalMXNetRecordSource(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -961,7 +959,7 @@ rocalMXNetRecordSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1023,7 +1021,7 @@ rocalJpegCOCOFileSource(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1086,7 +1084,7 @@ rocalJpegCOCOFileSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1146,7 +1144,7 @@ rocalFusedJpegCrop(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1210,7 +1208,7 @@ rocalJpegCOCOFileSourcePartial(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1277,7 +1275,7 @@ rocalJpegCOCOFileSourcePartialSingleShard(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1344,7 +1342,7 @@ rocalJpegTFRecordSource(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1415,7 +1413,7 @@ rocalJpegTFRecordSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1470,7 +1468,7 @@ rocalRawTFRecordSource(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1529,7 +1527,7 @@ rocalRawTFRecordSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1593,7 +1591,7 @@ rocalFusedJpegCropSingleShard(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1618,7 +1616,6 @@ rocalVideoFileSource(
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     auto context = static_cast<Context*>(p_context);
     try {
-#ifdef ROCAL_VIDEO
         if (sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
 
@@ -1647,11 +1644,8 @@ rocalVideoFileSource(
             auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
-#else
-        THROW("Video decoder is not enabled since ffmpeg is not present")
-#endif
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1693,7 +1687,7 @@ rocalNumpyFileSource(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1742,7 +1736,7 @@ rocalNumpyFileSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1768,7 +1762,6 @@ rocalVideoFileSourceSingleShard(
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     auto context = static_cast<Context*>(p_context);
     try {
-#ifdef ROCAL_VIDEO
         if (sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
 
@@ -1803,11 +1796,8 @@ rocalVideoFileSourceSingleShard(
             auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
-#else
-        THROW("Video decoder is not enabled since ffmpeg is not present")
-#endif
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1839,7 +1829,6 @@ rocalVideoFileResize(
     ROCAL_INVALID_CONTEXT_ERR(p_context, resize_output);
     auto context = static_cast<Context*>(p_context);
     try {
-#ifdef ROCAL_VIDEO
         if (sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
 
@@ -1859,18 +1848,31 @@ rocalVideoFileResize(
                                tensor_layout,
                                color_format);
 
-        Tensor* output = context->master_graph->create_internal_tensor(info);
-        context->master_graph->add_node<VideoLoaderNode>({}, {output})->init(internal_shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
-        context->master_graph->set_loop(loop);
+        // Only a request that matches the source in *both* dimensions needs no resize node. Using &&
+        // here let a request like 2048x512 on a 2048x1024 clip fall through to the native-size branch
+        // and come back unresized.
+        const bool needs_resize = (dest_width != video_prop.width || dest_height != video_prop.height);
 
-        if (dest_width != video_prop.width && dest_height != video_prop.height) {
+        // Check the resize arguments before the loader is inserted, not after. These throws used to
+        // run below, once the loader was already registered, and the handler only discards this
+        // call's output tensor - which is still null at that point - so the rejected clip's loader
+        // was left in the graph, counting towards the pipeline's loaders and its sample count.
+        if (needs_resize) {
             if ((dest_width | dest_height | resize_longer | resize_shorter) == 0)
                 THROW("Atleast one size 'dest_width' or 'dest_height' or 'resize_shorter' or 'resize_longer' must be specified")
             if ((dest_width | dest_height) && (resize_longer | resize_shorter))
                 THROW("Only one method of specifying size can be used \ndest_width and/or dest_height\nresize_shorter\nresize_longer")
             if (resize_longer && resize_shorter)
                 THROW("'resize_longer' and 'resize_shorter' cannot be passed together. They are mutually exclusive.")
+            if (max_size.size() > 2)
+                THROW("The length of max_size vector exceeds the image dimension.")
+        }
 
+        Tensor* output = context->master_graph->create_internal_tensor(info);
+        context->master_graph->add_node<VideoLoaderNode>({}, {output})->init(internal_shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
+        context->master_graph->set_loop(loop);
+
+        if (needs_resize) {
             unsigned out_width, out_height;
             RocalResizeScalingMode resize_scaling_mode;
 
@@ -1887,15 +1889,12 @@ rocalVideoFileResize(
                 out_height = dest_height;
             }
 
+            // A longer max_size was rejected above, before the loader was inserted.
             std::vector<unsigned> maximum_size;
-            if (max_size.size()) {
-                if (max_size.size() == 1) {
-                    maximum_size = {max_size[0], max_size[0]};
-                } else if (max_size.size() == 2) {
-                    maximum_size = {max_size[0], max_size[1]};  // {width, height}
-                } else {
-                    THROW("The length of max_size vector exceeds the image dimension.")
-                }
+            if (max_size.size() == 1) {
+                maximum_size = {max_size[0], max_size[0]};
+            } else if (max_size.size() == 2) {
+                maximum_size = {max_size[0], max_size[1]};  // {width, height}
             }
 
             // Determine the max width and height to be set to the output info
@@ -1942,16 +1941,18 @@ rocalVideoFileResize(
                 context->master_graph->add_node<CopyNode>({resize_output}, {actual_output});
             }
         } else {
+            // Decoded at native size: there is no resize node, so the decoded tensor is this
+            // call's result. Returning it is what every sibling loader does, rocalVideoFileSource
+            // among them; without it the function hands back nullptr even though it succeeded,
+            // leaving the caller with no handle to chain or inspect.
+            resize_output = output;
             if (is_output) {
                 auto actual_output = context->master_graph->create_tensor(info, is_output);
                 context->master_graph->add_node<CopyNode>({output}, {actual_output});
             }
         }
-#else
-        THROW("Video decoder is not enabled since ffmpeg is not present")
-#endif
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, resize_output);
     }
     return resize_output;
 }
@@ -1984,7 +1985,6 @@ rocalVideoFileResizeSingleShard(
     ROCAL_INVALID_CONTEXT_ERR(p_context, resize_output);
     auto context = static_cast<Context*>(p_context);
     try {
-#ifdef ROCAL_VIDEO
         if (sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
 
@@ -2009,18 +2009,31 @@ rocalVideoFileResizeSingleShard(
                                RocalTensorDataType::UINT8,
                                tensor_layout,
                                color_format);
-        Tensor* output = context->master_graph->create_internal_tensor(info);
-        context->master_graph->add_node<VideoLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
-        context->master_graph->set_loop(loop);
+        // Only a request that matches the source in *both* dimensions needs no resize node. Using &&
+        // here let a request like 2048x512 on a 2048x1024 clip fall through to the native-size branch
+        // and come back unresized.
+        const bool needs_resize = (dest_width != video_prop.width || dest_height != video_prop.height);
 
-        if (dest_width != video_prop.width && dest_height != video_prop.height) {
+        // Check the resize arguments before the loader is inserted, not after. These throws used to
+        // run below, once the loader was already registered, and the handler only discards this
+        // call's output tensor - which is still null at that point - so the rejected clip's loader
+        // was left in the graph, counting towards the pipeline's loaders and its sample count.
+        if (needs_resize) {
             if ((dest_width | dest_height | resize_longer | resize_shorter) == 0)
                 THROW("Atleast one size 'dest_width' or 'dest_height' or 'resize_shorter' or 'resize_longer' must be specified")
             if ((dest_width | dest_height) && (resize_longer | resize_shorter))
                 THROW("Only one method of specifying size can be used \ndest_width and/or dest_height\nresize_shorter\nresize_longer")
             if (resize_longer && resize_shorter)
                 THROW("'resize_longer' and 'resize_shorter' cannot be passed together. They are mutually exclusive.")
+            if (max_size.size() > 2)
+                THROW("The length of max_size vector exceeds the image dimension.")
+        }
 
+        Tensor* output = context->master_graph->create_internal_tensor(info);
+        context->master_graph->add_node<VideoLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
+        context->master_graph->set_loop(loop);
+
+        if (needs_resize) {
             unsigned out_width, out_height;
             RocalResizeScalingMode resize_scaling_mode;
 
@@ -2037,15 +2050,12 @@ rocalVideoFileResizeSingleShard(
                 out_height = dest_height;
             }
 
+            // A longer max_size was rejected above, before the loader was inserted.
             std::vector<unsigned> maximum_size;
-            if (max_size.size()) {
-                if (max_size.size() == 1) {
-                    maximum_size = {max_size[0], max_size[0]};
-                } else if (max_size.size() == 2) {
-                    maximum_size = {max_size[0], max_size[1]};  // {width, height}
-                } else {
-                    THROW("The length of max_size vector exceeds the image dimension.")
-                }
+            if (max_size.size() == 1) {
+                maximum_size = {max_size[0], max_size[0]};
+            } else if (max_size.size() == 2) {
+                maximum_size = {max_size[0], max_size[1]};  // {width, height}
             }
 
             // Determine the max width and height to be set to the output info
@@ -2091,16 +2101,18 @@ rocalVideoFileResizeSingleShard(
                 context->master_graph->add_node<CopyNode>({resize_output}, {actual_output});
             }
         } else {
+            // Decoded at native size: there is no resize node, so the decoded tensor is this
+            // call's result. Returning it is what every sibling loader does, rocalVideoFileSource
+            // among them; without it the function hands back nullptr even though it succeeded,
+            // leaving the caller with no handle to chain or inspect.
+            resize_output = output;
             if (is_output) {
                 auto actual_output = context->master_graph->create_tensor(info, is_output);
                 context->master_graph->add_node<CopyNode>({output}, {actual_output});
             }
         }
-#else
-        THROW("Video decoder is not enabled since ffmpeg is not present")
-#endif
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, resize_output);
     }
     return resize_output;
 }
@@ -2145,7 +2157,7 @@ rocalRawCIFAR10Source(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2196,7 +2208,7 @@ rocalRawCIFAR10SourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2252,7 +2264,7 @@ rocalJpegExternalFileSource(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2318,10 +2330,10 @@ rocalAudioFileSourceSingleShard(
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 #else
-        THROW("Audio decoder is not enabled since sndfile is not present")
+        THROW("rocAL was built without audio support: it needs SndFile, and a vx_rpp built against an RPP that has audio augmentations")
 #endif
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2384,10 +2396,10 @@ rocalAudioFileSource(
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 #else
-        THROW("Audio decoder is not enabled since sndfile is not present")
+        THROW("rocAL was built without audio support: it needs SndFile, and a vx_rpp built against an RPP that has audio augmentations")
 #endif
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2451,7 +2463,7 @@ rocalWebDatasetSourceSingleShard(
         THROW("Webdataset reader is not enabled since libtar is not present")
 #endif
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }

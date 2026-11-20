@@ -61,6 +61,17 @@ set(CMAKE_SKIP_BUILD_RPATH TRUE)
 
 find_package(MIVisionX QUIET)
 find_package(TurboJpeg QUIET)
+# pybind11 >= 3.1 is required: Python 3.14 support landed in pybind11 3.0, and
+# older releases (e.g. 2.11.1) fail to build the module against 3.14 headers.
+# 3.1 is the version validated here and in downstream packaging. The version
+# floor is enforced below so an installed-but-too-old pybind11 reports a clear
+# version-specific message instead of a bare "Not Found".
+set(ROCAL_PYBIND11_MIN_VERSION "3.1")
+# Make pybind11 use CMake's modern FindPython instead of the removed
+# FindPythonLibs/FindPythonInterp modules, which otherwise emit a CMP0148 dev
+# warning. This is already the default in pybind11 3.x; setting it explicitly
+# also silences the warning when an older pybind11 is present in the environment.
+set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 QUIET CONFIG)
 find_package(HALF QUIET)
 find_package(OpenMP COMPONENTS CXX QUIET)
@@ -135,7 +146,10 @@ endif()
 # PyBind11
 if(NOT pybind11_FOUND)
     set(BUILD_ROCAL_PYBIND false)
-    message("-- ${Yellow}NOTE: rocAL pybind requires pybind11, Not Found${ColourReset}")
+    message("-- ${Yellow}NOTE: rocAL pybind requires pybind11 >= ${ROCAL_PYBIND11_MIN_VERSION}, Not Found${ColourReset}")
+elseif(pybind11_VERSION VERSION_LESS ROCAL_PYBIND11_MIN_VERSION)
+    set(BUILD_ROCAL_PYBIND false)
+    message("-- ${Yellow}NOTE: rocAL pybind requires pybind11 >= ${ROCAL_PYBIND11_MIN_VERSION}, but found ${pybind11_VERSION}. Please upgrade pybind11 (Python 3.14 needs pybind11 3.0+)${ColourReset}")
 endif()
 # Half
 if(NOT HALF_FOUND)
@@ -150,7 +164,7 @@ endif()
 
 if(${BUILD_ROCAL_PYBIND})
     # multi version python support
-    set(PYTHON_VERSIONS "3.13" "3.12" "3.11" "3.10" "3.9" "3.8")
+    set(PYTHON_VERSIONS "3.14" "3.13" "3.12" "3.11" "3.10" "3.9")
     if(PYTHON_VERSION_SUGGESTED)
         set(PYTHON_VERSIONS "${PYTHON_VERSION_SUGGESTED}")
     endif()
@@ -184,13 +198,19 @@ if(${BUILD_ROCAL_PYBIND})
             message("-- ${Yellow}NOTE: Python${PY_VERSION} Not Found, not building rocAL pybind for Python${PY_VERSION}${ColourReset}")
             continue()
         else()
-            # Enable PythonFunction operator in core rocAL library when building pybind
-            # and all Python/pybind11/MIVisionX conditions are satisfied.
-            if (VX_EXT_RPP_VERSION VERSION_GREATER_EQUAL "3.1.1")
+            # Enable the PythonFunction operator in the core rocAL library when it is explicitly
+            # requested and all Python/pybind11/MIVisionX conditions are satisfied.
+            # Disabled by default: the operator compiles the CPython C-API into librocal.so,
+            # which leaves the core library with unresolved Py* symbols and unusable from plain
+            # C/C++ applications (https://github.com/ROCm/rocAL/issues/522).
+            if(NOT ROCAL_PYTHON_FUNCTION)
+                message("-- ${Yellow}NOTE: rocAL PythonFunction operator disabled - set -DROCAL_PYTHON_FUNCTION=ON to enable${ColourReset}")
+            elseif(VX_EXT_RPP_VERSION VERSION_GREATER_EQUAL "3.1.1")
                 target_compile_definitions(rocal PUBLIC ROCAL_PYTHON_FUNCTION)
                 target_include_directories(rocal PRIVATE ${Python3_INCLUDE_DIRS} ${pybind11_INCLUDE_DIRS})
                 target_link_libraries(rocal ${Python3_LIBRARIES})
                 message("-- ${White}rocAL PythonFunction operator enabled for pybind${ColourReset}")
+                message("-- ${Yellow}WARNING: ROCAL_PYTHON_FUNCTION=ON embeds the CPython C-API in librocal.so. The Python module works, but C/C++ applications will fail to link or dlopen librocal.so (https://github.com/ROCm/rocAL/issues/522)${ColourReset}")
             else()
                 message("-- ${Yellow}NOTE: rocAL PythonFunction operator disabled - requires Python3, pybind11 and MIVisionX vx_rpp >= 3.1.1${ColourReset}")
             endif()
@@ -216,7 +236,6 @@ if(${BUILD_ROCAL_PYBIND})
             list(APPEND LINK_LIBRARY_LIST_${PY_VERSION} rocal)
             # OpenMP
             list(APPEND LINK_LIBRARY_LIST_${PY_VERSION} ${OpenMP_CXX_LIBRARIES})
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-rpath='$ORIGIN:$ORIGIN/llvm/lib'")
 
             # Binding sources
             set(BINDING_SOURCES
@@ -262,6 +281,10 @@ if(${BUILD_ROCAL_PYBIND})
                 PREFIX ""
                 SUFFIX "${Python3_EXTENSION_SUFFIX}"
                 OUTPUT_NAME "rocal_pybind")
+            # Record the module rpath with a raw linker flag rather than the INSTALL_RPATH property:
+            # the build disables CMake's rpath handling (CMAKE_SKIP_BUILD_RPATH here and
+            # CMAKE_SKIP_INSTALL_RPATH at the top level), which would drop an INSTALL_RPATH entry.
+            set_property(TARGET ${mod_tgt} APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-rpath,'$ORIGIN:$ORIGIN/llvm/lib'")
 
             # Python files - Install
             install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/amd/"

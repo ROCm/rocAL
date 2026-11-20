@@ -214,6 +214,8 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
 
 MasterGraph::Status
 MasterGraph::run() {
+    // Checked before _processing, which an output routine clears when it fails.
+    rethrow_process_exception();
     if (!_processing)  // The user should not call the run function before the build() is called or while reset() is happening
         return MasterGraph::Status::NOT_RUNNING;
 
@@ -224,6 +226,10 @@ MasterGraph::run() {
     _rb_block_if_empty_time.start();
     _ring_buffer.block_if_empty();  // wait here if the user thread (caller of this function) is faster in consuming the processed images compare to th output routine in producing them
     _rb_block_if_empty_time.end();
+
+    // An output routine may have failed while this thread was blocked above, which is what woke it.
+    // Check before touching the batch state below, so run() cannot report OK without a valid batch.
+    rethrow_process_exception();
 
     if (_first_run) {
         // calling run pops the processed images that have been used by user, when user calls run() for the first time
@@ -360,6 +366,104 @@ MasterGraph::create_tensor(const TensorInfo &info, bool is_output) {
     return output;
 }
 
+void MasterGraph::validate_inputs(const std::vector<Tensor *> &inputs) {
+    std::shared_ptr<Node> first_parent = nullptr;
+
+    for (auto &input : inputs) {
+        auto parent = _tensor_map.find(input);
+        if (parent == _tensor_map.end())
+            THROW("Input tensor is invalid, cannot be found among output of previously created nodes")
+
+        // Node::add_previous() rejects parents from different loaders' graphs, but only once the
+        // node and some of its parent links are already in place, leaving a node behind that holds
+        // an output discard_tensor() would then free. Reject the same combination up front instead.
+        if (!first_parent)
+            first_parent = parent->second;
+        else if (parent->second->get_graph_id() != first_parent->get_graph_id())
+            THROW("The nodes are interdependent between 2 graphs")
+    }
+}
+
+// Takes the node by value on purpose: the only references the caller has to it are the ones this
+// function removes, and the node has to stay alive while they go.
+bool MasterGraph::discard_node(std::shared_ptr<Node> node) {
+    // Only the operator added last can be rolled back. These lists are append-only, and an
+    // operator added after this one may already consume its outputs, so anything else has to be
+    // left alone - the same reason discard_tensor() only unwinds the most recent create_tensor().
+    //
+    // Every augmentation lands in _nodes and every loader in _root_nodes, so that pair is the
+    // test. _pipeline_operators is not: only the two ImageLoaderNode specializations record one,
+    // and keying on it refuses to roll back a video, audio, numpy, CIFAR-10 or fused-crop loader.
+    const bool is_last_augmentation = !_nodes.empty() && _nodes.back() == node;
+    const bool is_last_loader = !_root_nodes.empty() && _root_nodes.back() == node;
+    if (!is_last_augmentation && !is_last_loader)
+        return false;
+
+    // Only pop an entry this node actually added, for the same reason.
+    if (!_pipeline_operators.empty() && _pipeline_operators.back()->node == node) {
+        _pipeline_operators.pop_back();
+        _op_idx--;
+    }
+
+    // Drop the links the parents gained. The node itself goes away with the last reference to it,
+    // taking its own _prev with it.
+    for (auto &input : node->input()) {
+        auto parent = _tensor_map.find(input);
+        if (parent != _tensor_map.end())
+            parent->second->remove_next(node);
+    }
+
+    for (auto &output : node->output())
+        _tensor_map.erase(output);
+
+    if (is_last_augmentation)
+        _nodes.pop_back();
+
+    // A loader also registered its module and claimed a graph id, which is what decides whether
+    // build() takes the single or the multi-graph path, and how many samples the pipeline has.
+    if (is_last_loader) {
+        _root_nodes.pop_back();
+        if (!_loader_modules.empty())
+            _loader_modules.pop_back();
+        if (_loaders_count > 0)
+            _loaders_count--;
+    }
+
+    return true;
+}
+
+void MasterGraph::discard_tensor(Tensor *tensor) {
+    if (tensor == nullptr)
+        return;
+
+    // Reached when an entry point threw after add_node() succeeded - from the node's init(), most
+    // often. The node holds this tensor as its output and is still in the graph, so build() would
+    // go on to create it from the very arguments init() rejected. Take the node out first; if it
+    // cannot be rolled back, leave the tensor alone too, since deleting it would leave the node
+    // holding a dangling output.
+    auto producer = _tensor_map.find(tensor);
+    if (producer != _tensor_map.end() && !discard_node(producer->second))
+        return;
+
+    // create_tensor(info, true) appends to both lists and allocates a user-facing replica. Only the
+    // most recent entry point can be rolled back, which is the one that just failed.
+    if (!_internal_tensor_list.empty() && _internal_tensor_list.back() == tensor) {
+        _internal_tensor_list.pop_back();
+        delete _output_tensor_list.back();
+        _output_tensor_list.pop_back();
+        delete tensor;
+        return;
+    }
+
+    // create_internal_tensor() hands ownership to _internal_tensors, which release() frees.
+    if (std::find(_internal_tensors.begin(), _internal_tensors.end(), tensor) != _internal_tensors.end())
+        return;
+
+    // create_tensor(info, false): nothing holds it yet, since the virtual tensor is only created
+    // once the graph is built. Without this the tensor leaks for the whole process.
+    delete tensor;
+}
+
 void MasterGraph::set_output(Tensor *output_tensor) {
     if (output_tensor->is_handle_set() == false) {
         if (output_tensor->create_from_handle(_context) != 0)
@@ -375,6 +479,10 @@ void MasterGraph::set_output(Tensor *output_tensor) {
 }
 
 void MasterGraph::release() {
+    // build() and the metadata getters below release the graph before throwing, so the caller's
+    // rocalRelease() would otherwise release it a second time and walk freed nodes.
+    if (_released) return;
+    _released = true;
     LOG("MasterGraph release ...")
     // Unblock any threads that might be waiting on ring buffer read/write calls during shutdown.
     _ring_buffer.release_all_blocked_calls();
@@ -499,6 +607,16 @@ MasterGraph::output_height() {
     return _output_tensor_list[0]->info().max_shape()[1];
 }
 
+size_t
+MasterGraph::output_byte_size(size_t tensor_index) {
+    // The size copy_output() requires of the user's buffer, taken from the tensor itself so that
+    // the channel count and the data type are both accounted for.
+    if (tensor_index >= _output_tensor_list.size())
+        THROW("Output tensor index " + TOSTR(tensor_index) + " is out of range, the pipeline has " +
+              TOSTR(_output_tensor_list.size()) + " output tensors")
+    return _output_tensor_list[tensor_index]->info().data_size();
+}
+
 void MasterGraph::sequence_start_frame_number(std::vector<size_t> &sequence_start_framenum) {
     sequence_start_framenum = _sequence_start_framenum_vec.back();
     _sequence_start_framenum_vec.pop_back();
@@ -511,6 +629,17 @@ void MasterGraph::sequence_frame_timestamps(std::vector<std::vector<float>> &seq
 
 MasterGraph::Status
 MasterGraph::reset() {
+    // A reset with no run() since the previous one has nothing to rewind. Readers do not roll
+    // their read pointer back over prefetched but undelivered samples, and this function
+    // restarts prefetching, so a second reset would drop those batches while leaving the
+    // pointer past them, starting the next epoch part way through the shard. Only skip when the
+    // pipeline is otherwise healthy: a stopped worker, or a stored processing error that only
+    // start_processing() clears, still needs the reset to recover.
+    if (_first_run && _processing) {
+        std::lock_guard<std::mutex> lock(_process_exception_lock);
+        if (!_process_exception)
+            return Status::OK;
+    }
     // stop the internal processing thread so that the
     _processing = false;
     _ring_buffer.unblock_writer();
@@ -916,17 +1045,17 @@ bool MasterGraph::is_out_of_data() {
 
 void MasterGraph::output_routine() {
     INFO("Output routine started with " + TOSTR(_remaining_count) + " to load");
-#if ENABLE_HIP
-    // Set device ID for output routine thread once
-    if (!_set_device_id) {
-        hipError_t hip_status = hipSetDevice(_gpu_id);
-        if (hip_status != hipSuccess) {
-            THROW("hipSetDevice failed");
-        }
-        _set_device_id = true;
-    }
-#endif
     try {
+#if ENABLE_HIP
+        // Set device ID for output routine thread once. A CPU pipeline has no device to select.
+        if (_affinity == RocalAffinity::GPU && !_set_device_id) {
+            hipError_t hip_status = hipSetDevice(_gpu_id);
+            if (hip_status != hipSuccess) {
+                THROW("hipSetDevice failed for device " + TOSTR(_gpu_id) + ", " + STR(hipGetErrorName(hip_status)));
+            }
+            _set_device_id = true;
+        }
+#endif
         while (_processing) {
             if (_loader_module->remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size)) {
                 // If the internal process routine ,output_routine(), has finished processing all the images, and last
@@ -1038,6 +1167,12 @@ void MasterGraph::output_routine() {
         }
     } catch (const std::exception &e) {
         ERR("Exception thrown in the process routine: " + STR(e.what()) + STR("\n"));
+        {
+            // Hand the error to the user thread, which rethrows it from run(). Without this the
+            // caller only sees processing stop and reports an unrelated downstream failure.
+            std::lock_guard<std::mutex> lock(_process_exception_lock);
+            _process_exception = std::current_exception();
+        }
         _processing = false;
         _ring_buffer.release_all_blocked_calls();
     }
@@ -1045,17 +1180,17 @@ void MasterGraph::output_routine() {
 
 void MasterGraph::output_routine_multiple_loaders() {
     INFO("Output routine for multiple loaders started with " + TOSTR(_remaining_count) + " to load");
-#if ENABLE_HIP
-    // Set device ID for output routine thread once
-    if (!_set_device_id) {
-        hipError_t hip_status = hipSetDevice(_gpu_id);
-        if (hip_status != hipSuccess) {
-            THROW("hipSetDevice failed");
-        }
-        _set_device_id = true;
-    }
-#endif
     try {
+#if ENABLE_HIP
+        // Set device ID for output routine thread once. A CPU pipeline has no device to select.
+        if (_affinity == RocalAffinity::GPU && !_set_device_id) {
+            hipError_t hip_status = hipSetDevice(_gpu_id);
+            if (hip_status != hipSuccess) {
+                THROW("hipSetDevice failed for device " + TOSTR(_gpu_id) + ", " + STR(hipGetErrorName(hip_status)));
+            }
+            _set_device_id = true;
+        }
+#endif
         while (_processing) {
             if (is_out_of_data()) {
                 // If the internal process routine ,output_routine(), has finished processing all the images, and last
@@ -1106,12 +1241,32 @@ void MasterGraph::output_routine_multiple_loaders() {
         }
     } catch (const std::exception &e) {
         ERR("Exception thrown in the process routine: " + STR(e.what()) + STR("\n"));
+        {
+            // Hand the error to the user thread, which rethrows it from run(). Without this the
+            // caller only sees processing stop and reports an unrelated downstream failure.
+            std::lock_guard<std::mutex> lock(_process_exception_lock);
+            _process_exception = std::current_exception();
+        }
         _processing = false;
         _ring_buffer.release_all_blocked_calls();
     }
 }
 
+void MasterGraph::rethrow_process_exception() {
+    std::exception_ptr process_exception;
+    {
+        std::lock_guard<std::mutex> lock(_process_exception_lock);
+        process_exception = _process_exception;
+    }
+    if (process_exception) std::rethrow_exception(process_exception);
+}
+
 void MasterGraph::start_processing() {
+    {
+        // Drop any error left by a previous run so a restarted pipeline is not reported as failed.
+        std::lock_guard<std::mutex> lock(_process_exception_lock);
+        _process_exception = nullptr;
+    }
     _processing = true;
     _remaining_count = _loader_modules[0]->remaining_count();
     for (int i = 1; i < _loaders_count; i++) {
@@ -1545,11 +1700,23 @@ TensorListVector* MasterGraph::create_cifar10_label_reader(const char *source_pa
     return &_metadata_output_tensor_list;
 }
 
-const std::pair<ImageNameBatch, pMetaDataBatch> &MasterGraph::meta_data() {
+// run() returns once it has popped the previous batch, so the output thread may still be filling
+// the one it made current. Wait for it the way the output copy does, instead of reporting a batch
+// that is merely not ready yet as one that was never loaded. This cannot hang: _processing is
+// false before build() and after release(), no_more_processed_data() covers the drained pipeline,
+// and an output routine that is out of data or has failed wakes the wait.
+void MasterGraph::wait_for_meta_data() {
+    if (_ring_buffer.level() == 0 && _processing && !no_more_processed_data())
+        _ring_buffer.block_if_empty();
     if (_ring_buffer.level() == 0) {
+        rethrow_process_exception();  // An empty ring buffer usually means the pipeline failed; report that, not the generic message
         release();
         THROW("No meta data has been loaded")
     }
+}
+
+const std::pair<ImageNameBatch, pMetaDataBatch> &MasterGraph::meta_data() {
+    wait_for_meta_data();
     return _ring_buffer.get_meta_data();
 }
 
@@ -1580,10 +1747,7 @@ TensorList *MasterGraph::labels_meta_data() {
     if (!_meta_data_reader && _loaders_count > 1)
         THROW("Metadata reader is not compatible with multiple loaders")
 
-    if (_ring_buffer.level() == 0) {
-        release();
-        THROW("No meta data has been loaded")
-    }
+    wait_for_meta_data();
     auto meta_data_buffers = (unsigned char *)_ring_buffer.get_meta_read_buffers()[0];  // Get labels buffer from ring buffer
     auto labels = _ring_buffer.get_meta_data().second->get_labels_batch();
     for (unsigned i = 0; i < _labels_tensor_list.size(); i++) {
@@ -1601,10 +1765,7 @@ TensorListVector *MasterGraph::ascii_values_meta_data() {
     if (_external_source_reader) {
         return &_webdataset_output_tensor_list;
     }
-    if (_ring_buffer.level() == 0) { 
-        release();
-        THROW("No meta data has been loaded")
-    }
+    wait_for_meta_data();
 
     for (uint ext = 0; ext < _ascii_tensor_list.size(); ext++) {
         auto meta_data_buffers = (uint8_t *)_ring_buffer.get_meta_read_buffers()[ext]; // Get ASCII buffer from ring buffer
@@ -1627,10 +1788,7 @@ TensorListVector *MasterGraph::ascii_values_meta_data() {
 TensorList *MasterGraph::bbox_meta_data() {
     if (!_meta_data_reader && _loaders_count > 1)
         THROW("Metadata reader is not compatible with multiple loaders")
-    if (_ring_buffer.level() == 0) {
-        release();
-        THROW("No meta data has been loaded")
-    }
+    wait_for_meta_data();
     auto meta_data_buffers = (unsigned char *)_ring_buffer.get_meta_read_buffers()[1];  // Get bbox buffer from ring buffer
     auto bbox_cords = _ring_buffer.get_meta_data().second->get_bb_cords_batch();
     for (unsigned i = 0; i < _bbox_tensor_list.size(); i++) {
@@ -1645,10 +1803,7 @@ TensorList *MasterGraph::bbox_meta_data() {
 TensorList *MasterGraph::mask_meta_data() {
     if (!_meta_data_reader && _loaders_count > 1)
         THROW("Metadata reader is not compatible with multiple loaders")
-    if (_ring_buffer.level() == 0) {
-        release();
-        THROW("No meta data has been loaded")
-    }
+    wait_for_meta_data();
     auto meta_data_buffers = (unsigned char *)_ring_buffer.get_meta_read_buffers()[2];  // Get mask buffer from ring buffer
     auto mask_cords = _ring_buffer.get_meta_data().second->get_mask_cords_batch();
     for (unsigned i = 0; i < _mask_tensor_list.size(); i++) {
@@ -1664,10 +1819,7 @@ TensorList *MasterGraph::matched_index_meta_data() {
     if (!_meta_data_reader && _loaders_count > 1)
         THROW("Metadata reader is not compatible with multiple loaders")
 
-    if (_ring_buffer.level() == 0) {
-        release();
-        THROW("No meta data has been loaded")
-    }
+    wait_for_meta_data();
     auto meta_data_buffers = reinterpret_cast<unsigned char *>(_ring_buffer.get_meta_read_buffers()[2]);  // Get matches buffer from ring buffer
     for (unsigned i = 0; i < _matches_tensor_list.size(); i++) {
         _matches_tensor_list[i]->set_mem_handle(reinterpret_cast<void *>(meta_data_buffers));
@@ -2094,15 +2246,16 @@ std::shared_ptr<Node> MasterGraph::add_node(const std::string& node_name, const 
         for (auto &output : outputs)
             _tensor_map.insert(std::make_pair(output, node));
     } else {
+        // Validate the inputs before anything is created or linked, so that a rejected
+        // operator leaves the graph exactly as it was.
+        validate_inputs(inputs);
+
         node = NodeFactory::instance().create_node(node_name, inputs, outputs);
         _nodes.push_back(node);
 
         _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "augmentation", node));
 
         for (auto &input : inputs) {
-            if (_tensor_map.find(input) == _tensor_map.end())
-                THROW("Input tensor is invalid, cannot be found among output of previously created nodes")
-
             auto parent_node = _tensor_map.find(input)->second;
             parent_node->add_next(node);
             node->add_previous(parent_node);

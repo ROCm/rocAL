@@ -44,6 +44,7 @@ class Node {
     const std::vector<Tensor *>& input() const { return _inputs; }
     const std::vector<Tensor *>& output() const { return _outputs; }
     void add_next(const std::shared_ptr<Node> &node);   // Adds the Node next to the current Node
+    void remove_next(const std::shared_ptr<Node> &node);   // Undoes an add_next(), used to unlink a node the graph rejected
     void add_previous(const std::shared_ptr<Node> &node);   // Adds the Node preceding the current Node
     void release();
     std::shared_ptr<Graph> graph() { return _graph; }

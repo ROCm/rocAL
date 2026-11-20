@@ -18,6 +18,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+# NOTE: fn.python_function is disabled by default, so this example raises a RuntimeError unless
+# rocAL was built with -DROCAL_PYTHON_FUNCTION=ON.
+# See https://github.com/ROCm/rocAL/issues/522 for details.
+
 from amd.rocal.plugin.generic import ROCALClassificationIterator
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
