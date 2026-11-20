@@ -31,6 +31,10 @@ import sys
 # path prefix -> (area description, gating status)
 # Status vocabulary:
 #   GATED      - a phase in this skill will fail if it breaks
+#   PARTIAL    - a gate runs, but exercises only a named slice of the area. Reported with
+#                the blind spot spelled out, never folded in with GATED: "covered" for a
+#                directory when one file in it is tested is the most expensive kind of
+#                wrong answer this script can give.
 #   SMOKE      - a test exists but only proves the module imports
 #   ORPHAN     - tests/cpp_api directory with no add_test; nothing runs it
 #   DISABLED   - add_test exists but is commented out in CMakeLists.txt
@@ -41,7 +45,8 @@ COVERAGE_MAP = [
       ("tests/cpp_api/audio_tests", "ORPHAN")]),
     ("rocAL/source/augmentations", "image augmentations",
      [("tests/python_api golden suite", "GATED"),
-      ("ctest unit_tests_{cpu,gpu,gray}", "GATED"),
+      ("ctest unit_tests_{cpu,gpu,gray} - rocalCropResize ONLY (test_case=1 of ~103)",
+       "PARTIAL"),
       ("tests/cpp_api/image_augmentation", "ORPHAN")]),
     ("rocAL/source/decoders/video", "video decoding",
      [("ctest video_tests_ffmpeg / video_tests_rocdecode", "GATED")]),
@@ -58,10 +63,26 @@ COVERAGE_MAP = [
      [("ctest dataloader_multithread_{cpu,gpu}", "GATED"),
       ("tests/cpp_api/dataloader", "DISABLED"),
       ("tests/cpp_api/multiple_dataloaders_test", "ORPHAN")]),
+    # Readers, most specific first. basic_test only ever calls rocalCreateLabelReader and
+    # rocalCreateTextFileBasedLabelReader, so it exercises the plain file path and nothing
+    # else; the golden suite covers coco/tf/caffe/caffe2/mxnet/web_dataset via
+    # --reader-type. These four are covered by neither.
+    ("rocAL/source/readers/image/cifar10_data_reader", "CIFAR-10 reader",
+     [("no suite in this skill reads CIFAR-10", "ORPHAN")]),
+    ("rocAL/source/readers/image/numpy_data_reader", "NumPy reader",
+     [("numpy_reader.py exists but phase 5 never invokes it", "ORPHAN")]),
+    ("rocAL/source/readers/image/external_source_reader", "external source reader",
+     [("tests/cpp_api/external_source", "ORPHAN")]),
+    ("rocAL/source/readers/video/sequence_file_source_reader", "video sequence reader",
+     [("video_tests cover the video file reader, not the sequence reader", "ORPHAN")]),
+    ("rocAL/source/readers/video", "video readers",
+     [("ctest video_tests_* (only when ROCAL_VIDEO_TESTS_ENABLED)", "GATED")]),
     ("rocAL/source/readers", "readers",
-     [("tests/python_api/readers_test_file.sh", "UNGATED"),
-      ("tests/cpp_api/dataloader_tf", "DISABLED"),
-      ("ctest basic_test_* (file reader path only)", "GATED")]),
+     [("tests/python_api golden suite - coco, tf, caffe, caffe2, mxnet, web_dataset",
+       "GATED"),
+      ("ctest basic_test_* - plain file/label reader path ONLY", "PARTIAL"),
+      ("tests/python_api/readers_test_file.sh", "UNGATED"),
+      ("tests/cpp_api/dataloader_tf", "DISABLED")]),
     ("rocAL/source/pipeline", "core pipeline / graph",
      [("every phase", "GATED"),
       ("ctest checkpoint_save/restore, serialization_test_*", "GATED")]),
@@ -397,12 +418,18 @@ def main():
 
     if not is_baseline_run:
         blind = [i for i in implicated if i["status"] in ("ORPHAN", "DISABLED", "UNGATED")]
+        partial = [i for i in implicated if i["status"] == "PARTIAL"]
         smoke = [i for i in implicated if i["status"] == "SMOKE"]
         if blind:
             print("\n  *** THIS DIFF TOUCHES CODE WITH NO WORKING TEST ***")
             for i in blind:
                 print(f"      [{i['status']:8}] {i['area']}: {i['covered_by']}")
             print("      A green run does NOT mean these paths were exercised.")
+        if partial:
+            print("\n  *** PARTIAL COVERAGE - a gate runs but tests only a slice ***")
+            for i in partial:
+                print(f"      [{i['status']:8}] {i['area']}: {i['covered_by']}")
+            print("      Green here says that slice works. It says nothing about the rest.")
         if smoke:
             print("\n  Smoke-only coverage (proves it imports, not that it computes):")
             for i in smoke:

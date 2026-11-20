@@ -1,52 +1,140 @@
 #!/usr/bin/env python3
-"""Gate a ctest run on the *set* of tests discovered, not just the exit code.
+"""Gate a ctest run on the *set* of tests that should have run, not just the exit code.
 
 Why this exists
 ---------------
-tests/cpp_api/CMakeLists.txt registers tests inside if() blocks keyed on BACKEND==HIP,
-rocdecode_FOUND and rocjpeg_FOUND. A missing dependency therefore SHRINKS the run instead
-of failing it: no GPU drops 23 tests to 10 and still prints "100% tests passed". And a
-project with no tests at all exits 0 ("No tests were found!!!"). Exit code alone cannot
-distinguish "everything passed" from "almost nothing ran".
+tests/cpp_api/CMakeLists.txt registers tests inside if() blocks. A missing dependency
+therefore SHRINKS the run instead of failing it: no GPU drops 23 tests to 10 and still
+prints "100% tests passed". A project with no tests at all exits 0 ("No tests were
+found!!!"). Exit code alone cannot tell "everything passed" from "almost nothing ran".
 
-This script compares discovered test names against the tiered inventory in baselines.json
-and names the specific tests that went missing.
+The expected set is DERIVED from CMakeLists.txt, never pinned
+-------------------------------------------------------------
+An earlier version of this script kept the inventory in baselines.json. It went stale
+twice in three weeks - #580/#582 added two pybind tests, and the cpp_api video tests were
+re-gated from `rocdecode_FOUND` onto `ROCAL_VIDEO_TESTS_ENABLED` /
+`ROCAL_VIDEO_ROCDECODE_AVAILABLE` - and a stale inventory fails in the worst direction:
+it reports real tests as UNEXPECTED and mis-tiers the rest.
 
-The expected set is built from independent dependency flags rather than a fixed ladder,
-because rocdecode_FOUND and rocjpeg_FOUND are separate if() blocks
-(tests/cpp_api/CMakeLists.txt:251-270). A HIP box with rocDecode but no rocJPEG registers
-21 tests and a box with rocJPEG but no rocDecode registers 22 - both are valid, and a
-three-rung ladder of cpu/hip/everything would wrongly flag one as missing tests and the
-other as having unexpected ones.
-
-It also gates the nested build dirs before anything compiles. Each cpp_api case is built
-by `ctest --build-and-test` into a dir that persists under build/tests/cpp_api/ and is
-reused on every later run, and those sub-projects cache ROCM_PATH without FORCE - so the
-first value a dir ever saw stays pinned no matter what the environment says afterwards.
-Reuse build/ across two ROCm installs and the suite links the old one while phase 2
-verified the new one.
+So the inventory is parsed out of the CMakeLists that defines it, together with the if()
+conditions each add_test sits under. The only hand-maintained part is the mapping from a
+CMake condition to a command-line flag, and an unrecognised condition is a HARD ERROR
+rather than a guess - so re-gating a test on something new cannot silently mis-tier it.
 
 Usage:
-    check_ctest.py --build-dir build --baselines baselines.json \\
-                   --rocm-path "$ROCM_PATH" \\
-                   --backend hip [--rocdecode] [--rocjpeg] [--log ctest.log]
-    check_ctest.py --build-dir build --baselines baselines.json --rocm-path "$ROCM_PATH" \\
-                   --backend cpu [--clean-stale-cache]
-    check_ctest.py --suite pybind --build-dir build/validate/pybind --baselines baselines.json
-
-Pass --expect-names to override the computed set entirely.
+    check_ctest.py --build-dir build --source-dir tests/cpp_api \\
+                   --rocm-path "$ROCM_PATH" --backend hip \\
+                   [--rocjpeg] [--video-tests] [--video-rocdecode] \\
+                   [--clean-stale-cache] [--log ctest.log]
+    check_ctest.py --suite pybind --build-dir build/validate/pybind \\
+                   --source-dir tests/pybind
 
 Exit 0 = exit code clean AND the expected set ran. Exit 1 otherwise.
 """
 
 import argparse
-import json
 import os
 import re
 import shutil
 import subprocess
 import sys
 from glob import glob
+
+# CMake condition -> the argparse dest that decides whether it holds.
+#
+# Hand-maintained on purpose, and deliberately small. Anything guarding an add_test that
+# is not in here aborts the run: that is the signal that upstream re-gated a test and this
+# skill has not caught up. Guessing instead would reintroduce exactly the silent drift
+# that retiring the pinned inventory was meant to remove.
+KNOWN_CONDITIONS = {
+    '"${BACKEND}" STREQUAL "HIP"': "hip",
+    "rocjpeg_FOUND": "rocjpeg",
+    "ROCAL_VIDEO_TESTS_ENABLED": "video_tests",
+    "ROCAL_VIDEO_ROCDECODE_AVAILABLE": "video_rocdecode",
+    "Python3_FOUND AND ROCAL_PYBIND_SCRIPTS": "pybind_scripts",
+}
+
+IF_RE = re.compile(r"^if\s*\((.*)\)\s*$")
+ELSEIF_RE = re.compile(r"^elseif\s*\((.*)\)\s*$")
+ELSE_RE = re.compile(r"^else\s*\(")
+ENDIF_RE = re.compile(r"^endif\s*\(")
+ADD_TEST_RE = re.compile(r"^add_test\s*\(")
+NAME_RE = re.compile(r"\bNAME\s+([A-Za-z0-9_]+)")
+
+
+def registered_tests(cmakelists):
+    """-> [(test_name, [conditions])] for every live add_test in the file.
+
+    Commented-out add_test calls are skipped, which is the point: tests/cpp_api has
+    several that are commented out as non-functional, and they must not be expected.
+    """
+    if not os.path.isfile(cmakelists):
+        raise SystemExit(f"cannot read {cmakelists} - is --source-dir correct?")
+
+    stack, found = [], []
+    buf, buf_conds, depth = None, None, 0
+    for raw in open(cmakelists, errors="replace"):
+        line = raw.strip()
+        if line.startswith("#"):
+            continue
+
+        # Inside an add_test(...) call: buffer until the parens balance, then read NAME
+        # off the whole call. tests/cpp_api writes most of them as
+        #     add_test(
+        #       NAME
+        #         basic_test_cpu
+        # so NAME and its value are on different lines and a per-line regex sees neither.
+        if buf is not None:
+            buf.append(line)
+            depth += line.count("(") - line.count(")")
+            if depth <= 0:
+                m = NAME_RE.search(" ".join(buf))
+                if m:
+                    found.append((m.group(1), buf_conds))
+                buf, buf_conds, depth = None, None, 0
+            continue
+
+        m = IF_RE.match(line)
+        if m:
+            stack.append(m.group(1).strip())
+            continue
+        m = ELSEIF_RE.match(line)
+        if m and stack:
+            stack[-1] = m.group(1).strip()
+            continue
+        if ELSE_RE.match(line) and stack:
+            stack[-1] = "NOT(" + stack[-1] + ")"
+            continue
+        if ENDIF_RE.match(line):
+            if stack:
+                stack.pop()
+            continue
+
+        if ADD_TEST_RE.match(line):
+            buf, buf_conds = [line], list(stack)
+            depth = line.count("(") - line.count(")")
+            if depth <= 0:                      # whole call on one line
+                m = NAME_RE.search(line)
+                if m:
+                    found.append((m.group(1), buf_conds))
+                buf, buf_conds, depth = None, None, 0
+    return found
+
+
+def expected_set(entries, held):
+    """Tests whose every enclosing condition is satisfied. Unknown condition -> abort."""
+    unknown = sorted({c for _, conds in entries for c in conds
+                      if c not in KNOWN_CONDITIONS})
+    if unknown:
+        raise SystemExit(
+            "This CMakeLists gates tests on condition(s) this skill does not model:\n"
+            + "".join(f"    {c}\n" for c in unknown)
+            + "Refusing to guess - an unmodelled condition silently mis-tiers every test\n"
+              "under it. Add it to KNOWN_CONDITIONS in check_ctest.py (and give it a flag)\n"
+              "once you have decided what it depends on."
+        )
+    return sorted(n for n, conds in entries
+                  if all(held.get(KNOWN_CONDITIONS[c], False) for c in conds))
 
 
 def cache_value(cache_path, key):
@@ -76,16 +164,11 @@ def stale_nested_caches(build_dir, rocm_path):
 
     with no FORCE (tests/cpp_api/basic_test/CMakeLists.txt:28-33), and `set(... CACHE ...)`
     without FORCE is a no-op once the entry exists. The FIRST ROCM_PATH such a dir ever saw
-    is therefore pinned for its lifetime: exporting a different one changes nothing, and
-    `-DROCM_PATH` on the top-level configure never reaches these sub-projects at all.
+    is pinned for its lifetime: exporting a different one changes nothing, and the
+    top-level -DROCM_PATH never reaches these sub-projects at all.
 
-    That makes phase 0b's export necessary but not sufficient. Switch ROCm installs while
-    reusing build/ and phase 2 verifies install A while the suite silently links and loads
-    install B - the exact stale-install failure this skill exists to catch, arriving by a
-    route that looks clean from the outside.
-
-    Detected by reading the value back out of each nested cache rather than by stamping a
-    file, so it reports what the sub-projects will actually use.
+    So exporting ROCM_PATH is necessary but NOT sufficient. Reuse build/ across two ROCm
+    installs and the install check verifies one while the suite links the other.
     """
     want = os.path.realpath(rocm_path)
     stale = []
@@ -99,11 +182,8 @@ def stale_nested_caches(build_dir, rocm_path):
 
 def discover(build_dir):
     """ctest -N lists registered tests without running them."""
-    res = subprocess.run(
-        ["ctest", "-N"], cwd=build_dir, capture_output=True, text=True,
-    )
-    names = re.findall(r"^\s*Test\s+#\d+:\s+(\S+)\s*$", res.stdout, re.M)
-    return names, res.stdout
+    res = subprocess.run(["ctest", "-N"], cwd=build_dir, capture_output=True, text=True)
+    return re.findall(r"^\s*Test\s+#\d+:\s+(\S+)\s*$", res.stdout, re.M)
 
 
 def parse_results(log_text):
@@ -113,39 +193,36 @@ def parse_results(log_text):
     if m:
         failed, total = int(m.group(2)), int(m.group(3))
         passed = total - failed
-    failing = re.findall(r"^\s*\d+\s+-\s+(\S+)\s+\((?:Failed|Timeout|SEGFAULT|Subprocess aborted|Exception)[^)]*\)",
-                         log_text, re.M)
+    failing = re.findall(
+        r"^\s*\d+\s+-\s+(\S+)\s+\((?:Failed|Timeout|SEGFAULT|Subprocess aborted|Exception)[^)]*\)",
+        log_text, re.M)
     return passed, failed, total, failing
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--build-dir", required=True)
-    ap.add_argument("--baselines", required=True)
+    ap.add_argument("--source-dir", required=True,
+                    help="the dir holding the CMakeLists.txt that registers the tests")
     ap.add_argument("--suite", choices=["cpp_api", "pybind"], default="cpp_api")
     ap.add_argument("--backend", choices=["cpu", "hip"],
                     help="cpp_api only: the BACKEND the tests were configured with")
-    ap.add_argument("--rocdecode", action="store_true",
-                    help="rocdecode_FOUND was true at configure time")
-    ap.add_argument("--rocjpeg", action="store_true",
-                    help="rocjpeg_FOUND was true at configure time")
-    ap.add_argument("--expect-names", help="comma-separated override of the expected set")
-    ap.add_argument("--log", help="path to a ctest run log; if omitted, this script runs ctest")
+    ap.add_argument("--rocjpeg", action="store_true", help="rocjpeg_FOUND was true")
+    ap.add_argument("--video-tests", action="store_true",
+                    help="ROCAL_VIDEO_TESTS_ENABLED was true")
+    ap.add_argument("--video-rocdecode", action="store_true",
+                    help="ROCAL_VIDEO_ROCDECODE_AVAILABLE was true")
     ap.add_argument("--rocm-path",
-                    help="the ROCM_PATH this run is validating; required for cpp_api, which "
-                         "reuses nested build dirs that pin the first value they ever saw")
+                    help="required for cpp_api: the ROCM_PATH this run validates")
     ap.add_argument("--clean-stale-cache", action="store_true",
-                    help="delete nested cpp_api build dirs pinned to a different ROCM_PATH "
-                         "instead of failing")
+                    help="delete nested build dirs pinned to a different ROCM_PATH")
+    ap.add_argument("--log", help="path to a ctest run log; if omitted, this script runs ctest")
     args = ap.parse_args()
-
-    with open(args.baselines) as fh:
-        base = json.load(fh)
 
     # ---- nested-cache staleness (before anything builds) --------------------
     # Must come first: ctest -N only lists, but the run below BUILDS each case in those
-    # nested dirs, so a pinned ROCM_PATH has to be caught before a single object is
-    # compiled against the wrong install.
+    # nested dirs, so a pinned ROCM_PATH has to be caught before anything is compiled
+    # against the wrong install.
     if args.suite == "cpp_api":
         if not args.rocm_path:
             ap.error(
@@ -166,68 +243,56 @@ def main():
             for d, got in stale:
                 print(f"    {d}\n        pinned to {got}")
             print("\n  Running now would build and link every one of those cases against the")
-            print("  OLD install while phase 2 verified the new one. Re-run with")
-            print("  --clean-stale-cache, or delete the directories listed above.")
+            print("  OLD install. Re-run with --clean-stale-cache, or delete them.")
             return 1
 
-    # ---- expected set -------------------------------------------------------
-    if args.expect_names:
-        expected = sorted({n.strip() for n in args.expect_names.split(",") if n.strip()})
-    elif args.suite == "pybind":
-        expected = sorted(base["pybind"]["expected"])
-    else:
-        tiers = base["ctest"]["tiers"]
-        if not args.backend:
-            ap.error("cpp_api needs --backend cpu|hip (or --expect-names)")
-        # rocDecode and rocJPEG only ever register tests inside the HIP block, so their
-        # flags are ignored on a CPU backend rather than silently inflating the set.
-        wanted = ["always"]
-        if args.backend == "hip":
-            wanted.append("hip")
-            if args.rocdecode:
-                wanted.append("rocdecode")
-            if args.rocjpeg:
-                wanted.append("rocjpeg")
-        elif args.rocdecode or args.rocjpeg:
-            print("  note: --rocdecode/--rocjpeg ignored on a CPU backend - those tests "
-                  "are registered only inside the HIP block")
-        expected = sorted(n for key in wanted for n in tiers[key])
-        print(f"  config     : backend={args.backend}"
-              f" rocdecode={args.rocdecode} rocjpeg={args.rocjpeg}")
+    # ---- expected set, derived ----------------------------------------------
+    if args.suite == "cpp_api" and not args.backend:
+        ap.error("cpp_api needs --backend cpu|hip")
 
-    # ---- discovered set -----------------------------------------------------
-    discovered, _ = discover(args.build_dir)
-    discovered_set = sorted(set(discovered))
+    entries = registered_tests(os.path.join(args.source_dir, "CMakeLists.txt"))
+    held = {
+        "hip": args.backend == "hip",
+        "rocjpeg": args.rocjpeg,
+        "video_tests": args.video_tests,
+        "video_rocdecode": args.video_rocdecode,
+        # tests/pybind registers everything under one Python3_FOUND AND
+        # ROCAL_PYBIND_SCRIPTS block; the gate for it not holding is "zero discovered",
+        # handled below as a hard failure, so the expected set always assumes it held.
+        "pybind_scripts": True,
+    }
+    expected = expected_set(entries, held)
+    print(f"  source     : {args.source_dir}/CMakeLists.txt "
+          f"({len(entries)} add_test, {len(expected)} expected here)")
+    if args.suite == "cpp_api":
+        print(f"  config     : backend={args.backend} rocjpeg={args.rocjpeg} "
+              f"video_tests={args.video_tests} video_rocdecode={args.video_rocdecode}")
 
-    print(f"  expected   : {len(expected)} test(s)")
-    print(f"  discovered : {len(discovered_set)} test(s)")
+    discovered = sorted(set(discover(args.build_dir)))
+    print(f"  discovered : {len(discovered)} test(s)")
 
     problems = []
-
-    if not discovered_set:
+    if not discovered:
         problems.append(
-            "ZERO tests discovered. ctest reports 'No tests were found!!!' and still exits 0, "
-            "so this would otherwise read as a pass. For tests/pybind this means rocAL pybind "
-            "is not installed at $ROCM_PATH/lib/amd/rocal."
+            "ZERO tests discovered. ctest reports 'No tests were found!!!' and still exits "
+            "0, so this would otherwise read as a pass. For tests/pybind it means rocAL "
+            "pybind is not installed at $ROCM_PATH/lib/amd/rocal."
         )
-
-    missing = sorted(set(expected) - set(discovered_set))
-    extra = sorted(set(discovered_set) - set(expected))
+    missing = sorted(set(expected) - set(discovered))
+    extra = sorted(set(discovered) - set(expected))
     if missing:
         problems.append("MISSING (silently not registered): " + ", ".join(missing))
     if extra:
         problems.append(
-            "UNEXPECTED (new tests added upstream? update baselines.json): " + ", ".join(extra)
-        )
+            "UNEXPECTED - registered but not predicted from CMakeLists under these flags. "
+            "Check the flags match what configure actually found: " + ", ".join(extra))
 
     # ---- run results --------------------------------------------------------
     if args.log and os.path.isfile(args.log):
         log_text = open(args.log, errors="replace").read()
     else:
-        res = subprocess.run(
-            ["ctest", "--output-on-failure"], cwd=args.build_dir,
-            capture_output=True, text=True,
-        )
+        res = subprocess.run(["ctest", "--output-on-failure"], cwd=args.build_dir,
+                             capture_output=True, text=True)
         log_text = res.stdout + res.stderr
         if args.log:
             with open(args.log, "w") as fh:
@@ -240,11 +305,10 @@ def main():
         print(f"  ran        : {total}, passed {passed}, failed {failed}")
         if failed:
             problems.append(f"{failed} test(s) FAILED: " + ", ".join(failing or ["<unparsed>"]))
-        if total != len(discovered_set):
+        if total != len(discovered):
             problems.append(
-                f"ran {total} but {len(discovered_set)} were registered - a filter or a crash "
-                "cut the run short"
-            )
+                f"ran {total} but {len(discovered)} were registered - a filter or a crash "
+                "cut the run short")
 
     if problems:
         print("\nCTEST GATE FAILED:")

@@ -66,9 +66,12 @@ footnote.
   `external_source`, `image_augmentation`, `multiple_dataloaders_test`,
   `voxel_augmentations_test`, plus `dataloader` and `dataloader_tf` whose `add_test` calls
   are commented out as non-functional.
-- **pybind tests are import smoke tests** - 6/6 means the module loads, nothing more.
+- **6 of the 8 pybind tests are import smoke tests** - they mean the module loads, nothing more. Only `pipeline_scope` (#580) and `rejected_operator` (#582) assert behaviour.
 - **8 randomized augmentations are auto-passed** without comparison (`Snow`, `Rain`,
   `Jitter`, `SNPNoise`, `Fog`, `GaussianNoise`, `ShotNoise`, `Spatter`).
+- **`PARTIAL` gates** - `unit_tests_{cpu,gpu,gray}` runs `rocalCropResize` only (1 of
+  ~103 cases); `basic_test_*` exercises the plain file/label reader path only. The
+  CIFAR-10, NumPy, external-source and video-sequence readers are covered by nothing.
 - **Not run by design:** `testAllScripts.sh` and `video_tests/testScript.sh` (both
   `sudo rm -rf`), `readers_test_file.sh` (no pass/fail of any kind), torch/JAX examples,
   `python_function_example.py` (needs `-DROCAL_PYTHON_FUNCTION=ON`).
@@ -76,7 +79,7 @@ footnote.
 
 ## Standing caveat
 
-The `<19>` host and `<17>` hip python_api baseline failures are **known but not
+The `<f>` host python_api baseline failures are **known but not
 root-caused**. `baselines.json` pins them so a different failure cannot hide inside the
 same count; it does not bless them.
 
@@ -87,5 +90,5 @@ same count; it does not bless them.
 *One line, for pasting into the PR description.*
 
 > Validated on `<branch>` @ `<sha>` against `<base>`: build + verified install, ctest
-> `<n>/<n>`, pybind 6/6, python_api host `<f>`/hip `<f>` failures matching baseline. No
+> `<n>/<n>`, pybind `<n>`/`<n>`, python_api host `<f>` failures matching baseline (hip unpinned). No
 > regressions. Not covered: `<the short list>`.

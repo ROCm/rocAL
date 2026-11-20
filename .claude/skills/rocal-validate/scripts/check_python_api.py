@@ -3,13 +3,17 @@
 
 Why this exists
 ---------------
-Nothing under tests/python_api sets a meaningful exit code:
+#616 gave image_comparison.py a real exit code (`exit(1 if failed_case_count else 0)`),
+and unit_tests.sh ends with that call, so the suite's status now propagates. That closes
+the old "always exits 0" hole - but it does not make the exit code a usable gate, for two
+reasons:
 
-  * unit_tests.sh:4-8 guards a missing ROCAL_DATA_PATH with a bare `exit`, which exits 0.
-  * image_comparison.py never calls sys.exit() on failure - it logs and returns.
+  * While any known failure exists the suite always exits 1, so the exit code cannot
+    distinguish "the same 9 known failures" from "9 completely different ones".
+  * unit_tests.sh:4-8 still guards a missing ROCAL_DATA_PATH with a bare `exit`, which
+    exits 0 having run nothing at all.
 
-So `bash unit_tests.sh 0 && echo ok` prints ok whether 0 or 139 cases failed. The only
-signal is the summary text, and it has two traps:
+So the gate is still the summary text, which has two traps:
 
   1. image_comparison.py:104 iterates over the *rocAL output* directory, not the goldens.
      A case that never produced an output file is not in that listing at all, so it is
@@ -97,12 +101,26 @@ def main():
 
     print(f"  backend    : {args.backend}")
     print(f"  observed   : passed {passed}, failed {failed}, total {total}")
-    print(f"  baseline   : passed {bl['passed']}, failed {bl['failed']}, total {bl['total']}")
+    # A backend with no measured numbers is UNPINNED: report what this run saw and offer
+    # to pin it, rather than inventing a comparison. Honest absence beats a stale number
+    # that looks authoritative - a wrong baseline fails in the worst direction, flagging
+    # healthy runs as regressions until someone stops believing the gate.
+    unpinned = bl.get("total") is None
+    if unpinned:
+        print("  baseline   : UNPINNED for this backend - " + bl.get("note", ""))
+    else:
+        print(f"  baseline   : passed {bl['passed']}, failed {bl['failed']}, "
+              f"total {bl['total']}")
 
     problems, notes = [], []
 
     # --- denominator ---------------------------------------------------------
-    if total != bl["total"]:
+    if unpinned:
+        print(f"  observed   : passed {passed}, failed {failed}, total {total}")
+        notes.append(
+            "No baseline to compare against for this backend. Nothing below is a verdict - "
+            "measure, review, then pin with --update in its own commit.")
+    elif total != bl["total"]:
         delta = total - bl["total"]
         problems.append(
             f"TOTAL CHANGED: {total} vs baseline {bl['total']} ({delta:+d}). "
@@ -154,11 +172,11 @@ def main():
     if pinned is None:
         notes.append(
             f"baseline failing set for '{args.backend}' is UNPINNED "
-            f"({bl.get('failing_note', '')}). Observed set recorded below; re-run with "
+            f"({bl.get('note', '')}). Observed set recorded below; re-run with "
             "--update to pin it."
         )
         print(f"  observed failing set ({len(failing)}): " + ", ".join(failing))
-        if failed != bl["failed"]:
+        if not unpinned and failed != bl["failed"]:
             problems.append(f"failed count {failed} vs baseline {bl['failed']}")
     else:
         pinned_set = set(pinned)

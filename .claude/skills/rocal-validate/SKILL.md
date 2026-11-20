@@ -17,8 +17,8 @@ Two supported modes, both first-class:
 
 ## Why these gates and not `ctest && echo ok`
 
-Four of rocAL's test entry points report success when they have tested nothing. The gates
-below exist specifically to close those holes; do not simplify them away.
+Several of rocAL's test entry points report success when they have tested nothing. The
+gates below close those holes; do not simplify them away.
 
 | Trap | What you see | What is true |
 |---|---|---|
@@ -26,7 +26,14 @@ below exist specifically to close those holes; do not simplify them away.
 | Pinned `ROCM_PATH` | ctest: `100% tests passed` | Nested per-case build dirs cache `ROCM_PATH` without `FORCE`; a reused `build/` keeps linking whichever ROCm install it saw first |
 | Missing dependency | ctest: `100% tests passed`, 10 tests | 13 tests were never registered; no GPU silently drops the run from 23 to 10 |
 | pybind not installed | `No tests were found!!!`, exit **0** | Zero tests ran. `ctest` with no tests exits 0 |
-| python_api failures | shell exit **0** | Nothing under `tests/python_api` sets an exit code on failure |
+| No `ROCAL_DATA_PATH` | shell exit **0** | `unit_tests.sh:4-8` guards it with a bare `exit`, having run nothing |
+| Same count, different failures | `9 failed`, as expected | A *different* 9 is a regression that no count or exit code can see |
+
+**What is no longer a trap.** #616 gave both image comparators
+`exit(1 if failed_case_count else 0)`, and `unit_tests.sh` ends with that call, so the
+python_api suite's status does propagate now. Do not re-add the old "nothing sets an exit
+code" claim. The exit code still cannot gate the run on its own, because it is 1 on every
+run that has any known failure - which is every run today.
 
 Run the phases in order. A failed gate stops the run - later phases are meaningless on a
 bad install.
@@ -192,11 +199,22 @@ catches it.
 
 ```bash
 python3 -I $SK/scripts/check_ctest.py \
-  --build-dir build --baselines $SK/baselines.json \
+  --build-dir build --source-dir tests/cpp_api \
   --rocm-path "$ROCM_PATH" [--clean-stale-cache] \
-  --backend <cpu|hip> [--rocdecode] [--rocjpeg] \
+  --backend <cpu|hip> [--rocjpeg] [--video-tests] [--video-rocdecode] \
   --log build/validate/<ts>/ctest.log
 ```
+
+The expected set is **derived from `tests/cpp_api/CMakeLists.txt`**, not pinned. The
+inventory used to live in `baselines.json` and went stale twice in three weeks - #580/#582
+added two pybind tests, and the video tests moved off `rocdecode_FOUND` onto
+`ROCAL_VIDEO_TESTS_ENABLED` / `ROCAL_VIDEO_ROCDECODE_AVAILABLE`. A stale inventory fails
+in the worst direction: it calls real tests `UNEXPECTED` and mis-tiers the rest.
+
+The script parses each `add_test` with the `if()` conditions it sits under. The only
+hand-maintained part is `KNOWN_CONDITIONS`, mapping a CMake condition to a flag, and an
+unrecognised condition is a **hard error** - so re-gating a test on something new cannot
+silently mis-tier it.
 
 `--rocm-path` is **required** here, and it is not a duplicate of the Phase 0b export.
 ctest builds each case with `--build-and-test` into a dir under `build/tests/cpp_api/`
@@ -213,19 +231,21 @@ gate reads `ROCM_PATH` back out of each nested `CMakeCache.txt` and fails before
 compiles, naming the pinned directories. `--clean-stale-cache` deletes them so they
 reconfigure. Never skip this by dropping the flag.
 
-Set the flags from what Phase 1 actually detected. They are **independent**, not a ladder:
-`rocdecode_FOUND` and `rocjpeg_FOUND` are separate `if()` blocks nested inside the HIP
-block, so 20, 21, 22 and 23 tests are all legitimate HIP configurations. Passing a
-coarse "everything" tier on a box with only one of the two decoders would report the
-other's tests as missing.
+Set the flags from what Phase 1 actually detected. They are **independent**, not a ladder -
+`rocjpeg_FOUND`, `ROCAL_VIDEO_TESTS_ENABLED` and `ROCAL_VIDEO_ROCDECODE_AVAILABLE` are
+separate `if()` blocks inside the HIP block, so several counts are legitimate. Measured
+against the current `CMakeLists.txt`:
 
-| backend | rocDecode | rocJPEG | expected |
-|---|---|---|---|
-| cpu | — | — | 10 |
-| hip | no | no | 20 |
-| hip | yes | no | 21 |
-| hip | no | yes | 22 |
-| hip | yes | yes | 23 |
+| backend | rocjpeg | video-tests | video-rocdecode | expected |
+|---|---|---|---|---|
+| cpu | — | — | — | 10 |
+| hip | no | no | no | 19 |
+| hip | no | yes | no | 20 |
+| hip | no | yes | yes | 21 |
+| hip | yes | yes | yes | 23 |
+
+These numbers are **output, not input** - the script derives them. They are reproduced
+here only so a wrong flag is obvious on sight.
 
 Two gates, not one: the exit code must be clean **and** the discovered test set must match
 the expected set. Fewer tests than expected is a FAIL naming the missing tests, not a pass.
@@ -243,15 +263,18 @@ implied.
 cmake -S tests/pybind -B build/validate/<ts>/pybind -DROCM_PATH="$ROCM_PATH"
 python3 -I $SK/scripts/check_ctest.py \
   --suite pybind --build-dir build/validate/<ts>/pybind \
-  --baselines $SK/baselines.json --log build/validate/<ts>/pybind.log
+  --source-dir tests/pybind --log build/validate/<ts>/pybind.log
 ```
 
-Gate: exactly the 6 `rocal_pybind_test_*` tests are discovered and pass. **Zero discovered
-is a FAIL** - it means pybind was not installed, and the plain reading of
+Gate: every `rocal_pybind_test_*` registered in `tests/pybind/CMakeLists.txt` is
+discovered and passes - **8** as of this writing, derived rather than pinned. **Zero
+discovered is a FAIL**: it means pybind was not installed, and the plain reading of
 `No tests were found!!!` plus exit 0 is the opposite of the truth.
 
-These are import smoke tests; they assert nothing beyond the module loading. Say so in the
-report so nobody reads 6/6 as functional coverage.
+Six of the eight are import smoke tests that assert nothing beyond the module loading.
+The exceptions are `pipeline_scope` (#580) and `rejected_operator` (#582), which assert
+real behaviour. Say which is which in the report, so nobody reads 8/8 as functional
+coverage of the bindings.
 
 ## Phase 5 - python_api golden suite
 
@@ -270,8 +293,9 @@ OUT="$ROOT/build/validate/<ts>"
 ( cd "$ROOT/tests/python_api" && ... bash unit_tests.sh 1 2>&1 | tee "$OUT/python_api_hip.log" )  # hip
 ```
 
-The subshells keep the `cd` from leaking. `set -o pipefail` is pointless here - the suite
-exits 0 regardless - which is exactly why the gate below parses the log instead.
+The subshells keep the `cd` from leaking. Since #616 the suite does propagate a real exit
+status, so `set -o pipefail` is worth having - but the status is 1 on any run with a known
+failure, i.e. every run today, which is why the gate below parses the log as well.
 
 Then gate each backend, **from the repo root**, with absolute paths. The output directory
 is created inside `tests/python_api`, so resolve it there, not from the cwd:
@@ -285,10 +309,15 @@ python3 -I "$ROOT/.claude/skills/rocal-validate/scripts/check_python_api.py" \
   --golden-dir "$ROCAL_DATA_PATH/rocal_data/GoldenOutputsTensor"
 ```
 
-The gate is on the failing **set**, not the count: a baseline of 19 host failures passing
-with a *different* 19 is a regression, not a pass. It also checks the denominator, because
-`image_comparison.py:104` iterates the output directory rather than the goldens - a case
-that never produced a file vanishes from the total instead of failing.
+The gate is on the failing **set**, not the count: a baseline of 9 host failures passing
+with a *different* 9 is a regression, not a pass, and no exit code can see that. It also
+checks the denominator, because `image_comparison.py` still loops over the *output*
+directory rather than the goldens - a case that never produced a file vanishes from the
+total instead of failing.
+
+Both backends are pinned from a run on this branch (2026-11-20, gfx1100): host 9/151, hip
+10/152. hip has one more case because #629 disables WarpPerspective on host only. Several
+of those "failures" are MISSING GOLDENS, not mismatches - see `no_golden` in baselines.json.
 
 If a baseline failure now passes, the script reports it as an improvement. Offer to pin the
 new set with `--update`, but **never** run `--update` to make a red run go green.
@@ -317,7 +346,8 @@ Write `build/validate/<ts>/report.md` from `report_template.md` and summarise it
   detected dependency set
 - a per-phase table: gate, result, numbers, delta vs baseline
 - for a PR run, the **scoped coverage findings** from Phase 0a first - any touched path
-  with no working test belongs at the top of the report, not in a footer
+  with no working test, or with only `PARTIAL` coverage, belongs at the top of the report,
+  not in a footer
 - the **"not covered by this run"** section from `references/coverage-gaps.md`; the gap is
   part of the result, not a footnote
 - a one-line verdict suitable for pasting into the PR description
@@ -325,7 +355,15 @@ Write `build/validate/<ts>/report.md` from `report_template.md` and summarise it
 Always repeat the caveat that the baseline python_api failures are **known but not
 root-caused**, so they do not quietly become permanent.
 
-## Out of scope for v1
+## Out of scope for now
 
-Not run, by design - each either needs `sudo rm -rf` or has nothing to gate on. Listed in
-the report as a known gap rather than silently omitted; see `references/coverage-gaps.md`.
+Not run, and listed in the report as a known gap rather than silently omitted; see
+`references/coverage-gaps.md`.
+
+The reason has changed, so do not repeat the old one: `testAllScripts.sh` and
+`video_tests/testScript.sh` **no longer call `sudo rm -rf`**. #615 anchored them to their
+own location and they now do a plain `rm -rf "$build_dir"` on a directory they created.
+They are still out of scope because each self-builds every case from scratch, which is a
+different and much longer job than this skill's gates - not because they are dangerous.
+`testAllScripts.sh` remains the largest suite in the repo and the obvious candidate for an
+opt-in `--full` flag.

@@ -54,19 +54,30 @@ Verified directly: an empty CMake project with `enable_testing()` prints
 `${ROCM_PATH}/lib/amd/rocal` exists. Without an installed pybind the whole suite silently
 evaporates into a passing run.
 
-## 4. The pybind tests are import smoke tests
+## 4. Six of the eight pybind tests are import smoke tests
 
 `rocal_pybind_test_{decoders,functions,pipelines,randoms,readers,types}` execute their
-scripts and check the exit code. 6/6 green means the module loads and the scripts run - not
+scripts and check the exit code. Green means the module loads and the scripts run - not
 that any computation is correct.
 
-## 5. Nothing under `tests/python_api` sets an exit code
+The two added since are real tests: `rocal_pybind_test_pipeline_scope` (#580) and
+`rocal_pybind_test_rejected_operator` (#582) assert actual behaviour. So "8/8 passed" is
+six smoke tests plus two assertions, not eight assertions.
 
-- `unit_tests.sh:4-8` guards a missing `ROCAL_DATA_PATH` with a bare `exit`, which exits
-  **0**. The suite prints `Need to export ROCAL_DATA_PATH` and reports success.
-- `image_comparison.py` never calls `sys.exit()` on failure; it logs and returns.
+## 5. An exit code alone still cannot gate `tests/python_api`
 
-So `bash unit_tests.sh 0 && echo ok` prints `ok` whether 0 or 139 cases failed.
+**#616 fixed the worst of this.** Both image comparators now end in
+`exit(1 if failed_case_count else 0)`, and `unit_tests.sh` ends with that call, so the
+suite's status propagates. The old "nothing sets an exit code" claim is obsolete - do not
+repeat it.
+
+What remains:
+
+- `unit_tests.sh:4-8` still guards a missing `ROCAL_DATA_PATH` with a bare `exit`, which
+  exits **0**. The suite prints `Need to export ROCAL_DATA_PATH` and reports success
+  having run nothing.
+- The status is 1 on any run with a known failure - every run today - so it cannot
+  distinguish the same 9 known failures from a different 9 of the same size.
 
 ## 6. The python_api denominator can shrink silently
 
@@ -93,8 +104,8 @@ anything (`:114-119`). They cannot fail. Treat them as "ran without crashing".
 
 | Entry point | Why not |
 |---|---|
-| `tests/cpp_api/unit_tests/testAllScripts.sh` | runs `sudo rm -rf ./build/*` and self-builds; cannot run unattended. The largest suite in the repo - the best candidate for an opt-in `--full` flag once the core flow is trusted. |
-| `tests/cpp_api/video_tests/testScript.sh` | also `sudo rm -rvf build*` |
+| `tests/cpp_api/unit_tests/testAllScripts.sh` | self-builds every case from scratch - a much longer job than these gates. The largest suite in the repo and the best candidate for an opt-in `--full` flag. **No longer dangerous:** #615 anchored it to its own location and it now does a plain `rm -rf "$build_dir"`, not `sudo rm -rf ./build/*`. |
+| `tests/cpp_api/video_tests/testScript.sh` | same - also anchored by #615, plain `rm -rf "$BUILD_DIR"` |
 | `tests/python_api/readers_test_file.sh` | no goldens, no comparison, no exit code; which pipelines run is edited in-file |
 | torch / JAX example scripts | examples, not gated tests |
 | `python_function_example.py` | needs `-DROCAL_PYTHON_FUNCTION=ON`, off by default |
@@ -121,8 +132,33 @@ Living under `tests/` is not coverage. `resolve_target.py` keeps an **allow-list
 entry points a phase actually invokes, so anything added to this directory later defaults
 to `UNGATED` rather than inheriting a blanket "test code, therefore gated" claim.
 
-## 9. The python_api baseline failures are known, not accepted
+## 9. A green ctest says almost nothing about augmentations or most readers
 
-As of 2026-10-28, host fails 19/139 and hip fails 17/139. **None are root-caused.**
-`baselines.json` pins them so a *different* failure cannot hide inside the same count. It
-does not bless them. Every report repeats this, so they do not quietly become permanent.
+Two gates look far broader than they are. Both were flagged by @kirancv22 on PR #583 and
+are now reported `PARTIAL`, never `GATED`:
+
+| Gate | Looks like | Actually runs |
+|---|---|---|
+| `unit_tests_{cpu,gpu,gray}` | all image augmentations | `test_case=1` only - `rocalCropResize`, 1 of ~103 cases in the switch. The argv is hardcoded in `tests/cpp_api/CMakeLists.txt`. |
+| `basic_test_*` | the readers | the plain file path only. `basic_test.cpp` calls `rocalCreateLabelReader` and `rocalCreateTextFileBasedLabelReader` and nothing else. |
+
+The golden suite does cover coco, tf, caffe, caffe2, mxnet and web_dataset via
+`--reader-type`. **Covered by neither**, and reported `ORPHAN`: the CIFAR-10 reader, the
+NumPy reader, the external-source reader and the video *sequence* reader.
+
+## 10. The python_api baseline failures are known, not accepted
+
+Host fails 9/151 and hip 10/152, measured 2026-11-20 on gfx1100. **None are root-caused.** `baselines.json` pins the
+names so a *different* failure cannot hide inside the same count. It does not bless them.
+Every report repeats this, so they do not quietly become permanent.
+
+**Several are missing goldens, not mismatches.** `image_comparison.py` counts a case with
+no reference image as a failure, and MIVisionX-data has none for some recently added
+augmentations - 5 of the 9 on host (`Dilate_*`, `Erode_*`, `Posterize_gray`) and 2 of the
+10 on hip. Goldens are per-backend, so a name can lack one on host and have one on hip.
+`no_golden` in `baselines.json` lists them. Mint the goldens and these stop being noise.
+
+**Re-measure, never re-derive.** When #587 disabled ten cases it was tempting to patch
+`139 - 10 = 129`. The measured total is **151**: develop had also *added* cases
+(`Posterize`, `Solarize`, `LUT`, `JpegCompressionDistortion`, ...). Arithmetic on a
+baseline yields a number that looks authoritative and is wrong.
