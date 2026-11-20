@@ -21,6 +21,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Introduce `NodeFactory` for dynamic node registration and creation.
 
 ### Changes
+* The FFmpeg and rocDecode video decoders are now built as a runtime plugin, `librocal_video_plugin.so.2`, instead of being compiled into `librocal.so`. `ROCAL_VIDEO_PLUGIN` is ON by default. The plugin is loaded on the first video call from the directory of `librocal.so`, then from `ROCM_PATH/lib`. A deployment that ships only `librocal.so` must install the plugin beside it, or build with `-DROCAL_VIDEO_PLUGIN=OFF` to keep the single-library layout.
 * The PythonFunction operator (`fn.python_function`) is disabled by default. It embedded the CPython C-API in `librocal.so`, which left the core library with unresolved `Py*` symbols and unusable from C/C++ applications. It can be re-enabled with `-DROCAL_PYTHON_FUNCTION=ON`, which reintroduces that limitation.
 * Optimized data distribution for the rocJPEG backend to improve multi-threaded decode throughput.
 * LMDB is now an optional dependency. When liblmdb is present at configure time, rocAL builds with Caffe/Caffe2 LMDB reader support; otherwise it builds without it.
@@ -31,6 +32,8 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Adds new method in Argument class for type-safe value retrieval of arguments.
 * `RocalPipelineParams` struct to represent pipeline configuration parameters used during serialization and deserialization.
 * The `Phase`, Bitwise AND/OR/XOR and `ResizeCropMirror` unit test cases are disabled, pending a fix to the RPP bilinear sampler they depend on.
+* The `WarpPerspective` unit test case's host backend is disabled, pending a fix to a known RPP perspective-divide defect that blackens in-bounds output under a genuine-perspective matrix.
+* The `Remap` unit test case's hip+gray combination is disabled, pending the same RPP bilinear sampler fix.
 
 ### Resolved issues
 * Resolve the off-by-one in `rocalGetOneHotImageLabels()`, which encoded the 0 based labels the readers produce as the wrong class.
@@ -59,7 +62,19 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve `rocalCopyToOutput()` reporting success at the end of the data, where it leaves the caller's buffer untouched.
 * Resolve the `unit_tests` numpy cases sizing their buffer from the color format, which counts one channel for a three channel batch.
 * Resolve a `TypeError` from `fn.decoders.image_raw`, which called the decoder binding one argument short on every TFRecord pipeline.
+* Resolve the raw TFRecord source reporting success while discarding part of each record, by failing when a record does not fit the output slot.
+* Resolve a process abort when a metadata getter is called before the output copy, by making the getters wait for the current batch instead of reporting it as never loaded.
+* Resolve a segmentation fault in the CIFAR-10 reader on a folder holding no `data_batch_*` files, by raising an error naming the folder and the prefix instead of indexing an empty file list.
+* Resolve CPU pipelines aborting on a host with no GPU, where the output thread selected a HIP device whatever the pipeline's affinity.
 * Resolve a segmentation fault in `rocalSetOutputs()` when an augmentation that rejected its input returns a null tensor, by reporting the error instead of setting any output.
+* Resolve an out-of-bounds read in the COCO, NumPy, TFRecord, Caffe LMDB, Caffe2 LMDB, MXNet RecordIO, and WebDataset readers when a path exists but holds nothing the reader accepts. Each reader now raises an error naming that path.
+* Resolve the TFRecord reader passing directories to the record parser. The scan now skips anything that is not a regular file, so an empty subdirectory no longer fails a directory that also holds records, and a root whose only child is an empty subdirectory raises the empty-scan error.
+* Resolve the Caffe and Caffe2 LMDB readers passing uninitialized LMDB handles to cleanup when creation fails before the read environment is opened.
+* Resolve readers skipping image files that are symbolic links. A labelled folder of links crashed while the pipeline was built in Python and failed the label lookup in C++. The readers now keep a link whose target is a regular file.
+* Resolve every audio augmentation failing at `rocalVerify()` with `Invalid layout` when vx_rpp was built without audio kernels, by building without audio support in that case and rejecting the audio operators where they are called, with the reason. Needs vx_rpp 3.3.3 or later, which reports whether it has audio.
+* Resolve a heap over-read in the MXNet RecordIO reader when a record's length is shorter than the 24-byte header or longer than the bytes just read. The reader now rejects that record with an error naming the length and the number of bytes read. The MXNet label reader rejects a record shorter than the header, and a record with no image data raises an error instead of hanging the loader. `rocalCreateMXNetReader()` reports a label reader error through `rocalGetStatus()` instead of terminating the process, and `fn.readers.mxnet` raises it as a `RuntimeError`.
+* Document that the output of `rocalNop()` and `fn.nop()` is undefined rather than a copy of the input, so that `rocalCopy()` and `fn.copy()` are used where the data matters.
+* Resolve a second `rocalResetLoaders()` call, with no `rocalRun()` between the two, starting the next epoch part way through the dataset. The readers do not roll their read pointer back over samples that were prefetched but never returned, so the second reset dropped the prefetched batches while leaving the pointer past them. Every epoch after the first skipped as many samples as the last batch was padded by and returned the padding sample in their place. A reset with no run since the previous one is now a no-op. This affected `ROCALClassificationIterator` and `ROCALGenericIterator` in the PyTorch plugin, which reset in `__next__` and again in `reset()`.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.
