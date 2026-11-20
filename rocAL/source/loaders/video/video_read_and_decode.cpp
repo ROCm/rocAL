@@ -113,6 +113,11 @@ VideoReadAndDecode::count() {
     return _video_reader->count_items();
 }
 
+size_t
+VideoReadAndDecode::last_batch_padded_size() {
+    return _video_reader->last_batch_padded_size();
+}
+
 float VideoReadAndDecode::convert_framenum_to_timestamp(size_t frame_number) {
     float timestamp;
     timestamp = (float)frame_number / _frame_rate;

@@ -44,6 +44,9 @@ unsigned SequenceFileSourceReader::count_items() {
     if (_loop)
         return _frame_names.size();
     int ret = ((int)_frame_names.size() - _read_counter);
+    // _frame_names is counted in frames, so a dropped batch is _user_batch_count frames
+    if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP && _last_batch_padded_size != 0)
+        ret -= _user_batch_count;
     return ((ret < 0) ? 0 : ret);
 }
 
@@ -54,6 +57,7 @@ Reader::Status SequenceFileSourceReader::initialize(ReaderConfig desc) {
     _shard_id = desc.get_shard_id();
     _shard_count = desc.get_shard_count();
     _user_batch_count = desc.get_batch_size();
+    _sharding_info = desc.get_sharding_info();
     _shuffle = desc.shuffle();
     _loop = desc.loop();
     _sequence_length = desc.get_sequence_length();
@@ -177,6 +181,8 @@ Reader::Status SequenceFileSourceReader::get_sequences() {
     if (_sequence_frame_names.empty())
         WRN("SequenceReader ShardID [" + TOSTR(_shard_id) + "] Did not load any file from " + _folder_path)
     if (_in_batch_read_count > 0 && _in_batch_read_count < _batch_count) {
+        // Record the replicated count so the iterators can trim the last batch
+        _last_batch_padded_size = (_batch_count > 1) ? (_batch_count - _in_batch_read_count) : 0;
         replicate_last_sequence_to_fill_last_shard();
         LOG("SequenceReader ShardID [" + TOSTR(_shard_id) + "] Replicated last sequence " + TOSTR((_batch_count - _in_batch_read_count)) + " times to fill the last batch")
     }

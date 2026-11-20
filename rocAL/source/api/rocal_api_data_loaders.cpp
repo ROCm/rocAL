@@ -1637,7 +1637,8 @@ rocalVideoFileSource(
 
         output = context->master_graph->create_internal_tensor(info);
 
-        context->master_graph->add_node<VideoLoaderNode>({}, {output})->init(internal_shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
+        ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
+        context->master_graph->add_node<VideoLoaderNode>({}, {output})->init(internal_shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), sharding_info);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1789,7 +1790,8 @@ rocalVideoFileSourceSingleShard(
 
         output = context->master_graph->create_internal_tensor(info);
 
-        context->master_graph->add_node<VideoLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
+        ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
+        context->master_graph->add_node<VideoLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), sharding_info);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1869,7 +1871,8 @@ rocalVideoFileResize(
         }
 
         Tensor* output = context->master_graph->create_internal_tensor(info);
-        context->master_graph->add_node<VideoLoaderNode>({}, {output})->init(internal_shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
+        ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
+        context->master_graph->add_node<VideoLoaderNode>({}, {output})->init(internal_shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), sharding_info);
         context->master_graph->set_loop(loop);
 
         if (needs_resize) {
@@ -2030,7 +2033,8 @@ rocalVideoFileResizeSingleShard(
         }
 
         Tensor* output = context->master_graph->create_internal_tensor(info);
-        context->master_graph->add_node<VideoLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
+        ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
+        context->master_graph->add_node<VideoLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), sharding_info);
         context->master_graph->set_loop(loop);
 
         if (needs_resize) {

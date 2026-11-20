@@ -43,6 +43,7 @@ class VideoLoader : public LoaderModule {
     void initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size = false) override;
     void set_output(Tensor* output_image) override;
     size_t remaining_count() override;  // returns number of remaining items to be loaded
+    size_t last_batch_padded_size() override;
     void reset() override;              // Resets the loader to load from the beginning
     Timing timing() override;
     void start_loading() override;

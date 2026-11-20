@@ -21,6 +21,8 @@ THE SOFTWARE.
 */
 
 #include "loaders/video/video_loader_sharded.h"
+
+#include <algorithm>
 #ifdef ROCAL_VIDEO
 
 VideoLoaderSharded::VideoLoaderSharded(void *dev_resources) : _dev_resources(dev_resources) {
@@ -111,6 +113,14 @@ size_t VideoLoaderSharded::remaining_count() {
     for (auto &loader : _loaders)
         sum += loader->remaining_count();
     return sum;
+}
+
+size_t VideoLoaderSharded::last_batch_padded_size() {
+    // Sequences are assigned round-robin, so shards differ by up to one sequence and their padded sizes differ
+    size_t last_batch_padded_size = 0;
+    for (auto &loader : _loaders)
+        last_batch_padded_size = std::max(last_batch_padded_size, loader->last_batch_padded_size());
+    return last_batch_padded_size;
 }
 
 void VideoLoaderSharded::reset() {

@@ -60,6 +60,15 @@ class VideoReader {
     //! Returns the number of items remained in this resource
     virtual unsigned count_items() = 0;
 
+    //! Returns the number of sequences replicated to fill the last batch
+    size_t last_batch_padded_size() { return _last_batch_padded_size; }
+
     virtual ~VideoReader() = default;
+
+   protected:
+    //! The members of ShardingInfo determine how the data is distributed among the shards and how the last batch is processed by the pipeline.
+    ShardingInfo _sharding_info = ShardingInfo();
+    //! Number of sequences replicated to fill the last batch
+    size_t _last_batch_padded_size = 0;
 };
 #endif

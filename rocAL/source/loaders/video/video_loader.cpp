@@ -66,6 +66,11 @@ VideoLoader::remaining_count() {
     return _remaining_sequences_count;
 }
 
+size_t
+VideoLoader::last_batch_padded_size() {
+    return _video_loader->last_batch_padded_size();
+}
+
 void VideoLoader::reset() {
     // stop the writer thread and empty the internal circular buffer
     _internal_thread_running = false;

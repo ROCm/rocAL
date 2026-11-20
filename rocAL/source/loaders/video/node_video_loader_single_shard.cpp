@@ -30,7 +30,8 @@ VideoLoaderSingleShardNode::VideoLoaderSingleShardNode(Tensor *output, void *dev
 }
 
 void VideoLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, const std::string &source_path, StorageType storage_type, DecoderType decoder_type, DecodeMode decoder_mode,
-                                      unsigned sequence_length, unsigned step, unsigned stride, VideoProperties &video_prop, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type) {
+                                      unsigned sequence_length, unsigned step, unsigned stride, VideoProperties &video_prop, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type,
+                                      const ShardingInfo &sharding_info) {
     _decode_mode = decoder_mode;  // for future use
     if (!_loader_module)
         THROW("ERROR: loader module is not set for VideoLoaderNode, cannot initialize")
@@ -48,6 +49,7 @@ void VideoLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, c
     reader_cfg.set_frame_step(step);
     reader_cfg.set_frame_stride(stride);
     reader_cfg.set_video_properties(video_prop);
+    reader_cfg.set_sharding_info(sharding_info);
     _loader_module->initialize(reader_cfg, DecoderConfig(decoder_type), mem_type, _batch_size);
     _loader_module->start_loading();
 }

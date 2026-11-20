@@ -35,6 +35,8 @@ unsigned VideoFileSourceReader::count_items() {
     if (_loop)
         return _total_sequences_count;
     int ret = (int)(_total_sequences_count - _read_counter);
+    if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP && _last_batch_padded_size != 0)
+        ret -= _batch_count;
     return ((ret <= 0) ? 0 : ret);
 }
 
@@ -57,6 +59,7 @@ VideoReader::Status VideoFileSourceReader::initialize(ReaderConfig desc) {
     _video_frame_count = _video_prop.frames_count;
     _start_end_frame = _video_prop.start_end_frame_num;
     _batch_count = desc.get_batch_size();
+    _sharding_info = desc.get_sharding_info();
     _total_sequences_count = 0;
     ret = create_sequence_info();
 
@@ -120,6 +123,8 @@ VideoReader::Status VideoFileSourceReader::create_sequence_info() {
         }
     }
     if (_in_batch_read_count > 0 && _in_batch_read_count < _batch_count) {
+        // Record the replicated count so the iterators can trim the last batch
+        _last_batch_padded_size = (_batch_count > 1) ? (_batch_count - _in_batch_read_count) : 0;
         replicate_last_sequence_to_fill_last_shard();
         LOG("VideoFileSourceReader ShardID [" + TOSTR(_shard_id) + "] Replicated the last sequence " + TOSTR((_batch_count - _in_batch_read_count)) + " times to fill the last batch")
     }

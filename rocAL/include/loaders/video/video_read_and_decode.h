@@ -43,6 +43,8 @@ class VideoReadAndDecode {
     VideoReadAndDecode();
     ~VideoReadAndDecode();
     size_t count();
+    //! Returns the number of sequences the reader replicated to fill the last batch
+    size_t last_batch_padded_size();
     void reset();
     void create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size, int device_id = 0);
     void set_video_process_count(size_t video_count) {
