@@ -629,6 +629,17 @@ void MasterGraph::sequence_frame_timestamps(std::vector<std::vector<float>> &seq
 
 MasterGraph::Status
 MasterGraph::reset() {
+    // A reset with no run() since the previous one has nothing to rewind. Readers do not roll
+    // their read pointer back over prefetched but undelivered samples, and this function
+    // restarts prefetching, so a second reset would drop those batches while leaving the
+    // pointer past them, starting the next epoch part way through the shard. Only skip when the
+    // pipeline is otherwise healthy: a stopped worker, or a stored processing error that only
+    // start_processing() clears, still needs the reset to recover.
+    if (_first_run && _processing) {
+        std::lock_guard<std::mutex> lock(_process_exception_lock);
+        if (!_process_exception)
+            return Status::OK;
+    }
     // stop the internal processing thread so that the
     _processing = false;
     _ring_buffer.unblock_writer();
@@ -1034,17 +1045,17 @@ bool MasterGraph::is_out_of_data() {
 
 void MasterGraph::output_routine() {
     INFO("Output routine started with " + TOSTR(_remaining_count) + " to load");
-#if ENABLE_HIP
-    // Set device ID for output routine thread once
-    if (!_set_device_id) {
-        hipError_t hip_status = hipSetDevice(_gpu_id);
-        if (hip_status != hipSuccess) {
-            THROW("hipSetDevice failed");
-        }
-        _set_device_id = true;
-    }
-#endif
     try {
+#if ENABLE_HIP
+        // Set device ID for output routine thread once. A CPU pipeline has no device to select.
+        if (_affinity == RocalAffinity::GPU && !_set_device_id) {
+            hipError_t hip_status = hipSetDevice(_gpu_id);
+            if (hip_status != hipSuccess) {
+                THROW("hipSetDevice failed for device " + TOSTR(_gpu_id) + ", " + STR(hipGetErrorName(hip_status)));
+            }
+            _set_device_id = true;
+        }
+#endif
         while (_processing) {
             if (_loader_module->remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size)) {
                 // If the internal process routine ,output_routine(), has finished processing all the images, and last
@@ -1169,17 +1180,17 @@ void MasterGraph::output_routine() {
 
 void MasterGraph::output_routine_multiple_loaders() {
     INFO("Output routine for multiple loaders started with " + TOSTR(_remaining_count) + " to load");
-#if ENABLE_HIP
-    // Set device ID for output routine thread once
-    if (!_set_device_id) {
-        hipError_t hip_status = hipSetDevice(_gpu_id);
-        if (hip_status != hipSuccess) {
-            THROW("hipSetDevice failed");
-        }
-        _set_device_id = true;
-    }
-#endif
     try {
+#if ENABLE_HIP
+        // Set device ID for output routine thread once. A CPU pipeline has no device to select.
+        if (_affinity == RocalAffinity::GPU && !_set_device_id) {
+            hipError_t hip_status = hipSetDevice(_gpu_id);
+            if (hip_status != hipSuccess) {
+                THROW("hipSetDevice failed for device " + TOSTR(_gpu_id) + ", " + STR(hipGetErrorName(hip_status)));
+            }
+            _set_device_id = true;
+        }
+#endif
         while (_processing) {
             if (is_out_of_data()) {
                 // If the internal process routine ,output_routine(), has finished processing all the images, and last
@@ -1695,12 +1706,23 @@ TensorListVector* MasterGraph::create_cifar10_label_reader(const char *source_pa
     return &_metadata_output_tensor_list;
 }
 
-const std::pair<ImageNameBatch, pMetaDataBatch> &MasterGraph::meta_data() {
+// run() returns once it has popped the previous batch, so the output thread may still be filling
+// the one it made current. Wait for it the way the output copy does, instead of reporting a batch
+// that is merely not ready yet as one that was never loaded. This cannot hang: _processing is
+// false before build() and after release(), no_more_processed_data() covers the drained pipeline,
+// and an output routine that is out of data or has failed wakes the wait.
+void MasterGraph::wait_for_meta_data() {
+    if (_ring_buffer.level() == 0 && _processing && !no_more_processed_data())
+        _ring_buffer.block_if_empty();
     if (_ring_buffer.level() == 0) {
         rethrow_process_exception();  // An empty ring buffer usually means the pipeline failed; report that, not the generic message
         release();
         THROW("No meta data has been loaded")
     }
+}
+
+const std::pair<ImageNameBatch, pMetaDataBatch> &MasterGraph::meta_data() {
+    wait_for_meta_data();
     return _ring_buffer.get_meta_data();
 }
 
@@ -1731,11 +1753,7 @@ TensorList *MasterGraph::labels_meta_data() {
     if (!_meta_data_reader && _loaders_count > 1)
         THROW("Metadata reader is not compatible with multiple loaders")
 
-    if (_ring_buffer.level() == 0) {
-        rethrow_process_exception();  // An empty ring buffer usually means the pipeline failed; report that, not the generic message
-        release();
-        THROW("No meta data has been loaded")
-    }
+    wait_for_meta_data();
     auto meta_data_buffers = (unsigned char *)_ring_buffer.get_meta_read_buffers()[0];  // Get labels buffer from ring buffer
     auto labels = _ring_buffer.get_meta_data().second->get_labels_batch();
     for (unsigned i = 0; i < _labels_tensor_list.size(); i++) {
@@ -1753,11 +1771,7 @@ TensorListVector *MasterGraph::ascii_values_meta_data() {
     if (_external_source_reader) {
         return &_webdataset_output_tensor_list;
     }
-    if (_ring_buffer.level() == 0) { 
-        rethrow_process_exception();  // An empty ring buffer usually means the pipeline failed; report that, not the generic message
-        release();
-        THROW("No meta data has been loaded")
-    }
+    wait_for_meta_data();
 
     for (uint ext = 0; ext < _ascii_tensor_list.size(); ext++) {
         auto meta_data_buffers = (uint8_t *)_ring_buffer.get_meta_read_buffers()[ext]; // Get ASCII buffer from ring buffer
@@ -1780,11 +1794,7 @@ TensorListVector *MasterGraph::ascii_values_meta_data() {
 TensorList *MasterGraph::bbox_meta_data() {
     if (!_meta_data_reader && _loaders_count > 1)
         THROW("Metadata reader is not compatible with multiple loaders")
-    if (_ring_buffer.level() == 0) {
-        rethrow_process_exception();  // An empty ring buffer usually means the pipeline failed; report that, not the generic message
-        release();
-        THROW("No meta data has been loaded")
-    }
+    wait_for_meta_data();
     auto meta_data_buffers = (unsigned char *)_ring_buffer.get_meta_read_buffers()[1];  // Get bbox buffer from ring buffer
     auto bbox_cords = _ring_buffer.get_meta_data().second->get_bb_cords_batch();
     for (unsigned i = 0; i < _bbox_tensor_list.size(); i++) {
@@ -1799,11 +1809,7 @@ TensorList *MasterGraph::bbox_meta_data() {
 TensorList *MasterGraph::mask_meta_data() {
     if (!_meta_data_reader && _loaders_count > 1)
         THROW("Metadata reader is not compatible with multiple loaders")
-    if (_ring_buffer.level() == 0) {
-        rethrow_process_exception();  // An empty ring buffer usually means the pipeline failed; report that, not the generic message
-        release();
-        THROW("No meta data has been loaded")
-    }
+    wait_for_meta_data();
     auto meta_data_buffers = (unsigned char *)_ring_buffer.get_meta_read_buffers()[2];  // Get mask buffer from ring buffer
     auto mask_cords = _ring_buffer.get_meta_data().second->get_mask_cords_batch();
     for (unsigned i = 0; i < _mask_tensor_list.size(); i++) {
@@ -1819,11 +1825,7 @@ TensorList *MasterGraph::matched_index_meta_data() {
     if (!_meta_data_reader && _loaders_count > 1)
         THROW("Metadata reader is not compatible with multiple loaders")
 
-    if (_ring_buffer.level() == 0) {
-        rethrow_process_exception();  // An empty ring buffer usually means the pipeline failed; report that, not the generic message
-        release();
-        THROW("No meta data has been loaded")
-    }
+    wait_for_meta_data();
     auto meta_data_buffers = reinterpret_cast<unsigned char *>(_ring_buffer.get_meta_read_buffers()[2]);  // Get matches buffer from ring buffer
     for (unsigned i = 0; i < _matches_tensor_list.size(); i++) {
         _matches_tensor_list[i]->set_mem_handle(reinterpret_cast<void *>(meta_data_buffers));

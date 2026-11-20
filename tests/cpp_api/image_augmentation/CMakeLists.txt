@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# Copyright (c) 2024 - 2025 Advanced Micro Devices, Inc.
+# Copyright (c) 2024 - 2026 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -52,8 +52,21 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake)
 find_package(AMDRPP QUIET)
 
 # Application Includes & Libraries
-include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rocal)
-link_directories(${ROCM_PATH}/lib)
+# Prefer CMAKE_INSTALL_PREFIX/include/rocal when building against a local install,
+# falling back to the system ROCm layout.
+if(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/include/rocal/rocal_api.h")
+    set(ROCAL_INCLUDE_ROOT ${CMAKE_INSTALL_PREFIX}/include/rocal)
+else()
+    set(ROCAL_INCLUDE_ROOT ${ROCM_PATH}/include/rocal)
+endif()
+include_directories(${ROCM_PATH}/include ${ROCAL_INCLUDE_ROOT})
+
+# Prefer the same prefix for the library location.
+if(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/lib")
+    link_directories(${CMAKE_INSTALL_PREFIX}/lib ${ROCM_PATH}/lib)
+else()
+    link_directories(${ROCM_PATH}/lib)
+endif()
 
 add_executable(${PROJECT_NAME} image_augmentation.cpp)
 
@@ -62,8 +75,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake ${ROCM_PATH}/
 find_package(OpenCVComponents MODULE QUIET)
 
 # Link Libraries & Set CXX Flags
-# -mf16c -- Support F16C built-in functions and code generation.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mf16c -Wall ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall ")
 # librocal carries Python C-API symbols (PythonFunction operator); link libpython to resolve them
 find_package(Python3 QUIET COMPONENTS Development.Embed)
 target_link_libraries(${PROJECT_NAME} rocal $<TARGET_NAME_IF_EXISTS:Python3::Python>)
