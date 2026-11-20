@@ -402,6 +402,8 @@ def mxnet(path, stick_to_shard=False, pad_last_batch=False):
     }
     mxnet_metadata = b.mxnetReader(
         Pipeline.current()._handle, *(kwargs_pybind.values()))
+    if b.getStatus(Pipeline.current()._handle) != types.OK:
+        raise RuntimeError(b.rocalGetErrorMessage(Pipeline.current()._handle))
     return mxnet_metadata
 
 def webdataset(path, index_paths="", ext = None, missing_components_behavior = types.MISSING_COMPONENT_ERROR):
