@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 #include <map>
 #include <mutex>
+#include <string>
 #include "decoders/video/video_plugin_loader.h"
 #include "pipeline/commons.h"
 
@@ -44,6 +45,35 @@ std::mutex& decoder_registry_mutex() {
     return mtx;
 }
 
+std::string missing_video_decoder_message(DecoderType type, bool ffmpeg_registered) {
+    const char* name = nullptr;
+    switch (type) {
+        case DecoderType::FFMPEG_VIDEO:
+            name = "FFmpeg";
+            break;
+        case DecoderType::ROCDECODE_VIDEO:
+            name = "rocDecode";
+            break;
+        default:
+            break;
+    }
+    const std::string which = name != nullptr ? std::string(name) : ("decoder type " + TOSTR(type));
+#ifdef ROCAL_VIDEO_PLUGIN
+    if (type == DecoderType::ROCDECODE_VIDEO && ffmpeg_registered)
+        return "No video decoder factory is registered for rocDecode. The video plugin is loaded but was built without rocDecode.";
+    if (name != nullptr)
+        return "No video decoder factory is registered for " + which + ". The video plugin did not provide it.";
+    return "No video decoder factory is registered for " + which + ".";
+#else
+    (void)ffmpeg_registered;
+    if (type == DecoderType::ROCDECODE_VIDEO)
+        return "No video decoder factory is registered for rocDecode. This rocAL build does not include rocDecode.";
+    if (type == DecoderType::FFMPEG_VIDEO)
+        return "No video decoder factory is registered for FFmpeg. This rocAL build does not include FFmpeg, and a monolithic build does not produce rocal_video_plugin.";
+    return "No video decoder factory is registered for " + which + ".";
+#endif
+}
+
 }  // namespace
 
 void register_decoder_factory(DecoderType type, VideoDecoderFactory factory) {
@@ -53,12 +83,18 @@ void register_decoder_factory(DecoderType type, VideoDecoderFactory factory) {
 
 std::shared_ptr<VideoDecoder> create_decoder(DecoderType type, DecoderConfig& cfg) {
     ensure_video_plugin_loaded();
-    std::lock_guard<std::mutex> lock(decoder_registry_mutex());
-    auto it = decoder_registry().find(type);
-    if (it == decoder_registry().end() || !it->second)
-        THROW("No video decoder factory is registered for decoder type " + TOSTR(type) +
-              ". Link rocal_video_plugin if video support is required.");
-    return it->second(cfg);
+    VideoDecoderFactory factory;
+    {
+        std::lock_guard<std::mutex> lock(decoder_registry_mutex());
+        auto it = decoder_registry().find(type);
+        if (it == decoder_registry().end() || !it->second) {
+            auto ffmpeg = decoder_registry().find(DecoderType::FFMPEG_VIDEO);
+            const bool ffmpeg_registered = ffmpeg != decoder_registry().end() && static_cast<bool>(ffmpeg->second);
+            THROW(missing_video_decoder_message(type, ffmpeg_registered));
+        }
+        factory = it->second;
+    }
+    return factory(cfg);
 }
 
 bool is_decoder_registered(DecoderType type) {

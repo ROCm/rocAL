@@ -36,6 +36,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * The `Remap` unit test case's hip+gray combination is disabled, pending the same RPP bilinear sampler fix.
 
 ### Resolved issues
+* Resolve video property reads holding one lock across the FFmpeg scan, a missing decoder always telling the caller to link `rocal_video_plugin`, and the loader opening one plugin file again for every name it is known by.
 * Resolve the off-by-one in `rocalGetOneHotImageLabels()`, which encoded the 0 based labels the readers produce as the wrong class.
 * Resolve a crash in the TurboJPEG decoder when a source image is more than eight times larger than the requested decode size.
 * Resolve a memory leak and a process abort on TurboJPEG decode failures.
