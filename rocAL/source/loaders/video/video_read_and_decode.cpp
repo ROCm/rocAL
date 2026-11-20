@@ -119,13 +119,17 @@ float VideoReadAndDecode::convert_framenum_to_timestamp(size_t frame_number) {
     return timestamp;
 }
 
-// Runs on a decode thread, so it cannot throw. A failure leaves the decoded size at zero for
-// load() to report after the join.
+// Runs on a decode thread: Decode() can throw, and an exception crossing the std::thread
+// boundary calls std::terminate. A failure leaves the decoded size at zero for load().
 void VideoReadAndDecode::decode_sequence(size_t sequence_index) {
-    if (_video_decoder[_sequence_video_idx[sequence_index]]->Decode(_decompressed_buff_ptrs[sequence_index], _sequence_start_frame_num[sequence_index], _sequence_length, _stride,
-                                                                    _max_decoded_width, _max_decoded_height, _max_decoded_stride, _out_pix_fmt) == VideoDecoder::Status::OK) {
-        _actual_decoded_width[sequence_index] = _max_decoded_width;
-        _actual_decoded_height[sequence_index] = _max_decoded_height;
+    try {
+        if (_video_decoder[_sequence_video_idx[sequence_index]]->Decode(_decompressed_buff_ptrs[sequence_index], _sequence_start_frame_num[sequence_index], _sequence_length, _stride,
+                                                                        _max_decoded_width, _max_decoded_height, _max_decoded_stride, _out_pix_fmt) == VideoDecoder::Status::OK) {
+            _actual_decoded_width[sequence_index] = _max_decoded_width;
+            _actual_decoded_height[sequence_index] = _max_decoded_height;
+        }
+    } catch (const std::exception &e) {
+        ERR("Exception thrown while decoding " + _sequence_video_path[sequence_index] + ": " + STR(e.what()));
     }
 }
 
@@ -172,6 +176,7 @@ VideoReadAndDecode::load(unsigned char *buff,
     // Only a successful decode writes these, so a zero below means the sequence was not decoded.
     std::fill(_actual_decoded_width.begin(), _actual_decoded_width.end(), 0);
     std::fill(_actual_decoded_height.begin(), _actual_decoded_height.end(), 0);
+    _sequence_video_idx.clear();
     for (size_t i = 0; i < _batch_size; i++) {
         auto sequence_info = _video_reader->get_sequence_info();
         _sequence_start_frame_num[i] = sequence_info.start_frame_number;
@@ -190,11 +195,11 @@ VideoReadAndDecode::load(unsigned char *buff,
                     std::vector<std::string> substrings;
                     char delim = '#';
                     substring_extraction(itr->first, delim, substrings);
+                    temp_itr->second._is_decoder_instance = false;
                     if (_video_decoder[video_idx]->Initialize(substrings[1].c_str(), _device_id) != VideoDecoder::Status::OK)
                         THROW("Could not initialize a video decoder for " + substrings[1] + ", see the decoder error logged above")
                     itr->second._video_map_idx = video_idx;
                     itr->second._is_decoder_instance = true;
-                    temp_itr->second._is_decoder_instance = false;
                     break;
                 }
             }
