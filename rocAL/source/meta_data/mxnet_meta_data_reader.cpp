@@ -140,12 +140,20 @@ void MXNetMetaDataReader::read_images() {
         uint8_t *_data = new uint8_t[_data_size_to_read];
         uint8_t *_data_ptr = _data;
         auto ret = _file_contents.read((char *)_data_ptr, _data_size_to_read).gcount();
-        if (ret == -1 || ret != _data_size_to_read)
+        if (ret == -1 || ret != _data_size_to_read) {
+            delete[] _data;
             THROW("MXNetMetaDataReader ERROR:  Unable to read the data from the file ");
+        }
+        if (_data_size_to_read < static_cast<int64_t>(sizeof(_magic) + sizeof(_length_flag) + sizeof(ImageRecordIOHeader))) {
+            delete[] _data;
+            THROW("MXNetMetaDataReader ERROR: Record is shorter than a RecordIO header");
+        }
         _magic = *((uint32_t *)_data_ptr);
         _data_ptr += sizeof(_magic);
-        if (_magic != _kMagic)
+        if (_magic != _kMagic) {
+            delete[] _data;
             THROW("MXNetMetaDataReader ERROR: Invalid RecordIO: wrong magic number");
+        }
         _length_flag = *((uint32_t *)_data_ptr);
         _data_ptr += sizeof(_length_flag);
         _hdr = *((ImageRecordIOHeader *)_data_ptr);
@@ -153,6 +161,7 @@ void MXNetMetaDataReader::read_images() {
         if (_hdr.flag == 0) {
             add((to_string(_hdr.image_id[0])), _hdr.label);
         } else {
+            delete[] _data;
             WRN("\nMultiple record reading has not supported");
             continue;
         }

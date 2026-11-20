@@ -61,6 +61,22 @@ THE SOFTWARE.
         std::cerr << e.what() << '\n';    \
     } while (0)
 
+/*! An entry point that fails must also discard the output tensor it had already created:
+ *  these are extern "C" and cannot let the exception escape, so callers - the Python bindings
+ *  among them - read a null return as "this call failed" and take the reason from
+ *  rocalGetErrorMessage(). Returning the tensor of an operator that never joined the graph
+ *  builds a pipeline that runs but produces nothing, and dropping it without discarding it
+ *  leaks the tensor, or worse leaves it in the master graph's output lists as an output no node
+ *  produces. discard_tensor() is the inverse of whichever create_tensor() overload made it.
+ *  `output` must be a Tensor*; rocalNonSilentRegionDetection returns a struct of two tensors and
+ *  so unwinds them itself. */
+#define ROCAL_HANDLE_EXCEPTION(context, e, output)       \
+    do {                                                 \
+        ROCAL_PRINT_EXCEPTION(context, e);               \
+        context->master_graph->discard_tensor(output);   \
+        output = {};                                     \
+    } while (0)
+
 /*!
  * \file
  * \brief The AMD rocAL Library.

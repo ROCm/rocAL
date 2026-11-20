@@ -124,7 +124,7 @@ void Caffe2MetaDataReaderDetection::read_lmdb_record(std::string file_name, uint
     // The size of the memory map is also the maximum size of the database.
     CHECK_LMDB_RETURN_STATUS(mdb_env_set_mapsize(env, file_byte_size));
     // Opening an environment handle.
-    CHECK_LMDB_RETURN_STATUS(mdb_env_open(env, file_name.c_str(), 0, 0664));
+    CHECK_LMDB_RETURN_STATUS(mdb_env_open(env, file_name.c_str(), kLmdbReadFlags, 0664));
     // Creating a transaction for use with the environment.
     CHECK_LMDB_RETURN_STATUS(mdb_txn_begin(env, NULL, MDB_RDONLY, &txn));
     // Opening a database in the environment.

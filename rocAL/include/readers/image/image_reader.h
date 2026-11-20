@@ -36,12 +36,18 @@ THE SOFTWARE.
 #include "pipeline/enum_registry.h"
 
 #ifdef ROCAL_LMDB
-#define CHECK_LMDB_RETURN_STATUS(status)                                                          \
+#define CHECK_LMDB_RETURN_STATUS(call)                                                            \
     do {                                                                                          \
-        if (status != MDB_SUCCESS)                                                                \
+        int lmdb_status_ = (call);                                                                \
+        if (lmdb_status_ != MDB_SUCCESS)                                                          \
             THROW("LMDB error, " + std::string(__FILE__) + ":" + std::to_string(__LINE__) + " " + \
-                  #status + ":" + std::string(mdb_strerror(status)));                             \
+                  #call + ": " + std::string(mdb_strerror(lmdb_status_)));                        \
     } while (0)
+// Readers never write the database. MDB_RDONLY still updates lock.mdb, so a
+// read rewrites that file and fails when lock.mdb cannot be created or
+// opened for writing. MDB_NOLOCK skips the lock file. Safe while no writer
+// is active.
+constexpr unsigned int kLmdbReadFlags = MDB_RDONLY | MDB_NOLOCK;
 #endif
 
 enum class StorageType {

@@ -203,7 +203,8 @@ void VideoLabelReader::read_files(const std::string &_path) {
     if ((_src_dir = opendir(_path.c_str())) == nullptr)
         THROW("ERROR: Failed opening the directory at " + _path);
     while ((_entity = readdir(_src_dir)) != nullptr) {
-        if (_entity->d_type != DT_REG)
+        std::error_code ec;
+        if (!filesys::is_regular_file(filesys::path(_path) / _entity->d_name, ec))
             continue;
         std::string file_path = _path;
         file_path.append("/");

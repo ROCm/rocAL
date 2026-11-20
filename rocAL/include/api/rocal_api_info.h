@@ -57,6 +57,15 @@ extern "C" int ROCAL_API_CALL rocalGetOutputHeight(RocalContext rocal_context);
 extern "C" int ROCAL_API_CALL rocalGetOutputColorFormat(RocalContext rocal_context);
 
 /*!
+ * \brief Retrieves the size in bytes of one output batch, as required by rocalCopyToOutput().
+ * \ingroup group_rocal_info
+ * \param [in] rocal_context The RocalContext.
+ * \param [in] tensor_index The output tensor to report on, defaults to the first.
+ * \return The size of one output batch in bytes, or 0 on failure.
+ */
+extern "C" size_t ROCAL_API_CALL rocalGetOutputByteSize(RocalContext rocal_context, size_t tensor_index = 0);
+
+/*!
  * \brief Retrieves the number of remaining images.
  * \ingroup group_rocal_info
  * \param [in] rocal_context The RocalContext.

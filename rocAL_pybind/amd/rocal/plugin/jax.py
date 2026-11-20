@@ -115,8 +115,10 @@ class ROCALJaxIterator(object):
             if pipeline._name == "labelReader":
                 if pipeline._one_hot_encoding:
                     labels = np.empty(labels_size, dtype="int32")
+                    # Host numpy buffer, so the destination type is HOST_MEMORY regardless of
+                    # the pipeline's output memory type; it is moved to the device below.
                     pipeline.get_one_hot_encoded_labels(
-                        labels.ctypes.data, pipeline._output_memory_type)
+                        labels.ctypes.data, types.HOST_MEMORY)
                     labels_tensor = labels.reshape(
                         -1, self.batch_size, pipeline._num_classes)
                     labels_tensor = convert_to_jax_array(
