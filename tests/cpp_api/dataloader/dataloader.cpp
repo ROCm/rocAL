@@ -30,19 +30,18 @@ THE SOFTWARE.
 
 #include "rocal_api.h"
 #if ENABLE_OPENCV
-#include "opencv2/opencv.hpp"
+#include "image_output.h"
 using namespace cv;
 #define CV_RGB2BGR COLOR_RGB2BGR
 #endif
 
-#define DISPLAY
 using namespace std::chrono;
 
 int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
-        printf("Usage: dataloader <image_dataset_folder [required]> <processing_device=1/cpu=0>  decode_width decode_height batch_size display_on_off <nhwc=0/nchw=1> <reverse_channels=0/1> \n");
+        printf("Usage: dataloader <cifar10_dataset_folder, holding the data_batch_* binaries [required]> <processing_device=1/cpu=0>  decode_width decode_height batch_size display_on_off <nhwc=0/nchw=1> <reverse_channels=0/1> \n");
         return -1;
     }
     int argIdx = 1;
@@ -231,10 +230,10 @@ int main(int argc, const char **argv) {
                     }
                 }
             }
-            cv::imwrite("output.png", mat_output);
+            rocal_test_output_image(mat_output, mat_output, "output.png");
         }
         // Cifar10 dataloader only supports ROCAL_COLOR_RGB_PLANAR
-        cv::waitKey(1);
+        rocal_test_output_pause(1);
         col_counter = (col_counter + 1) % number_of_cols;
 #endif
     }

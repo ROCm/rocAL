@@ -65,7 +65,7 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update -qq
-          apt-get install -y --no-install-recommends build-essential cmake git python3 \
+          apt-get install -y --no-install-recommends build-essential cmake git python3 python3-dev \
           libprotobuf-dev libprotoc-dev protobuf-compiler libturbojpeg0-dev liblmdb-dev libjpeg-dev \
           pkg-config ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev \
           amdrocm-decode-test
@@ -74,6 +74,14 @@ jobs:
           mkdir build
           cd build
           cmake ../ -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DRAPIDJSON_BUILD_EXAMPLES=OFF -DRAPIDJSON_BUILD_TESTS=OFF -DRAPIDJSON_BUILD_DOC=OFF
+          make -j$(nproc)
+          make install
+          cd ../..
+          git clone --depth 1 -b v3.1.0 https://github.com/pybind/pybind11.git
+          cd pybind11
+          mkdir build
+          cd build
+          cmake ../ -DPYBIND11_TEST=OFF
           make -j$(nproc)
           make install
           cd ../..
@@ -110,7 +118,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DBUILD_PYPACKAGE=OFF
+          cmake .. -DBUILD_PYPACKAGE=ON
           make -j$(nproc)
           make install
       - name: Run tests

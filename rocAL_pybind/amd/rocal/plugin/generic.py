@@ -137,8 +137,11 @@ class ROCALGenericIterator(object):
         if self.loader._name == "labelReader":
             if self.loader._one_hot_encoding == True:
                 self.labels = np.empty(self.labels_size, dtype="int32")
+                # The destination memory type describes the buffer being written, not the
+                # pipeline output. This buffer is always a host numpy array, so passing a GPU
+                # pipeline's DEVICE_MEMORY would hipMemcpy host-to-device into a host pointer.
                 self.loader.get_one_hot_encoded_labels(
-                        self.labels.ctypes.data, self.loader._output_memory_type)
+                        self.labels.ctypes.data, types.HOST_MEMORY)
                 self.labels_tensor = self.labels.reshape(
                     -1, self.batch_size, self.loader._num_classes)
             else:

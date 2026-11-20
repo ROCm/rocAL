@@ -23,6 +23,7 @@ import sys
 import subprocess  # nosec
 import shutil
 import argparse
+import tempfile
 
 test_case_augmentation_map = {
     0: "audio_decoder",
@@ -58,13 +59,22 @@ def run_unit_test(rocal_data_path, qa_mode, gpu, downmix, build_folder_path, cas
             # Handle the error by replacing or ignoring problematic characters
             decoded_stdout = result.stdout.decode('utf-8', errors='replace')
 
-        # check the QA status of the test case
-        if "PASSED" in decoded_stdout:
-            num_passed += 1
-            passed_cases.append(test_case_augmentation_map[case])
+        if qa_mode:
+            # check the QA status of the test case - the binary only prints this marker in QA mode
+            if "PASSED" in decoded_stdout:
+                num_passed += 1
+                passed_cases.append(test_case_augmentation_map[case])
+            else:
+                num_failed += 1
+                failed_cases.append(test_case_augmentation_map[case])
         else:
-            num_failed += 1
-            failed_cases.append(test_case_augmentation_map[case])
+            # Non-QA mode never prints a PASSED/FAILED marker; fall back to the process's own exit code.
+            if result.returncode == 0:
+                num_passed += 1
+                passed_cases.append(test_case_augmentation_map[case])
+            else:
+                num_failed += 1
+                failed_cases.append(test_case_augmentation_map[case])
         print(decoded_stdout)
 
     if qa_mode:
@@ -73,6 +83,7 @@ def run_unit_test(rocal_data_path, qa_mode, gpu, downmix, build_folder_path, cas
         print("Number of FAILED:", num_failed)
         print(failed_cases)
     print("------------------------------------------------------------------------------------------")
+    return num_failed
 
 def audio_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
@@ -88,10 +99,16 @@ def main():
     rocal_data_path = os.environ.get("ROCAL_DATA_PATH")
     if rocal_data_path is None:
         print("Need to export ROCAL_DATA_PATH")
-        sys.exit()
+        sys.exit(1)
 
     sys.dont_write_bytecode = True
-    build_folder_path = os.getcwd()
+    if os.access(script_path, os.W_OK):
+        build_folder_path = script_path
+    else:
+        # script_path is not writable (for example, an installed, root-owned test tree):
+        # build in a private scratch directory instead of failing outright.
+        build_folder_path = tempfile.mkdtemp(prefix="rocal_audio_test_build_")
+        print(f"NOTE: {script_path} is not writable; building in {build_folder_path} instead.")
 
     args = audio_test_suite_parser_and_validator()
     gpu = args.gpu
@@ -104,7 +121,7 @@ def main():
     if test_case is not None: 
         if test_case not in case_list:
             print(" Invalid Test Case! ")
-            exit()
+            exit(1)
         else:
             case_list = [test_case]
 
@@ -118,7 +135,8 @@ def main():
     subprocess.run(["cmake", script_path], cwd=".")   # nosec
     subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
-    run_unit_test(rocal_data_path, qa_mode, gpu, downmix, build_folder_path, case_list)
+    num_failed = run_unit_test(rocal_data_path, qa_mode, gpu, downmix, build_folder_path, case_list)
+    sys.exit(1 if num_failed else 0)
 
 if __name__ == "__main__":
     main()

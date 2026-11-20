@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2026 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,9 +22,7 @@ THE SOFTWARE.
 
 #pragma once
 #include <memory>
-#include "video_decoder.h"
 #include "decoders/image/decoder.h"
+#include "decoders/video/video_decoder.h"
 
-#ifdef ROCAL_VIDEO
 std::shared_ptr<VideoDecoder> create_video_decoder(DecoderConfig config);
-#endif

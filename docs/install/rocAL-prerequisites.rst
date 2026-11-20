@@ -25,7 +25,7 @@ The following prerequisites are required by both installation methods:
 * Python3, Python3 pip, and Python3 wheel
 * `LMDB Library <http://www.lmdb.tech/doc/>`_
 * `FFMPEG <https://www.ffmpeg.org>`_
-* `PyBind11 <https://github.com/pybind/pybind11/releases/tag/v2.11.1>`_ version 2.11.1 (Manual install from `<https://github.com/pybind/pybind11>`_)
+* `PyBind11 <https://github.com/pybind/pybind11/releases/tag/v3.1.0>`_ version 3.1.0 or later (version 3.1 or later is required; Python 3.14 needs pybind11 3.0 or later) (Manual install from `<https://github.com/pybind/pybind11>`_)
 * `RapidJSON <https://github.com/Tencent/rapidjson>`_ (Manual install from `<https://github.com/Tencent/rapidjson.git>`_)
 
 .. note::

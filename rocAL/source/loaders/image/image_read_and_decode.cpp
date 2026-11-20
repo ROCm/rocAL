@@ -222,6 +222,15 @@ ImageReadAndDecode::load(unsigned char *buff,
     // Decode with the height and size equal to a single image
     // File read is done serially since I/O parallelization does not work very well.
     _file_load_time.start();  // Debug timing
+    // This branch is reached only by the raw TFRecord sources, i.e. TFRecordReader.
+    // ImageReadAndDecode is constructed only by ImageLoader, which is only built by
+    // ImageLoaderNode / ImageLoaderSingleShardNode / FusedJpegCropNode /
+    // FusedJpegCropSingleShardNode. Of all the rocal_api_data_loaders.cpp call sites that
+    // construct those nodes, the only two passing DecoderType::SKIP_DECODE are the raw
+    // TFRecord sources, and both pass StorageType::TF_RECORD. Every other source passes
+    // TURBO_JPEG, including the external file source, which has its own branch below.
+    // CIFAR10 and Numpy do set SKIP_DECODE, but on their own loader modules, which do not
+    // use ImageReadAndDecode at all.
     if (_decoder_config._type == DecoderType::SKIP_DECODE) {
         while ((file_counter != _batch_size) && _reader->count_items() > 0) {
             auto read_ptr = buff + image_size * file_counter;
@@ -231,9 +240,21 @@ ImageReadAndDecode::load(unsigned char *buff,
                 continue;
             }
 
-            _actual_read_size[file_counter] = _reader->read_data(read_ptr, fsize);
+            // The record is stored raw and nothing on this path converts it, so a slot smaller
+            // than the record (a U8 output for a 3 plane record, say) does not narrow it, it
+            // discards the tail and mislabels the rest. The read below is still bound by the
+            // slot, which is what keeps a record this size from overrunning buff.
+            if (fsize > image_size)
+                THROW("Raw record " + _reader->id() + " of size " + TOSTR(fsize) +
+                      " bytes exceeds the output slot of " + TOSTR(image_size) + " bytes (" +
+                      TOSTR(max_decoded_width) + "x" + TOSTR(max_decoded_height) + "x" +
+                      TOSTR(output_planes) + "). The raw source copies records without"
+                      " converting; load them in a format that matches the stored data and"
+                      " convert afterwards.")
+
+            _actual_read_size[file_counter] = _reader->read_data(read_ptr, image_size);
             if (_actual_read_size[file_counter] < fsize)
-                LOG("Reader read less than requested bytes of size: " + _actual_read_size[file_counter]);
+                LOG("Reader read less than requested bytes of size: " + TOSTR(_actual_read_size[file_counter]));
 
             _image_names[file_counter] = _reader->id();
             _reader->close();

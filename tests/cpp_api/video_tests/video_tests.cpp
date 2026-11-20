@@ -34,7 +34,7 @@ THE SOFTWARE.
 
 #include "rocal_api.h"
 #if ENABLE_OPENCV
-#include "opencv2/opencv.hpp"
+#include "image_output.h"
 using namespace cv;
 
 #define CV_RGB2BGR COLOR_RGB2BGR
@@ -308,10 +308,10 @@ int main(int argc, const char **argv) {
                     mat_output = mat_in_view(cv::Rect(0, ((b * single_image_height * ouput_frames_per_sequence) + (i * single_image_height)), w, single_image_height));
                     if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
                         cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
-                        cv::imwrite(save_image_path, mat_color);
+                        rocal_test_output_image(mat_color, mat_color, save_image_path);
                         video_writer.write(mat_color);
                     } else {
-                        cv::imwrite(save_image_path, mat_output);
+                        rocal_test_output_image(mat_output, mat_output, save_image_path);
                         video_writer.write(mat_output);
                     }
                 }

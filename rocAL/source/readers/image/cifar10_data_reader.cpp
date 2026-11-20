@@ -184,6 +184,12 @@ Reader::Status CIFAR10DataReader::subfolder_reading() {
         entry_name_list.push_back(entry_name);
         LOG("CIFAR10DataReader  Got entry name " + entry_name)
     }
+    // Closed here so the throws below do not leak the stream.
+    closedir(_sub_dir);
+
+    if (entry_name_list.empty())
+        THROW("CIFAR10DataReader ERROR: Did not find any entry in " + _full_path);
+
     std::sort(entry_name_list.begin(), entry_name_list.end());
     std::string subfolder_path = _full_path + "/" + entry_name_list[0];
     filesys::path pathObj(subfolder_path);
@@ -198,8 +204,12 @@ Reader::Status CIFAR10DataReader::subfolder_reading() {
                 WRN("CIFAR10DataReader: File reader cannot access the storage at " + _folder_path);
         }
     }
-    if (!_file_names.empty())
-        LOG("CIFAR10DataReader  Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path)
+    // An empty list makes the shard end index wrap below, which std::shuffle and open() read past.
+    if (_file_names.empty())
+        THROW("CIFAR10DataReader ERROR: Did not load any file matching the prefix \"" + _file_name_prefix +
+              "\" from " + _full_path);
+
+    LOG("CIFAR10DataReader  Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path)
 
     auto dataset_size = _file_count_all_shards;
     size_t padded_samples = 0;
@@ -235,7 +245,6 @@ Reader::Status CIFAR10DataReader::subfolder_reading() {
         }
     }
     compute_start_and_end_idx_of_all_shards();
-    closedir(_sub_dir);
     return ret;
 }
 
@@ -244,7 +253,8 @@ Reader::Status CIFAR10DataReader::open_folder() {
         THROW("CIFAR10DataReader ERROR: Failed opening the directory at " + _folder_path);
 
     while ((_entity = readdir(_src_dir)) != nullptr) {
-        if (_entity->d_type != DT_REG)
+        std::error_code ec;
+        if (!filesys::is_regular_file(filesys::path(_folder_path) / _entity->d_name, ec))
             continue;
         std::string file_path = _folder_path;
         // check if the filename has the _file_name_prefix
