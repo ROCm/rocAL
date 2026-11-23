@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include <algorithm>
 #include <vx_ext_rpp.h>
 #include <vx_ext_amd.h>
 #include "pipeline/graph.h"
@@ -74,7 +75,10 @@ void CropNode::init(unsigned int crop_h, unsigned int crop_w, float x_drift, flo
     _crop_param->crop_h = crop_h;
     _crop_param->x1 = 0;
     _crop_param->y1 = 0;
-    _crop_param->set_fixed_crop(x_drift, y_drift);
+    // x_drift and y_drift are fractions of the free space: 0 is the left or top edge, 1 is the
+    // right or bottom edge. Clamp them here, and not in set_fixed_crop(), so that other callers
+    // of set_fixed_crop() such as crop_mirror_normalize keep their behaviour.
+    _crop_param->set_fixed_crop(std::clamp(x_drift, 0.0f, 1.0f), std::clamp(y_drift, 0.0f, 1.0f));
 }
 
 // This init is used only for centre crop

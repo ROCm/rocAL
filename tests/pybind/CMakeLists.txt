@@ -99,6 +99,12 @@ if(Python3_FOUND AND ROCAL_PYBIND_SCRIPTS)
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
   set_property(TEST rocal_pybind_test_rejected_operator PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$PYTHONPATH")
+  # 9 - crop position test
+  add_test(NAME rocal_pybind_test_crop_position
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/crop_position_test.py
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  )
+  set_property(TEST rocal_pybind_test_crop_position PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$PYTHONPATH")
 else()
   if(NOT Python3_FOUND)
     message("-- NOTE: rocAL pybind requires Python3 - NOT FOUND")
