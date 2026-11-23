@@ -162,6 +162,11 @@ void VideoLoader::start_loading() {
         THROW("start_loading() should be called after initialize() function is called")
     _remaining_sequences_count = _video_loader->count();
     _internal_thread_running = true;
+    {
+        // reset() restarts the loader thread through here, so clear the previous epoch's failure.
+        std::lock_guard<std::mutex> lock(_load_exception_lock);
+        _load_exception = nullptr;
+    }
     _load_thread = std::thread(&VideoLoader::load_routine, this);
 }
 
@@ -169,55 +174,79 @@ LoaderModuleStatus
 VideoLoader::load_routine() {
     LOG("Started the internal loader thread");
     LoaderModuleStatus last_load_status = LoaderModuleStatus::OK;
-
     // Initially record number of all the frames that are going to be loaded, this is used to know how many still there
-    while (_internal_thread_running) {
-        auto data = _circ_buff.get_write_buffer();
-        if (!_internal_thread_running)
-            break;
 
-        auto load_status = LoaderModuleStatus::NO_MORE_DATA_TO_READ;
-        {
-            load_status = _video_loader->load(data,
-                                              _decoded_data_info._data_names,
-                                              _max_tensor_width,
-                                              _max_tensor_height,
-                                              _decoded_data_info._roi_width,
-                                              _decoded_data_info._roi_height,
-                                              _decoded_data_info._original_width,
-                                              _decoded_data_info._original_height,
-                                              _sequence_start_framenum_vec,
-                                              _sequence_frame_timestamps_vec,
-                                              _output_tensor->info().color_format());
+    try {
+        while (_internal_thread_running) {
+            auto data = _circ_buff.get_write_buffer();
+            if (!_internal_thread_running)
+                break;
 
-            if (load_status == LoaderModuleStatus::OK) {
-                _circ_buff.set_decoded_data_info(_decoded_data_info);
-                _circ_buff.push();
-                _image_counter += _output_tensor->info().batch_size();
+            auto load_status = LoaderModuleStatus::NO_MORE_DATA_TO_READ;
+            {
+                load_status = _video_loader->load(data,
+                                                  _decoded_data_info._data_names,
+                                                  _max_tensor_width,
+                                                  _max_tensor_height,
+                                                  _decoded_data_info._roi_width,
+                                                  _decoded_data_info._roi_height,
+                                                  _decoded_data_info._original_width,
+                                                  _decoded_data_info._original_height,
+                                                  _sequence_start_framenum_vec,
+                                                  _sequence_frame_timestamps_vec,
+                                                  _output_tensor->info().color_format());
+
+                if (load_status == LoaderModuleStatus::OK) {
+                    _circ_buff.set_decoded_data_info(_decoded_data_info);
+                    _circ_buff.push();
+                    _image_counter += _output_tensor->info().batch_size();
+                }
+            }
+            if (load_status != LoaderModuleStatus::OK) {
+                if (last_load_status != load_status) {
+                    if (load_status == LoaderModuleStatus::NO_MORE_DATA_TO_READ ||
+                        load_status == LoaderModuleStatus::NO_FILES_TO_READ) {
+                        LOG("Cycled through all images, count " + TOSTR(_image_counter));
+                    } else {
+                        ERR("ERROR: Detected error in reading the images");
+                    }
+                    last_load_status = load_status;
+                }
+
+                // Here it sets the out-of-data flag and signal the circular buffer's internal
+                // read semaphore using release() call
+                // , and calls the release() allows the reader thread to wake up and handle
+                // the out-of-data case properly
+                // It also slows down the reader thread since there is no more data to read,
+                // till program ends or till reset is called
+                _circ_buff.unblock_reader();
+                std::this_thread::sleep_for(std::chrono::seconds(1));
             }
         }
-        if (load_status != LoaderModuleStatus::OK) {
-            if (last_load_status != load_status) {
-                if (load_status == LoaderModuleStatus::NO_MORE_DATA_TO_READ ||
-                    load_status == LoaderModuleStatus::NO_FILES_TO_READ) {
-                    LOG("Cycled through all images, count " + TOSTR(_image_counter));
-                } else {
-                    ERR("ERROR: Detected error in reading the images");
-                }
-                last_load_status = load_status;
-            }
-
-            // Here it sets the out-of-data flag and signal the circular buffer's internal
-            // read semaphore using release() call
-            // , and calls the release() allows the reader thread to wake up and handle
-            // the out-of-data case properly
-            // It also slows down the reader thread since there is no more data to read,
-            // till program ends or till reset is called
+    } catch (const std::exception &e) {
+        // Catch here: an exception crossing the std::thread boundary would call std::terminate.
+        // load_next() rethrows it on the user thread.
+        ERR("Exception thrown in the loader thread: " + STR(e.what()) + STR("\n"));
+        {
+            std::lock_guard<std::mutex> lock(_load_exception_lock);
+            _load_exception = std::current_exception();
+        }
+        // Keep nudging the reader so a wake-up racing with the consumer's wait is not lost.
+        while (_internal_thread_running) {
             _circ_buff.unblock_reader();
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }
     return LoaderModuleStatus::OK;
+}
+
+void VideoLoader::rethrow_load_exception() {
+    std::exception_ptr load_exception;
+    {
+        std::lock_guard<std::mutex> lock(_load_exception_lock);
+        load_exception = _load_exception;
+    }
+    if (load_exception) std::rethrow_exception(load_exception);
 }
 
 bool VideoLoader::is_out_of_data() {
@@ -227,6 +256,8 @@ bool VideoLoader::is_out_of_data() {
 LoaderModuleStatus
 VideoLoader::update_output_image() {
     LoaderModuleStatus status = LoaderModuleStatus::OK;
+
+    rethrow_load_exception();
     if (is_out_of_data())
         return LoaderModuleStatus::NO_MORE_DATA_TO_READ;
     if (_stopped)
@@ -248,6 +279,9 @@ VideoLoader::update_output_image() {
     }
     if (_stopped)
         return LoaderModuleStatus::OK;
+
+    // The loader may have failed while this thread was blocked above.
+    rethrow_load_exception();
     _output_decoded_data_info = _circ_buff.get_decoded_data_info();
     _output_names = _output_decoded_data_info._data_names;
     _output_tensor->update_tensor_roi(_output_decoded_data_info._roi_width, _output_decoded_data_info._roi_height);
