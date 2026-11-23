@@ -50,29 +50,31 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../cmake)
 
 find_package(AMDRPP QUIET)
 
-# Prefer CMAKE_INSTALL_PREFIX/include/rocal when building against a local install,
-# falling back to the system ROCm layout.
-if(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/include/rocal/rocal_api.h")
-    set(ROCAL_INCLUDE_ROOT ${CMAKE_INSTALL_PREFIX}/include/rocal)
-else()
-    set(ROCAL_INCLUDE_ROOT ${ROCM_PATH}/include/rocal)
-endif()
-include_directories(${ROCM_PATH}/include ${ROCAL_INCLUDE_ROOT})
+# Start from the installed rocAL this test belongs to; see ../cmake/RocalTestRoot.cmake.
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/RocalTestRoot.cmake)
+rocal_test_find_rocal(${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 # Prefer the freshly built rocAL library directory when one is passed in.  This
 # lets the video_tests binary link against the in-tree librocal.so and lets the
 # runtime plugin loader find librocal_video_plugin.so next to it.
-if(ROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR AND EXISTS "${ROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR}")
-    link_directories(${ROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR})
+# The library is linked by full path so no other librocal on the search path can
+# take its place, and the API headers come from the source tree it was built from
+# (ROCAL_VIDEO_PLUGIN_BUILD_INCLUDE_DIR). The install prefix may not hold this build
+# yet, so its headers can describe a different rocAL than the one being linked.
+set(ROCAL_BUILD_LIBRARY "${ROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}rocal${CMAKE_SHARED_LIBRARY_SUFFIX}")
+if(ROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR AND EXISTS "${ROCAL_BUILD_LIBRARY}")
+    set(ROCAL_LIBRARY ${ROCAL_BUILD_LIBRARY})
+    if(ROCAL_VIDEO_PLUGIN_BUILD_INCLUDE_DIR AND EXISTS "${ROCAL_VIDEO_PLUGIN_BUILD_INCLUDE_DIR}/rocal_api.h")
+        set(ROCAL_INCLUDE_DIR ${ROCAL_VIDEO_PLUGIN_BUILD_INCLUDE_DIR})
+    endif()
     # Make the in-tree librocal.so and librocal_video_plugin.so discoverable at
     # runtime without relying on LD_LIBRARY_PATH.
     list(APPEND CMAKE_BUILD_RPATH ${ROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR})
     list(APPEND CMAKE_INSTALL_RPATH ${ROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR})
-elseif(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/lib")
-    link_directories(${CMAKE_INSTALL_PREFIX}/lib ${ROCM_PATH}/lib)
-else()
-    link_directories(${ROCM_PATH}/lib/)
 endif()
+message("-- ${PROJECT_NAME}: using rocAL ${ROCAL_LIBRARY} with headers from ${ROCAL_INCLUDE_DIR}")
+include_directories(${ROCM_PATH}/include ${ROCAL_INCLUDE_DIR})
+link_directories(${ROCM_PATH}/lib)
 
 file(GLOB My_Source_Files ./*.cpp)
 add_executable(${PROJECT_NAME} ${My_Source_Files})
@@ -83,4 +85,4 @@ find_package(OpenCVComponents MODULE QUIET)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall ")
 # librocal carries Python C-API symbols (PythonFunction operator); link libpython to resolve them
 find_package(Python3 QUIET COMPONENTS Development.Embed)
-target_link_libraries(${PROJECT_NAME} rocal $<TARGET_NAME_IF_EXISTS:Python3::Python>)
+target_link_libraries(${PROJECT_NAME} ${ROCAL_LIBRARY} $<TARGET_NAME_IF_EXISTS:Python3::Python>)

@@ -128,49 +128,65 @@ find_library(SWSCALE_LIBRARY
 )
 mark_as_advanced(SWSCALE_LIBRARY)
 
-# Derive a version string. Prefer the pkg-config value; if unavailable, fall
-# back to parsing the libavcodec version header.
-if(_FFMPEG_AVCODEC_VERSION)
-  set(FFMPEG_VERSION "${_FFMPEG_AVCODEC_VERSION}")
-elseif(AVCODEC_INCLUDE_DIR)
-  if(EXISTS "${AVCODEC_INCLUDE_DIR}/libavcodec/version.h")
-    # Newer FFmpeg moved LIBAVCODEC_VERSION_MAJOR into version_major.h, leaving MINOR/MICRO
-    # in version.h. Read MAJOR from version_major.h when present so version detection does not
-    # come up empty and fall back to the legacy compatibility branch on recent headers.
-    set(_AVCODEC_MAJOR_HEADER "${AVCODEC_INCLUDE_DIR}/libavcodec/version.h")
-    if(EXISTS "${AVCODEC_INCLUDE_DIR}/libavcodec/version_major.h")
-      set(_AVCODEC_MAJOR_HEADER "${AVCODEC_INCLUDE_DIR}/libavcodec/version_major.h")
-    endif()
-    file(STRINGS "${_AVCODEC_MAJOR_HEADER}" AVCODEC_VERSION_MAJOR_REGEXP
-         REGEX "^#define[ \t]+LIBAVCODEC_VERSION_MAJOR[ \t]+")
-    file(STRINGS "${AVCODEC_INCLUDE_DIR}/libavcodec/version.h" AVCODEC_VERSION_MINOR_REGEXP
-         REGEX "^#define[ \t]+LIBAVCODEC_VERSION_MINOR[ \t]+")
-    file(STRINGS "${AVCODEC_INCLUDE_DIR}/libavcodec/version.h" AVCODEC_VERSION_MICRO_REGEXP
-         REGEX "^#define[ \t]+LIBAVCODEC_VERSION_MICRO[ \t]+")
-    string(REGEX REPLACE "^#define[ \t]+LIBAVCODEC_VERSION_MAJOR[ \t]+([0-9]+).*" "\\1"
-           AVCODEC_VERSION_MAJOR "${AVCODEC_VERSION_MAJOR_REGEXP}")
-    string(REGEX REPLACE "^#define[ \t]+LIBAVCODEC_VERSION_MINOR[ \t]+([0-9]+).*" "\\1"
-           AVCODEC_VERSION_MINOR "${AVCODEC_VERSION_MINOR_REGEXP}")
-    string(REGEX REPLACE "^#define[ \t]+LIBAVCODEC_VERSION_MICRO[ \t]+([0-9]+).*" "\\1"
-           AVCODEC_VERSION_MICRO "${AVCODEC_VERSION_MICRO_REGEXP}")
-    if(AVCODEC_VERSION_MAJOR AND AVCODEC_VERSION_MINOR AND AVCODEC_VERSION_MICRO)
-      set(FFMPEG_VERSION "${AVCODEC_VERSION_MAJOR}.${AVCODEC_VERSION_MINOR}.${AVCODEC_VERSION_MICRO}")
-    endif()
+# Read <name>/version.h (and version_major.h, which newer FFmpeg uses for the MAJOR define)
+# under <include_dir> into <out_var> as MAJOR.MINOR.MICRO, or leave it empty.
+function(_ffmpeg_header_version name include_dir out_var)
+  set(${out_var} "" PARENT_SCOPE)
+  string(TOUPPER "${name}" _upper)
+  set(_version_header "${include_dir}/${name}/version.h")
+  if(NOT include_dir OR NOT EXISTS "${_version_header}")
+    return()
   endif()
-endif()
+  set(_major_header "${_version_header}")
+  if(EXISTS "${include_dir}/${name}/version_major.h")
+    set(_major_header "${include_dir}/${name}/version_major.h")
+  endif()
+  set(_parts "")
+  foreach(_part MAJOR MINOR MICRO)
+    set(_header "${_version_header}")
+    if(_part STREQUAL "MAJOR")
+      set(_header "${_major_header}")
+    endif()
+    file(STRINGS "${_header}" _line REGEX "^#define[ \t]+${_upper}_VERSION_${_part}[ \t]+[0-9]+")
+    string(REGEX REPLACE "^#define[ \t]+${_upper}_VERSION_${_part}[ \t]+([0-9]+).*" "\\1" _value "${_line}")
+    if(NOT _value MATCHES "^[0-9]+$")
+      return()
+    endif()
+    list(APPEND _parts "${_value}")
+  endforeach()
+  string(REPLACE ";" "." _version "${_parts}")
+  set(${out_var} "${_version}" PARENT_SCOPE)
+endfunction()
+
+# Derive the per-component versions from the headers that will be compiled, re-read on every
+# configure, so a changed FFmpeg install is picked up without clearing the cache.
+# pkg-config is only a fallback: pkg_check_modules caches its results and does not re-query a
+# module it found before, so its value can describe an FFmpeg that is no longer installed.
+# When pkg-config is not used for a component in this run, any value left in the cache by an
+# earlier configure is shadowed with an empty one so it cannot be mistaken for a detection.
+# The results are plain variables. find_package(FFmpeg) runs in the top-level scope (and in the
+# video plugin when it is built on its own), so they reach every consumer without a cache entry
+# that could outlive the install.
+_ffmpeg_header_version(libavcodec "${AVCODEC_INCLUDE_DIR}" _FFMPEG_AVCODEC_HEADER_VERSION)
+_ffmpeg_header_version(libavformat "${AVFORMAT_INCLUDE_DIR}" _FFMPEG_AVFORMAT_HEADER_VERSION)
+_ffmpeg_header_version(libavutil "${AVUTIL_INCLUDE_DIR}" _FFMPEG_AVUTIL_HEADER_VERSION)
+foreach(_component AVCODEC AVFORMAT AVUTIL)
+  if(_FFMPEG_${_component}_HEADER_VERSION)
+    set(_FFMPEG_${_component}_VERSION "${_FFMPEG_${_component}_HEADER_VERSION}")
+  elseif(NOT PKG_CONFIG_FOUND OR NOT _FFMPEG_${_component}_FOUND)
+    set(_FFMPEG_${_component}_VERSION "")
+  endif()
+endforeach()
+set(FFMPEG_VERSION "${_FFMPEG_AVCODEC_VERSION}")
 
 # Export the same per-component version variables the rest of the build expects.
-# If pkg-config did not provide them, approximate them with the derived version.
-if(NOT _FFMPEG_AVCODEC_VERSION AND FFMPEG_VERSION)
-  set(_FFMPEG_AVCODEC_VERSION "${FFMPEG_VERSION}")
-endif()
+# If neither the headers nor pkg-config provided one, approximate it with the libavcodec version.
 if(NOT _FFMPEG_AVFORMAT_VERSION AND FFMPEG_VERSION)
   set(_FFMPEG_AVFORMAT_VERSION "${FFMPEG_VERSION}")
 endif()
 if(NOT _FFMPEG_AVUTIL_VERSION AND FFMPEG_VERSION)
   set(_FFMPEG_AVUTIL_VERSION "${FFMPEG_VERSION}")
 endif()
-set(_FFMPEG_AVCODEC_VERSION "${_FFMPEG_AVCODEC_VERSION}" CACHE INTERNAL "Detected libavcodec version")
 
 if(AVCODEC_LIBRARY AND AVFORMAT_LIBRARY AND AVUTIL_LIBRARY AND SWSCALE_LIBRARY AND
    AVCODEC_INCLUDE_DIR AND AVFORMAT_INCLUDE_DIR AND AVUTIL_INCLUDE_DIR AND SWSCALE_INCLUDE_DIR)

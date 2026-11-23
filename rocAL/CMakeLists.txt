@@ -246,9 +246,16 @@ if(${BUILD_ROCAL})
         set(rocdecode_UTILS_DIR "${rocdecode_PREFIX_DIR}/share/rocdecode/utils")
         set(rocdecode_ROCVIDEODECODE_DIR "${rocdecode_UTILS_DIR}/rocvideodecode")
         # The rocDecode runtime package does not ship the utility source files
-        # (resize_kernels.cpp / roc_video_dec.cpp).  If they are missing, disable
-        # rocDecode support instead of failing configure.
-        if(EXISTS "${rocdecode_UTILS_DIR}/resize_kernels.cpp" AND EXISTS "${rocdecode_ROCVIDEODECODE_DIR}/roc_video_dec.cpp")
+        # (resize_kernels.cpp / colorspace_kernels.cpp / roc_video_dec.cpp).  If any is
+        # missing, disable rocDecode support instead of failing configure.
+        # All three are checked here because this is the scope that adds ENABLE_ROCDECODE
+        # to librocal. rocAL_hip compiles both kernel files and drops rocDecode on its own
+        # when one is absent, but its rocdecode_FOUND=FALSE only applies inside that
+        # subdirectory. Enabling rocDecode here without both kernels would leave librocal
+        # calling kernels that were never built, which surfaces as undefined symbols when
+        # the library is loaded.
+        if(EXISTS "${rocdecode_UTILS_DIR}/resize_kernels.cpp" AND EXISTS "${rocdecode_UTILS_DIR}/colorspace_kernels.cpp"
+           AND EXISTS "${rocdecode_ROCVIDEODECODE_DIR}/roc_video_dec.cpp")
             include_directories(${rocdecode_INCLUDE_DIR} ${rocdecode_ROCVIDEODECODE_DIR})
             include_directories(${rocdecode_UTILS_DIR})
             if(NOT ROCAL_VIDEO_PLUGIN)
@@ -487,20 +494,24 @@ if(${BUILD_ROCAL})
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocal COMPONENT dev)
     # install internal rocAL headers so the optional FFmpeg video plugin can be built
     # from installed sources on the target machine.
+    # The public headers under include/api are installed by the rule above, so the api
+    # directory is excluded as a whole; excluding "api/*" would still create an empty
+    # include/rocal/api directory.
     install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocal
             COMPONENT dev
             FILES_MATCHING
             PATTERN "*.h"
             PATTERN "*.hpp"
-            PATTERN "api/*" EXCLUDE)
+            PATTERN "api" EXCLUDE)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/rocal_build_config.h
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocal COMPONENT dev)
-    # install generated protobuf headers needed by some internal headers
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/rocAL/
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocal
-            COMPONENT dev
-            FILES_MATCHING PATTERN "*.pb.h")
+    # install generated protobuf headers needed by some internal headers.
+    # The list comes from protobuf_generate_cpp above. Installing the binary directory
+    # with FILES_MATCHING instead would also copy every build subdirectory, empty, into
+    # include/rocal.
+    install(FILES ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} ${CAFFE2_PROTO_HEADERS} ${ROCAL_PROTO_HEADERS}
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocal COMPONENT dev)
 else()
     message(FATAL_ERROR "-- ${Red}rocAL dependencies not satisfied${ColourReset}")
 endif()
