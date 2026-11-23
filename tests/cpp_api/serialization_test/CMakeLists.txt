@@ -48,25 +48,26 @@ endif()
 
 project(serialization_test)
 
-list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
-list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rocal/test/cmake)
-
-# Find required packages
-find_package(AMDRPP QUIET)
-
 # Take the rocAL headers and library from one prefix, the rocAL this test belongs to,
 # so they always describe the same build; see cmake/RocalTestRoot.cmake in the test suite.
-# RocalTestRoot and FindOpenCVComponents are looked up next to this test first, then in the
-# installed suite under ROCM_PATH, so a test directory copied out of <prefix>/share/rocal/test
-# still configures. Without the module, as with a rocAL install that predates it, link rocal
-# from the library search path with the ROCM_PATH headers.
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake ${ROCM_PATH}/share/rocal/test/cmake)
-include(RocalTestRoot OPTIONAL RESULT_VARIABLE ROCAL_TEST_ROOT_MODULE)
+# The helper comes from the suite this test sits in. A test directory copied out of
+# <prefix>/share/rocal/test has no suite next to it, so it uses the one installed under ROCM_PATH.
+# Without either, as with a rocAL install that predates the helper, link rocal from the library
+# search path with the ROCM_PATH headers.
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/RocalTestRoot.cmake OPTIONAL RESULT_VARIABLE ROCAL_TEST_ROOT_MODULE)
+if(NOT ROCAL_TEST_ROOT_MODULE)
+    include(${ROCM_PATH}/share/rocal/test/cmake/RocalTestRoot.cmake OPTIONAL RESULT_VARIABLE ROCAL_TEST_ROOT_MODULE)
+endif()
 if(ROCAL_TEST_ROOT_MODULE)
     rocal_test_find_rocal()
 else()
     set(ROCAL_LIBRARY rocal)
     set(ROCAL_INCLUDE_DIR ${ROCM_PATH}/include/rocal)
+    # ROCAL_FOUND gates the backend detection below, so report an installed rocAL here too.
+    find_library(ROCAL_SEARCH_PATH_LIBRARY NAMES rocal HINTS ${ROCM_PATH}/lib)
+    if(ROCAL_SEARCH_PATH_LIBRARY AND EXISTS "${ROCAL_INCLUDE_DIR}/rocal_api.h")
+        set(ROCAL_FOUND TRUE)
+    endif()
 endif()
 
 if(ROCAL_FOUND)
@@ -90,6 +91,12 @@ else()
 endif(NOT ROCAL_FOUND)
 message("-- ${BoldBlue}Backend set to -- ${BACKEND}${ColourReset}")
 
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
+list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rocal/test/cmake)
+
+# Find required packages
+find_package(AMDRPP QUIET)
+
 include_directories(${ROCM_PATH}/include ${ROCAL_INCLUDE_DIR})
 link_directories(${ROCM_PATH}/lib)
 
@@ -98,6 +105,7 @@ file(GLOB Source_Files ./*.cpp)
 add_executable(${PROJECT_NAME} ${Source_Files})
 
 # OpenCV configuration
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake ${ROCM_PATH}/share/rocal/test/cmake)
 find_package(OpenCVComponents MODULE QUIET)
 
 # Compiler flags
