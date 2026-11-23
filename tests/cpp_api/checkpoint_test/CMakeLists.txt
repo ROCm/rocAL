@@ -51,9 +51,19 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../cmake)
 find_package(AMDRPP QUIET)
 
 # Take the rocAL headers and library from one prefix, the rocAL this test belongs to,
-# so they always describe the same build; see ../cmake/RocalTestRoot.cmake.
-include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/RocalTestRoot.cmake)
-rocal_test_find_rocal(${CMAKE_CURRENT_SOURCE_DIR}/..)
+# so they always describe the same build; see cmake/RocalTestRoot.cmake in the test suite.
+# RocalTestRoot and FindOpenCVComponents are looked up next to this test first, then in the
+# installed suite under ROCM_PATH, so a test directory copied out of <prefix>/share/rocal/test
+# still configures. Without the module, as with a rocAL install that predates it, link rocal
+# from the library search path with the ROCM_PATH headers.
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake ${ROCM_PATH}/share/rocal/test/cmake)
+include(RocalTestRoot OPTIONAL RESULT_VARIABLE ROCAL_TEST_ROOT_MODULE)
+if(ROCAL_TEST_ROOT_MODULE)
+    rocal_test_find_rocal()
+else()
+    set(ROCAL_LIBRARY rocal)
+    set(ROCAL_INCLUDE_DIR ${ROCM_PATH}/include/rocal)
+endif()
 include_directories(${ROCM_PATH}/include ${ROCAL_INCLUDE_DIR})
 link_directories(${ROCM_PATH}/lib)
 

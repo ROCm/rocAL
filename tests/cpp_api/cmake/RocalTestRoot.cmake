@@ -24,14 +24,16 @@
 #
 ################################################################################
 
-# rocal_test_find_rocal(<suite_dir>)
+# rocal_test_find_rocal()
 #
 # Sets ROCAL_FOUND, ROCAL_ROOT, ROCAL_LIBRARY and ROCAL_INCLUDE_DIR to the rocAL a C++ test builds against,
-# taking the library and the headers from the same prefix. <suite_dir> is the directory of the
-# test suite (tests/cpp_api, installed as <prefix>/share/rocal/test). The first candidate that
-# holds both librocal and include/rocal/rocal_api.h is used:
+# taking the library and the headers from the same prefix. The test suite is the directory above
+# this module (tests/cpp_api, installed as <prefix>/share/rocal/test). It is located from this
+# file rather than from the test, so a test directory copied out of the installed suite that
+# loads this module from <prefix>/share/rocal/test/cmake still resolves <prefix>. The first
+# candidate that holds both librocal and include/rocal/rocal_api.h is used:
 #   1. ROCAL_ROOT, when set. The test suite passes it to every test project.
-#   2. <prefix>, when <suite_dir> is <prefix>/share/rocal/test. This is the rocAL the tests were
+#   2. <prefix>, when the suite is <prefix>/share/rocal/test. This is the rocAL the tests were
 #      installed with. It comes before CMAKE_INSTALL_PREFIX because a standalone configure
 #      defaults that to /usr/local, which may hold an unrelated rocAL.
 #   3. CMAKE_INSTALL_PREFIX.
@@ -41,10 +43,11 @@
 # directory to the build RPATH so the test also loads the same library at run time.
 # When no candidate holds rocAL, ROCAL_LIBRARY is the bare name "rocal" for the linker search
 # path and ROCAL_INCLUDE_DIR is ROCM_PATH/include/rocal.
-function(rocal_test_find_rocal suite_dir)
+get_filename_component(_ROCAL_TEST_SUITE_DIR "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+
+function(rocal_test_find_rocal)
     set(_candidates ${ROCAL_ROOT})
-    get_filename_component(_suite_dir "${suite_dir}" ABSOLUTE)
-    if(_suite_dir MATCHES "^(.*)/share/rocal/test$")
+    if(_ROCAL_TEST_SUITE_DIR MATCHES "^(.*)/share/rocal/test$")
         list(APPEND _candidates "${CMAKE_MATCH_1}")
     endif()
     list(APPEND _candidates ${CMAKE_INSTALL_PREFIX} ${ROCM_PATH})
