@@ -298,15 +298,30 @@ set(ROCAL_RPM_PACKAGE_LIST     "hip-runtime-amd, openmp-extras-runtime, mivision
 set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "half, hip-dev, openmp-extras-dev, mivisionx-dev, libprotobuf-dev, libturbojpeg0-dev")
 set(ROCAL_RPM_DEV_PACKAGE_LIST  "half, hip-devel, openmp-extras-devel, mivisionx-devel, protobuf-devel")
 
-# Protobuf is a hard-required core dependency, but its runtime .so was previously only declared
-# in the -dev package lists above, leaving a gap for a minimal `apt install rocal` / `yum install rocal`.
-# The Debian runtime package name is SONAME-versioned and differs by distro/Protobuf release
-# (e.g. libprotobuf23 on Ubuntu 22.04, libprotobuf32t64 on Ubuntu 24.04), so resolve it from the
-# actual library dpkg found on the build machine instead of hardcoding one version.
+# Resolve Protobuf's SONAME-versioned runtime package name via dpkg; re-run find_package here
+# so the result variables are populated in this directory's scope.
+find_package(Protobuf QUIET)
+set(ROCAL_PROTOBUF_LIBRARY_PATH "")
+foreach(_protobuf_lib_var Protobuf_LIBRARY Protobuf_LIBRARY_RELEASE)
+  if(NOT ROCAL_PROTOBUF_LIBRARY_PATH AND ${_protobuf_lib_var} AND EXISTS "${${_protobuf_lib_var}}")
+    set(ROCAL_PROTOBUF_LIBRARY_PATH "${${_protobuf_lib_var}}")
+  endif()
+endforeach()
+if(NOT ROCAL_PROTOBUF_LIBRARY_PATH)
+  foreach(_protobuf_libs_var Protobuf_LIBRARIES PROTOBUF_LIBRARIES)
+    if(NOT ROCAL_PROTOBUF_LIBRARY_PATH AND ${_protobuf_libs_var})
+      list(GET ${_protobuf_libs_var} 0 _protobuf_first_lib)
+      if(EXISTS "${_protobuf_first_lib}")
+        set(ROCAL_PROTOBUF_LIBRARY_PATH "${_protobuf_first_lib}")
+      endif()
+    endif()
+  endforeach()
+endif()
+
 set(PROTOBUF_DEBIAN_PACKAGE_NAME "")
-if(EXISTS ${DPKG_EXE} AND PROTOBUF_LIBRARY)
+if(EXISTS ${DPKG_EXE} AND ROCAL_PROTOBUF_LIBRARY_PATH)
   execute_process(
-    COMMAND dpkg -S ${PROTOBUF_LIBRARY}
+    COMMAND dpkg -S ${ROCAL_PROTOBUF_LIBRARY_PATH}
     RESULT_VARIABLE PROTOBUF_DPKG_RESULT
     OUTPUT_VARIABLE PROTOBUF_DPKG_OUTPUT
     OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -317,27 +332,20 @@ if(EXISTS ${DPKG_EXE} AND PROTOBUF_LIBRARY)
   endif()
 endif()
 if(NOT PROTOBUF_DEBIAN_PACKAGE_NAME)
-  # Fall back to the common recent SONAME package names as apt alternatives if dpkg lookup fails
-  # (e.g. cross-compiling, or building on a non-Debian-based system).
+  # Fallback SONAME alternatives if dpkg lookup fails (e.g. cross-compiling, source-built Protobuf).
   set(PROTOBUF_DEBIAN_PACKAGE_NAME "libprotobuf32t64 | libprotobuf32 | libprotobuf23")
 endif()
 set(ROCAL_DEBIAN_PACKAGE_LIST  "${ROCAL_DEBIAN_PACKAGE_LIST}, ${PROTOBUF_DEBIAN_PACKAGE_NAME}")
 # RPM Requires: is conventionally unversioned (matches the existing protobuf-devel dev dependency).
 set(ROCAL_RPM_PACKAGE_LIST     "${ROCAL_RPM_PACKAGE_LIST}, protobuf")
 
-# Conditionally declare optional runtime dependencies that were actually found and linked into
-# librocal.so at build time -- these mirror the "optional / feature-gated" libraries documented
-# in README.md. This list is a fallback safety net; CPACK_DEBIAN_PACKAGE_SHLIBDEPS / RPM
-# auto-Requires (enabled below) should derive the same set automatically from the real NEEDED
-# entries, but is kept here in case shlibdeps/autoreq isn't reliable in a given packaging environment.
+# Fallback safety net for optional runtime deps, in case shlibdeps/auto-Requires below don't catch them.
 if(LMDB_FOUND)
   set(ROCAL_DEBIAN_PACKAGE_LIST  "${ROCAL_DEBIAN_PACKAGE_LIST}, liblmdb0")
   set(ROCAL_RPM_PACKAGE_LIST     "${ROCAL_RPM_PACKAGE_LIST}, lmdb-libs")
 endif()
 if(FFMPEG_FOUND)
-  # The ffmpeg package itself depends on the matching libavcodec/libavformat/libavutil/libswscale
-  # runtime packages on both Debian and RPM-based distros, so depending on it is more portable
-  # than hardcoding the individual SONAME-versioned library package names.
+  # Depend on the ffmpeg meta-package rather than individual SONAME-versioned libav* packages.
   set(ROCAL_DEBIAN_PACKAGE_LIST  "${ROCAL_DEBIAN_PACKAGE_LIST}, ffmpeg")
   set(ROCAL_RPM_PACKAGE_LIST     "${ROCAL_RPM_PACKAGE_LIST}, ffmpeg")
 endif()
@@ -346,16 +354,12 @@ if(SNDFILE_FOUND)
   set(ROCAL_RPM_PACKAGE_LIST     "${ROCAL_RPM_PACKAGE_LIST}, libsndfile")
 endif()
 if(hipFile_FOUND)
-  # Package name is provided by ROCm; verify against the actual component name for each target
-  # distro before relying on this in production packaging.
+  # Verify hipfile package name against each target distro before relying on this in production.
   set(ROCAL_DEBIAN_PACKAGE_LIST  "${ROCAL_DEBIAN_PACKAGE_LIST}, hipfile")
   set(ROCAL_RPM_PACKAGE_LIST     "${ROCAL_RPM_PACKAGE_LIST}, hipfile")
 endif()
 if(LIBTAR_FOUND)
-  # No standard Debian/RPM distro package exists for libtar (see README -- it's built from
-  # source per the Dockerfiles), so there's no runtime package name to depend on here. This is
-  # also why dpkg-shlibdeps/rpmbuild auto-Requires can't resolve it either: it has no owning
-  # package. Documented as a known limitation rather than guessed.
+  # No distro package exists for libtar (built from source); document as a known limitation.
   message("-- ${Yellow}NOTE: rocAL linked against libtar (WebDataset support), but no distro package exists to declare as a runtime dependency -- ensure libtar is installed from source wherever rocal is deployed${ColourReset}")
 endif()
 
@@ -393,13 +397,17 @@ endif()
 set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE ${CPACK_PACKAGE_HOMEPAGE})
 set(CPACK_RPM_PACKAGE_URL ${CPACK_PACKAGE_HOMEPAGE})
-# Turn on automatic shared-library dependency detection so the packaged Depends:/Requires: list
-# stays in sync with whatever actually got linked into librocal.so, instead of relying solely on
-# the hand-maintained ROCAL_DEBIAN_PACKAGE_LIST / ROCAL_RPM_PACKAGE_LIST above. dpkg-shlibdeps /
-# rpmbuild's auto-Requires derive real, correctly-versioned dependencies straight from the
-# binary's NEEDED entries, which is what actually closes the packaging-vs-linkage gap.
+# Enable automatic shared-library dependency detection for Depends:/Requires:.
 set(CPACK_RPM_PACKAGE_AUTOREQPROV "yes")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+# RPATH is stripped and ROCm libs may not be registered with ldconfig; point dpkg-shlibdeps at ROCM_PATH explicitly.
+if(NOT CMAKE_VERSION VERSION_LESS "3.20")
+  set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS_PRIVATE_DIRS "${ROCM_PATH}/lib")
+else()
+  message(WARNING "CMake < 3.20 detected: CPACK_DEBIAN_PACKAGE_SHLIBDEPS_PRIVATE_DIRS is unavailable, "
+                   "so dpkg-shlibdeps may fail to resolve ROCm library dependencies unless "
+                   "${ROCM_PATH}/lib is registered with ldconfig on the build machine.")
+endif()
 # Debian package - COMPONENT
 set(CPACK_DEB_COMPONENT_INSTALL ON)
 set(CPACK_DEBIAN_RUNTIME_PACKAGE_SHLIBDEPS ON)
