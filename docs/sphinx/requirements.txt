@@ -23,7 +23,7 @@ beautifulsoup4==4.14.3
     # via pydata-sphinx-theme
 breathe==4.36.0
     # via rocm-docs-core
-certifi==2026.1.4
+certifi==2026.10.18
     # via requests
 cffi==2.0.0
     # via
@@ -41,7 +41,7 @@ click-log==0.4.0
     # via doxysphinx
 comm==0.2.3
     # via ipykernel
-cryptography==46.0.3
+cryptography==50.0.0
     # via pyjwt
 debugpy==1.8.19
     # via ipykernel
@@ -53,7 +53,7 @@ docutils==0.21.2
     #   pydata-sphinx-theme
     #   sphinx
     #   sphinx-markdown-builder
-doxysphinx==3.3.14
+doxysphinx==3.3.15
     # via rocm-docs-core
 exceptiongroup==1.3.1
     # via ipython
@@ -65,11 +65,11 @@ fastjsonschema==2.21.2
     #   rocm-docs-core
 gitdb==4.0.12
     # via gitpython
-gitpython==3.1.46
+gitpython==3.2.1
     # via rocm-docs-core
 greenlet==3.3.0
     # via sqlalchemy
-idna==3.11
+idna==3.15
     # via requests
 imagesize==1.4.1
     # via sphinx
@@ -107,7 +107,7 @@ jupyter-core==5.9.1
     #   nbformat
 libsass==0.22.0
     # via doxysphinx
-lxml==5.2.1
+lxml==6.1.0
     # via doxysphinx
 markdown-it-py==3.0.0
     # via
@@ -167,16 +167,16 @@ pydata-sphinx-theme==0.15.4
     #   sphinx-book-theme
 pygithub==2.8.1
     # via rocm-docs-core
-pygments==2.19.2
+pygments==2.20.0
     # via
     #   accessible-pygments
     #   ipython
     #   mpire
     #   pydata-sphinx-theme
     #   sphinx
-pyjson5==1.6.9
+pyjson5==2.0.1
     # via doxysphinx
-pyjwt[crypto]==2.10.1
+pyjwt[crypto]==2.15.0
     # via pygithub
 pynacl==1.6.2
     # via pygithub
@@ -199,7 +199,7 @@ referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.5
+requests==2.33.0
     # via
     #   pygithub
     #   rocm-docs-core
@@ -216,7 +216,7 @@ smmap==5.0.2
     # via gitdb
 snowballstemmer==3.0.1
     # via sphinx
-soupsieve==2.8.1
+soupsieve==4.1.3
     # via beautifulsoup4
 sphinx==8.1.3
     # via
@@ -265,7 +265,7 @@ tabulate==0.9.0
     #   sphinx-markdown-builder
 tomli==2.4.0
     # via sphinx
-tornado==6.5.4
+tornado==6.6.1
     # via
     #   ipykernel
     #   jupyter-client
@@ -291,7 +291,7 @@ typing-extensions==4.15.0
     #   pygithub
     #   referencing
     #   sqlalchemy
-urllib3==2.6.3
+urllib3==2.8.0
     # via
     #   pygithub
     #   requests

@@ -36,6 +36,10 @@ defaults:
   run:
     shell: bash
 
+# Least-privilege default: this workflow only needs to read the repository.
+permissions:
+  contents: read
+
 env:
   ROCM_PATH: /opt/rocm
   LD_LIBRARY_PATH: /opt/rocm/lib
@@ -59,9 +63,10 @@ jobs:
       image: mivisionx/ubuntu-24.04:rocm-20260710
       options: --device /dev/kfd --device /dev/dri
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 1
+          persist-credentials: false
       - name: Install dependencies
         run: |
           apt-get update -qq
