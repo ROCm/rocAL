@@ -20,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <algorithm>
 #include <vx_ext_rpp.h>
 #include <vx_ext_amd.h>
 #include "pipeline/graph.h"
@@ -73,21 +72,14 @@ void CropNode::update_node() {
 void CropNode::init(unsigned int crop_h, unsigned int crop_w, float x_drift, float y_drift) {
     _crop_param->crop_w = crop_w;
     _crop_param->crop_h = crop_h;
-    _crop_param->x1 = 0;
-    _crop_param->y1 = 0;
     // x_drift and y_drift are fractions of the free space: 0 is the left or top edge, 1 is the
-    // right or bottom edge. Clamp them here, and not in set_fixed_crop(), so that other callers
-    // of set_fixed_crop() such as crop_mirror_normalize keep their behaviour.
-    _crop_param->set_fixed_crop(std::clamp(x_drift, 0.0f, 1.0f), std::clamp(y_drift, 0.0f, 1.0f));
+    // right or bottom edge. They are clamped in RocalCropParam::fill_crop_dims().
+    _crop_param->set_fixed_crop(x_drift, y_drift);
 }
 
 // This init is used only for centre crop
 void CropNode::init(unsigned int crop_h, unsigned int crop_w) {
-    _crop_param->crop_w = crop_w;
-    _crop_param->crop_h = crop_h;
-    _crop_param->x1 = 0;
-    _crop_param->y1 = 0;
-    _crop_param->set_fixed_crop(0.5, 0.5);  // for center_crop
+    init(crop_h, crop_w, 0.5f, 0.5f);
 }
 
 void CropNode::init(FloatParam *crop_h_factor, FloatParam *crop_w_factor, FloatParam *x_drift, FloatParam *y_drift) {

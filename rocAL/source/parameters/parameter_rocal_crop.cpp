@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include <algorithm>
 #include <cmath>
 #include <VX/vx.h>
 #include <VX/vx_compatibility.h>
@@ -53,8 +54,13 @@ void RocalCropParam::fill_crop_dims() {
             cropw_arr_val[img_idx] = (crop_w <= in_roi[img_idx].xywh.w && crop_w > 0) ? crop_w : in_roi[img_idx].xywh.w;
             croph_arr_val[img_idx] = (crop_h <= in_roi[img_idx].xywh.h && crop_h > 0) ? crop_h : in_roi[img_idx].xywh.h;
             if (_is_fixed_crop) {
-                x1_arr_val[img_idx] = static_cast<size_t>(std::nearbyintf(_crop_anchor[0] * (in_roi[img_idx].xywh.w - cropw_arr_val[img_idx])));
-                y1_arr_val[img_idx] = static_cast<size_t>(std::nearbyintf(_crop_anchor[1] * (in_roi[img_idx].xywh.h - croph_arr_val[img_idx])));
+                // An anchor outside [0, 1] would start the crop past the edge of the image, which
+                // the crop kernels read out of bounds. The crop size is already limited to the
+                // image above, so the clamped anchor keeps x1 + crop_w and y1 + crop_h inside it.
+                float anchor_x = std::clamp(_crop_anchor[0], 0.0f, 1.0f);
+                float anchor_y = std::clamp(_crop_anchor[1], 0.0f, 1.0f);
+                x1_arr_val[img_idx] = static_cast<size_t>(std::nearbyintf(anchor_x * (in_roi[img_idx].xywh.w - cropw_arr_val[img_idx])));
+                y1_arr_val[img_idx] = static_cast<size_t>(std::nearbyintf(anchor_y * (in_roi[img_idx].xywh.h - croph_arr_val[img_idx])));
             } else {
                 x1_arr_val[img_idx] = (x1 >= in_roi[img_idx].xywh.w) ? 0 : x1;
                 y1_arr_val[img_idx] = (y1 >= in_roi[img_idx].xywh.h) ? 0 : y1;

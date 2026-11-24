@@ -100,8 +100,19 @@ if(Python3_FOUND AND ROCAL_PYBIND_SCRIPTS)
   )
   set_property(TEST rocal_pybind_test_rejected_operator PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$PYTHONPATH")
   # 9 - crop position test
+  # The data is read from the installed test package, and the GPU case runs only on a HIP build
+  set(RPP_BACKEND_HIP_FOUND 0)
+  if(EXISTS ${ROCM_PATH}/include/rpp/rpp_backend.h)
+    file(READ ${ROCM_PATH}/include/rpp/rpp_backend.h RPP_BACKEND_FILE)
+    string(REGEX MATCH "RPP_BACKEND_HIP ([0-9]*)" _ ${RPP_BACKEND_FILE})
+    set(RPP_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
+  endif()
+  set(CROP_POSITION_TEST_ARGS --data ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet)
+  if((NOT DEFINED BACKEND AND RPP_BACKEND_HIP_FOUND) OR "${BACKEND}" STREQUAL "HIP")
+    list(APPEND CROP_POSITION_TEST_ARGS --gpu)
+  endif()
   add_test(NAME rocal_pybind_test_crop_position
-            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/crop_position_test.py
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/crop_position_test.py ${CROP_POSITION_TEST_ARGS}
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
   set_property(TEST rocal_pybind_test_crop_position PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$PYTHONPATH")

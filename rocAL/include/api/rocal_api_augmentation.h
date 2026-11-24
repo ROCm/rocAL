@@ -1228,10 +1228,10 @@ extern "C" RocalTensor ROCAL_API_CALL rocalColorTwistFixed(RocalContext context,
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor
- * \param [in] crop_height crop width of the tensor
- * \param [in] crop_width crop height of the tensor
- * \param [in] start_x x-coordinate, start of the input tensor to be cropped
- * \param [in] start_y y-coordinate, start of the input tensor to be cropped
+ * \param [in] crop_height height of the crop in pixels
+ * \param [in] crop_width width of the crop in pixels
+ * \param [in] start_x horizontal position of the crop as a fraction of the space left beside it: 0.0 is the left edge, 0.5 the centre and 1.0 the right edge. Values outside [0, 1] are clamped and NaN is rejected
+ * \param [in] start_y vertical position of the crop as a fraction of the space left above and below it: 0.0 is the top edge, 0.5 the centre and 1.0 the bottom edge. Values outside [0, 1] are clamped and NaN is rejected
  * \param [in] mean mean value (specified for each channel) for tensor normalization
  * \param [in] std_dev standard deviation value (specified for each channel) for tensor normalization
  * \param [in] is_output is the output tensor part of the graph output
@@ -1252,17 +1252,17 @@ extern "C" RocalTensor ROCAL_API_CALL rocalCropMirrorNormalize(RocalContext cont
                                                                RocalTensorLayout output_layout = ROCAL_NONE,
                                                                RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
-/*! \brief Crops images.
+/*! \brief Crops images with randomised size and position.
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor
- * \param [in] crop_height crop width of the tensor
- * \param [in] crop_width crop height of the tensor
- * \param [in] crop_depth crop depth of the tensor
- * \param [in] crop_pox_x x-coordinate, start of the input tensor to be cropped
- * \param [in] crop_pos_y y-coordinate, start of the input tensor to be cropped
- * \param [in] crop_pos_z z-coordinate, start of the input tensor to be cropped
  * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] crop_width width of the crop as a fraction of the input width, drawn from this parameter for every sample
+ * \param [in] crop_height height of the crop as a fraction of the input height, drawn from this parameter for every sample
+ * \param [in] crop_depth unused
+ * \param [in] crop_pos_x horizontal position of the crop as a fraction of the space left beside it, drawn from this parameter for every sample: 0.0 is the left edge and 1.0 the right edge
+ * \param [in] crop_pos_y vertical position of the crop as a fraction of the space left above and below it, drawn from this parameter for every sample: 0.0 is the top edge and 1.0 the bottom edge
+ * \param [in] crop_pos_z unused
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
@@ -1271,7 +1271,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalCrop(RocalContext context, RocalTenso
                                                 RocalFloatParam crop_width = NULL,
                                                 RocalFloatParam crop_height = NULL,
                                                 RocalFloatParam crop_depth = NULL,
-                                                RocalFloatParam crop_pox_x = NULL,
+                                                RocalFloatParam crop_pos_x = NULL,
                                                 RocalFloatParam crop_pos_y = NULL,
                                                 RocalFloatParam crop_pos_z = NULL,
                                                 RocalTensorLayout output_layout = ROCAL_NONE,
@@ -1281,13 +1281,13 @@ extern "C" RocalTensor ROCAL_API_CALL rocalCrop(RocalContext context, RocalTenso
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor
- * \param [in] crop_height crop width of the tensor
- * \param [in] crop_width crop height of the tensor
- * \param [in] crop_depth crop depth of the tensor
- * \param [in] crop_pos_x horizontal position of the crop as a fraction of the space left beside it: 0.0 is the left edge, 0.5 the centre and 1.0 the right edge. Values outside [0, 1] are clamped
- * \param [in] crop_pos_y vertical position of the crop as a fraction of the space left above and below it: 0.0 is the top edge, 0.5 the centre and 1.0 the bottom edge. Values outside [0, 1] are clamped
- * \param [in] crop_pos_z z-coordinate, start of the input tensor to be cropped
+ * \param [in] crop_width width of the crop in pixels
+ * \param [in] crop_height height of the crop in pixels
+ * \param [in] crop_depth depth of the crop, must be non-zero. Not otherwise used
  * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] crop_pos_x horizontal position of the crop as a fraction of the space left beside it: 0.0 is the left edge, 0.5 the centre and 1.0 the right edge. Values outside [0, 1] are clamped and NaN is rejected
+ * \param [in] crop_pos_y vertical position of the crop as a fraction of the space left above and below it: 0.0 is the top edge, 0.5 the centre and 1.0 the bottom edge. Values outside [0, 1] are clamped and NaN is rejected
+ * \param [in] crop_pos_z unused
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor

@@ -21,6 +21,8 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include <cmath>
+#include "pipeline/exception.h"
 #include "pipeline/graph.h"
 
 #include "parameters/parameter_factory.h"
@@ -56,6 +58,9 @@ class CropParam {
     }
     void set_random() { _random = true; }
     void set_fixed_crop(float anchor_x, float anchor_y) {
+        // The anchors are clamped to [0, 1] in fill_crop_dims(), and std::clamp passes NaN through
+        if (std::isnan(anchor_x) || std::isnan(anchor_y))
+            THROW("The crop position must be a number, not NaN")
         _is_fixed_crop = true;
         _random = false;
         _crop_anchor[0] = anchor_x;
