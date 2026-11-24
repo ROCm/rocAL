@@ -196,9 +196,15 @@ do
         # Re-enable these lines and regenerate their goldens once that entry is removed.
         # python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name phase --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Phase_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name threshold --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Threshold_${rgb_name[$rgb]}_${device_name}"
-        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name warp_perspective --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}WarpPerspective_${rgb_name[$rgb]}_${device_name}"
+        # WarpPerspective on the host backend is disabled: a known RPP bug blackens
+        # in-bounds output under a genuine-perspective matrix (m6/m7 != 0, which this
+        # test's matrix uses)
+        if [ $device -eq 1 ]; then
+            python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name warp_perspective --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}WarpPerspective_${rgb_name[$rgb]}_${device_name}"
+        fi
 
-        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name remap --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Remap_${rgb_name[$rgb]}_${device_name}"
+        # Disable until RPP fix is merged
+        # python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name remap --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Remap_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name crop_and_patch --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}CropAndPatch_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name ricap --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Ricap_${rgb_name[$rgb]}_${device_name}"
         # Disabled with phase above, same rotate defect - see the note there. ROCM-33746.

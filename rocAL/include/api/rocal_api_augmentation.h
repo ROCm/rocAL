@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #ifndef MIVISIONX_ROCAL_API_AUGMENTATION_H
 #define MIVISIONX_ROCAL_API_AUGMENTATION_H
-#include "rocal_api_types.h"
+#include "rocal_api_tensor.h"
 
 /*!
  * \file
@@ -1173,10 +1173,13 @@ extern "C" RocalTensor ROCAL_API_CALL rocalCopy(RocalContext context, RocalTenso
 
 /*! \brief Performs no operation.
  * \ingroup group_rocal_augmentations
+ * \note The returned tensor is allocated but never written, so its contents are undefined and can
+ * differ between runs and between backends. It is not a copy of the input. Use this operator only
+ * to measure pipeline overhead, and use rocalCopy() when the output has to carry the input's data.
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor
  * \param [in] is_output is the output tensor part of the graph output
- * \return RocalTensor
+ * \return RocalTensor A tensor shaped like the input, with undefined contents
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalNop(RocalContext context, RocalTensor input, bool is_output);
 

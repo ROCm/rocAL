@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #ifndef MIVISIONX_ROCAL_API_DATA_TRANSFER_H
 #define MIVISIONX_ROCAL_API_DATA_TRANSFER_H
-#include "rocal_api_types.h"
+#include "rocal_api_tensor.h"
 
 /*!
  * \file

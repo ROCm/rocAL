@@ -1,12 +1,17 @@
 #!/bin/bash
-cwd=$(pwd)
-if [ -d build ];then 
-    sudo rm -rf ./build/*
+cwd="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+if [ -w "$cwd" ]; then
+    build_dir="$cwd/build"
+    rm -rf "$build_dir"
+    mkdir "$build_dir"
 else
-    mkdir build
+    # $cwd is not writable (for example, an installed, root-owned test tree):
+    # build in a private scratch directory instead of failing outright.
+    build_dir="$(mktemp -d -t rocal_unit_test_build.XXXXXX)"
+    echo "NOTE: $cwd is not writable; building in $build_dir instead."
 fi
-cd build || exit
-cmake ..
+cd "$build_dir" || exit
+cmake "$cwd"
 make -j"$(nproc)"
 
 if [[ $ROCAL_DATA_PATH == "" ]]
@@ -257,9 +262,15 @@ do
         # Re-enable these lines and regenerate their goldens once that entry is removed.
         # ./unit_tests 2 "$coco_detection_path" "${output_path}Phase_${rgb_name[$rgb]}_${device_name}" $width $height 75 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}Threshold_${rgb_name[$rgb]}_${device_name}" $width $height 76 $device $rgb 1 $display
-        ./unit_tests 2 "$coco_detection_path" "${output_path}WarpPerspective_${rgb_name[$rgb]}_${device_name}" $width $height 77 $device $rgb 1 $display
+        # WarpPerspective on the host backend is disabled: a known RPP bug blackens
+        # in-bounds output under a genuine-perspective matrix (m6/m7 != 0, which this
+        # test's matrix uses)
+        if [ $device -eq 1 ]; then
+            ./unit_tests 2 "$coco_detection_path" "${output_path}WarpPerspective_${rgb_name[$rgb]}_${device_name}" $width $height 77 $device $rgb 1 $display
+        fi
 
-        ./unit_tests 2 "$coco_detection_path" "${output_path}Remap_${rgb_name[$rgb]}_${device_name}" $width $height 78 $device $rgb 1 $display
+        # Disable until RPP fix is merged
+        # ./unit_tests 2 "$coco_detection_path" "${output_path}Remap_${rgb_name[$rgb]}_${device_name}" $width $height 78 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}CropAndPatch_${rgb_name[$rgb]}_${device_name}" $width $height 79 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}Ricap_${rgb_name[$rgb]}_${device_name}" $width $height 80 $device $rgb 1 $display
         # Disabled with Phase above, same rotate defect - see the note there. ROCM-33746.

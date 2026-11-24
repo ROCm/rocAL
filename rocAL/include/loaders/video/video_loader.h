@@ -22,6 +22,8 @@ THE SOFTWARE.
 
 #pragma once
 
+#include <exception>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
@@ -62,6 +64,7 @@ class VideoLoader : public LoaderModule {
     bool is_out_of_data();
     void de_init();
     void stop_internal_thread();
+    void rethrow_load_exception();
     std::shared_ptr<VideoReadAndDecode> _video_loader;
     LoaderModuleStatus update_output_image();
     LoaderModuleStatus load_routine();
@@ -87,6 +90,8 @@ class VideoLoader : public LoaderModule {
     std::vector<std::vector<std::vector<float>>> _sequence_frame_timestamps_vec;
     CropImageInfo _crop_img_info;
     size_t _max_tensor_width, _max_tensor_height;
+    std::mutex _load_exception_lock;
+    std::exception_ptr _load_exception = nullptr;  //!< Raised on the loader thread, rethrown by load_next()
 #if ENABLE_HIP
     hipStream_t _hip_stream = nullptr;
 #endif
