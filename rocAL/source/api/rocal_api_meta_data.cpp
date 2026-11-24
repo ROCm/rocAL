@@ -135,10 +135,16 @@ RocalMetaData
 RocalMetaData
     ROCAL_API_CALL
     rocalCreateMXNetReader(RocalContext p_context, const char* source_path, bool is_output) {
-    ROCAL_INVALID_CONTEXT_EXCEPTION(p_context);
-    auto context = static_cast<Context*>(p_context);
-
-    return context->master_graph->create_mxnet_label_reader(source_path, is_output);
+    try {
+        ROCAL_INVALID_CONTEXT_EXCEPTION(p_context);
+        auto context = static_cast<Context*>(p_context);
+        return context->master_graph->create_mxnet_label_reader(source_path, is_output);
+    } catch (const std::exception& e) {
+        auto context = static_cast<Context*>(p_context);
+        if (context) context->capture_error(e.what());
+        std::cerr << e.what() << '\n';
+        return nullptr;
+    }
 }
 
 RocalMetaData
@@ -242,12 +248,13 @@ void
     std::vector<int> one_hot_encoded(meta_data_batch_size * num_of_classes, 0);
     auto labels = meta_data.second->get_labels_batch();
     for (uint i = 0; i < meta_data_batch_size; i++) {
+        // The label readers number classes from 0, so column `label` is the one to set. Anything
+        // outside [0, num_of_classes) cannot be encoded; report it instead of emitting a row that
+        // belongs to another class or an all-zero row that no caller can tell apart from a miss.
         int label_index = labels[i][0];
-        if (label_index > 0 && label_index <= num_of_classes) {
-            one_hot_encoded[(i * num_of_classes) + label_index - 1] = 1;
-        } else if (!label_index) {
-            one_hot_encoded[(i * num_of_classes) + num_of_classes - 1] = 1;
-        }
+        if (label_index < 0 || label_index >= num_of_classes)
+            THROW("Label " + TOSTR(label_index) + " of sample " + TOSTR(i) + " in the batch is outside the one hot encoding range [0, " + TOSTR(num_of_classes) + ")")
+        one_hot_encoded[(i * num_of_classes) + label_index] = 1;
     }
     if (output_mem_type == RocalOutputMemType::ROCAL_MEMCPY_HOST)
         memcpy(buf, one_hot_encoded.data(), sizeof(int) * meta_data_batch_size * num_of_classes);
@@ -482,13 +489,20 @@ void
 RocalMetaData
     ROCAL_API_CALL
     rocalCreateWebDatasetReader(RocalContext p_context, const char* source_path, const char* index_path, std::vector<std::set<std::string>> extensions, RocalMissingComponentsBehaviour missing_components_behavior, bool is_output) {
-#ifdef ENABLE_WDS
+    try {
         ROCAL_INVALID_CONTEXT_EXCEPTION(p_context);
+#ifdef ENABLE_WDS
         auto context = static_cast<Context*>(p_context);
         return context->master_graph->create_webdataset_reader(source_path, index_path, extensions , MetaDataReaderType::WEBDATASET_META_DATA_READER, static_cast<MissingComponentsBehaviour>(missing_components_behavior));
 #else
         THROW("Webdataset reader is not enabled since libtar is not present")
 #endif
+    } catch (const std::exception& e) {
+        auto context = static_cast<Context*>(p_context);
+        if (context) context->capture_error(e.what());
+        std::cerr << e.what() << '\n';
+        return nullptr;
+    }
 }
 
 RocalTensorList

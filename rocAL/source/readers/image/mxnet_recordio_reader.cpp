@@ -30,6 +30,46 @@ THE SOFTWARE.
 
 using namespace std;
 
+namespace {
+// A record on disk is the magic word, the length word, then clength bytes. clength
+// includes ImageRecordIOHeader. A length below that header wraps the unsigned
+// subtraction, and a length past the bytes just read is a heap over-read.
+const uint64_t kRecordPrefix = sizeof(uint32_t) * 2;
+const uint64_t kRecordHeader = sizeof(ImageRecordIOHeader);
+
+bool bytes_to_read_ok(int64_t bytes_read) {
+    if (bytes_read < 0)
+        return false;
+    return static_cast<uint64_t>(bytes_read) <= UINT32_MAX;
+}
+
+bool record_length_in_bounds(uint32_t clength, int64_t bytes_read) {
+    if (!bytes_to_read_ok(bytes_read))
+        return false;
+    const uint64_t available = static_cast<uint64_t>(bytes_read);
+    if (available < kRecordPrefix + kRecordHeader)
+        return false;
+    const uint64_t length = clength;
+    if (length < kRecordHeader || kRecordPrefix + length > available)
+        return false;
+    return true;
+}
+
+bool image_size_from_record(uint32_t clength, int64_t bytes_read, uint32_t label_count, int64_t* image_size) {
+    if (!record_length_in_bounds(clength, bytes_read))
+        return false;
+    const uint64_t label_bytes = static_cast<uint64_t>(label_count) * sizeof(float);
+    if (label_bytes > static_cast<uint64_t>(clength) - kRecordHeader)
+        return false;
+    *image_size = static_cast<int64_t>(static_cast<uint64_t>(clength) - kRecordHeader - label_bytes);
+    return true;
+}
+
+std::string record_length_error(uint32_t clength, int64_t bytes_read) {
+    return "MXNetRecordIOReader ERROR: Record length " + std::to_string(clength) + " is outside the " + std::to_string(bytes_read) + " bytes read from the file";
+}
+}
+
 MXNetRecordIOReader::MXNetRecordIOReader() {
     _src_dir = nullptr;
     _entity = nullptr;
@@ -115,7 +155,10 @@ Reader::Status MXNetRecordIOReader::record_reading() {
 
     if (!_file_names.empty())
         LOG("MXNetRecordIOReader ShardID [" << TOSTR(_shard_id) << "] Total of " << TOSTR(_file_names.size()) << " images loaded from " << _path)
-    
+
+    if (_file_names.empty())
+        THROW("MXNetRecordIOReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Did not load any file from " + _path);
+
     size_t padded_samples = ((_shard_size > 0) ? _shard_size : largest_shard_size_without_padding()) % _batch_size;
     _last_batch_padded_size = ((_batch_size > 1) && (padded_samples > 0)) ? (_batch_size - padded_samples) : 0;
 
@@ -180,32 +223,52 @@ void MXNetRecordIOReader::read_image_names() {
     for (int current_index = 0; current_index < (int)_indices.size(); current_index++) {
         uint32_t _magic, _length_flag;
         std::tie(_seek_pos, _data_size_to_read) = _indices[current_index];
+        if (!bytes_to_read_ok(_data_size_to_read))
+            THROW("MXNetRecordIOReader ERROR: Record length is outside the " + std::to_string(_data_size_to_read) + " bytes read from the file");
         _file_contents.seekg(_seek_pos, ifstream::beg);
         uint8_t *_data = new uint8_t[_data_size_to_read];
         uint8_t *_data_ptr = _data;
         auto ret = _file_contents.read((char *)_data_ptr, _data_size_to_read).gcount();
-        if (ret == -1 || ret != _data_size_to_read)
+        if (ret == -1 || ret != _data_size_to_read) {
+            delete[] _data;
             THROW("MXNetRecordIOReader ERROR:  Unable to read the data from the file ");
+        }
+        if (_data_size_to_read < static_cast<int64_t>(kRecordPrefix)) {
+            delete[] _data;
+            THROW("MXNetRecordIOReader ERROR: Record is shorter than a RecordIO header");
+        }
 
         _magic = *((uint32_t *)_data_ptr);
         _data_ptr += sizeof(_magic);
-        if (_magic != _kMagic)
+        if (_magic != _kMagic) {
+            delete[] _data;
             THROW("MXNetRecordIOReader ERROR: Invalid MXNet RecordIO: wrong _magic number");
+        }
         _length_flag = *((uint32_t *)_data_ptr);
         _data_ptr += sizeof(_length_flag);
         uint32_t _clength = DecodeLength(_length_flag);
+        if (!record_length_in_bounds(_clength, _data_size_to_read)) {
+            delete[] _data;
+            THROW(record_length_error(_clength, _data_size_to_read));
+        }
         _hdr = *((ImageRecordIOHeader *)_data_ptr);
 
         if (_hdr.flag == 0)
             _image_key = to_string(_hdr.image_id[0]);
         else {
+            delete[] _data;
             WRN("\nMXNetRecordIOReader Multiple record reading has not supported");
             continue;
         }
-        /* _clength - sizeof(ImageRecordIOHeader) to get the data size.
-        Subtracting label size(_hdr.flag * sizeof(float)) from data size to get image size*/
-        int64_t image_size = (_clength - sizeof(ImageRecordIOHeader)) - (_hdr.flag * sizeof(float));
+        int64_t image_size = 0;
+        if (!image_size_from_record(_clength, _data_size_to_read, _hdr.flag, &image_size)) {
+            delete[] _data;
+            THROW(record_length_error(_clength, _data_size_to_read));
+        }
         delete[] _data;
+        // The loader skips a zero-byte image without advancing this reader, so it would retry the record forever.
+        if (image_size == 0)
+            THROW("MXNetRecordIOReader ERROR: Record " + _image_key + " holds no image data");
 
         _file_names.push_back(_image_key.c_str());
         _last_file_name = _image_key.c_str();
@@ -221,29 +284,47 @@ void MXNetRecordIOReader::read_image_names() {
 
 void MXNetRecordIOReader::read_image(unsigned char *buff, int64_t seek_position, int64_t _data_size_to_read) {
     uint32_t _magic, _length_flag;
+    if (!bytes_to_read_ok(_data_size_to_read))
+        THROW("MXNetRecordIOReader ERROR: Record length is outside the " + std::to_string(_data_size_to_read) + " bytes read from the file");
     _file_contents.seekg(seek_position, ifstream::beg);
     uint8_t *_data = new uint8_t[_data_size_to_read];
     uint8_t *_data_ptr = _data;
     auto ret = _file_contents.read((char *)_data_ptr, _data_size_to_read).gcount();
-    if (ret == -1 || ret != _data_size_to_read)
+    if (ret == -1 || ret != _data_size_to_read) {
+        delete[] _data;
         THROW("MXNetRecordIOReader ERROR:  Unable to read the data from the file ");
+    }
+    if (_data_size_to_read < static_cast<int64_t>(kRecordPrefix)) {
+        delete[] _data;
+        THROW("MXNetRecordIOReader ERROR: Record is shorter than a RecordIO header");
+    }
     _magic = *((uint32_t *)_data_ptr);
     _data_ptr += sizeof(_magic);
-    if (_magic != _kMagic)
+    if (_magic != _kMagic) {
+        delete[] _data;
         THROW("MXNetRecordIOReader ERROR: Invalid RecordIO: wrong _magic number");
+    }
     _length_flag = *((uint32_t *)_data_ptr);
     _data_ptr += sizeof(_length_flag);
     uint32_t _cflag = DecodeFlag(_length_flag);
     uint32_t _clength = DecodeLength(_length_flag);
+    if (!record_length_in_bounds(_clength, _data_size_to_read)) {
+        delete[] _data;
+        THROW(record_length_error(_clength, _data_size_to_read));
+    }
     _hdr = *((ImageRecordIOHeader *)_data_ptr);
     _data_ptr += sizeof(_hdr);
 
-    int64_t data_size = _clength - sizeof(ImageRecordIOHeader);
-    int64_t label_size = _hdr.flag * sizeof(float);
-    int64_t image_size = data_size - label_size;
+    int64_t image_size = 0;
+    if (!image_size_from_record(_clength, _data_size_to_read, _hdr.flag, &image_size)) {
+        delete[] _data;
+        THROW(record_length_error(_clength, _data_size_to_read));
+    }
     if (_cflag == 0)
-        memcpy(buff, _data_ptr + label_size, image_size);
-    else
+        memcpy(buff, _data_ptr + (_hdr.flag * sizeof(float)), static_cast<size_t>(image_size));
+    else {
+        delete[] _data;
         THROW("\nMultiple record reading has not supported");
+    }
     delete[] _data;
 }

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2026 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,19 +22,20 @@ THE SOFTWARE.
 
 #include "loaders/video/video_read_and_decode.h"
 #include "decoders/video/video_decoder_factory.h"
+#include "pipeline/timing_debug.h"
 
 #ifdef ROCAL_VIDEO
-std::tuple<VideoDecoder::ColorFormat, unsigned, AVPixelFormat>
+std::tuple<VideoDecoder::ColorFormat, unsigned, rocal::video::VideoPixelFormat>
 video_interpret_color_format(RocalColorFormat color_format) {
     switch (color_format) {
         case RocalColorFormat::RGB24:
-            return std::make_tuple(VideoDecoder::ColorFormat::RGB, 3, AV_PIX_FMT_RGB24);
+            return std::make_tuple(VideoDecoder::ColorFormat::RGB, 3, rocal::video::VideoPixelFormat::RGB24);
 
         case RocalColorFormat::BGR24:
-            return std::make_tuple(VideoDecoder::ColorFormat::BGR, 3, AV_PIX_FMT_BGR24);
+            return std::make_tuple(VideoDecoder::ColorFormat::BGR, 3, rocal::video::VideoPixelFormat::BGR24);
 
         case RocalColorFormat::U8:
-            return std::make_tuple(VideoDecoder::ColorFormat::GRAY, 1, AV_PIX_FMT_GRAY8);
+            return std::make_tuple(VideoDecoder::ColorFormat::GRAY, 1, rocal::video::VideoPixelFormat::GRAY8);
 
         default:
             throw std::invalid_argument("Invalid color format\n");
@@ -74,7 +75,7 @@ void VideoReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
     _video_decoder_config = decoder_config;
     _device_id = device_id;
 
-    // Initialize the ffmpeg context once for the video files.
+    // Initialize the video decoder context once for the video files.
     size_t i = 0;
     for (; i < _video_process_count; i++) {
         _video_decoder[i] = create_video_decoder(decoder_config);
@@ -85,7 +86,7 @@ void VideoReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
         video_instance._video_map_idx = atoi(substrings[0].c_str());
         video_instance._is_decoder_instance = true;
         if (_video_decoder[i]->Initialize(substrings[1].c_str(), _device_id) != VideoDecoder::Status::OK)
-            video_instance._is_decoder_instance = false;
+            THROW("Could not initialize a video decoder for " + substrings[1] + ", see the decoder error logged above")
         _video_file_name_map.insert(std::pair<std::string, video_map>(_video_names[i], video_instance));
     }
     if (_video_process_count != _video_count) {
@@ -118,11 +119,17 @@ float VideoReadAndDecode::convert_framenum_to_timestamp(size_t frame_number) {
     return timestamp;
 }
 
+// Runs on a decode thread: Decode() can throw, and an exception crossing the std::thread
+// boundary calls std::terminate. A failure leaves the decoded size at zero for load().
 void VideoReadAndDecode::decode_sequence(size_t sequence_index) {
-    if (_video_decoder[_sequence_video_idx[sequence_index]]->Decode(_decompressed_buff_ptrs[sequence_index], _sequence_start_frame_num[sequence_index], _sequence_length, _stride,
-                                                                    _max_decoded_width, _max_decoded_height, _max_decoded_stride, _out_pix_fmt) == VideoDecoder::Status::OK) {
-        _actual_decoded_width[sequence_index] = _max_decoded_width;
-        _actual_decoded_height[sequence_index] = _max_decoded_height;
+    try {
+        if (_video_decoder[_sequence_video_idx[sequence_index]]->Decode(_decompressed_buff_ptrs[sequence_index], _sequence_start_frame_num[sequence_index], _sequence_length, _stride,
+                                                                        _max_decoded_width, _max_decoded_height, _max_decoded_stride, _out_pix_fmt) == VideoDecoder::Status::OK) {
+            _actual_decoded_width[sequence_index] = _max_decoded_width;
+            _actual_decoded_height[sequence_index] = _max_decoded_height;
+        }
+    } catch (const std::exception &e) {
+        ERR("Exception thrown while decoding " + _sequence_video_path[sequence_index] + ": " + STR(e.what()));
     }
 }
 
@@ -166,6 +173,10 @@ VideoReadAndDecode::load(unsigned char *buff,
     size_t parallel_sequence_count = 0;
     _sequence_start_frame_num.resize(_batch_size);
     _sequence_video_path.resize(_batch_size);
+    // Only a successful decode writes these, so a zero below means the sequence was not decoded.
+    std::fill(_actual_decoded_width.begin(), _actual_decoded_width.end(), 0);
+    std::fill(_actual_decoded_height.begin(), _actual_decoded_height.end(), 0);
+    _sequence_video_idx.clear();
     for (size_t i = 0; i < _batch_size; i++) {
         auto sequence_info = _video_reader->get_sequence_info();
         _sequence_start_frame_num[i] = sequence_info.start_frame_number;
@@ -173,7 +184,6 @@ VideoReadAndDecode::load(unsigned char *buff,
         _decompressed_buff_ptrs[i] = buff + (i * image_size * _sequence_length);
 
         // Check if the video file is already initialized otherwise use an existing decoder instance to initialize the video
-        // std::cerr << "\nThe source video is " << _sequence_video_path[i] << " MAP : "<<_video_file_name_map.find(_sequence_video_path[i])->second._video_map_idx << "\tThe start index is : " << _sequence_start_frame_num[i] << "\n";
         std::map<std::string, video_map>::iterator itr = _video_file_name_map.find(_sequence_video_path[i]);
         if (itr->second._is_decoder_instance == false) {
             std::map<std::string, video_map>::iterator temp_itr;
@@ -185,11 +195,11 @@ VideoReadAndDecode::load(unsigned char *buff,
                     std::vector<std::string> substrings;
                     char delim = '#';
                     substring_extraction(itr->first, delim, substrings);
-                    if (_video_decoder[video_idx]->Initialize(substrings[1].c_str(), _device_id) == VideoDecoder::Status::OK) {
-                        itr->second._video_map_idx = video_idx;
-                        itr->second._is_decoder_instance = true;
-                    }
                     temp_itr->second._is_decoder_instance = false;
+                    if (_video_decoder[video_idx]->Initialize(substrings[1].c_str(), _device_id) != VideoDecoder::Status::OK)
+                        THROW("Could not initialize a video decoder for " + substrings[1] + ", see the decoder error logged above")
+                    itr->second._video_map_idx = video_idx;
+                    itr->second._is_decoder_instance = true;
                     break;
                 }
             }
@@ -228,6 +238,15 @@ VideoReadAndDecode::load(unsigned char *buff,
         th.join();
 
     _decode_time.end();  // Debug timing
+
+    // After the join, so every decode thread has recorded its size.
+    for (size_t i = 0; i < _batch_size; i++) {
+        if (_actual_decoded_width[i] == 0 || _actual_decoded_height[i] == 0) {
+            std::vector<std::string> substrings;
+            substring_extraction(_sequence_video_path[i], '#', substrings);
+            THROW("Decoded no frames for " + substrings[1] + " at frame " + TOSTR(_sequence_start_frame_num[i]) + ", see the decoder error logged above")
+        }
+    }
 
     for (size_t i = 0; i < _batch_size; i++) {
         std::vector<std::string> substrings1, substrings2;

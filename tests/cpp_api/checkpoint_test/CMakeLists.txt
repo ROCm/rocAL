@@ -50,14 +50,30 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../cmake)
 
 find_package(AMDRPP QUIET)
 
-include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rocal)
-link_directories(${ROCM_PATH}/lib)
+# Prefer CMAKE_INSTALL_PREFIX/include/rocal when building against a local install,
+# falling back to the system ROCm layout.
+if(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/include/rocal/rocal_api.h")
+    set(ROCAL_INCLUDE_ROOT ${CMAKE_INSTALL_PREFIX}/include/rocal)
+else()
+    set(ROCAL_INCLUDE_ROOT ${ROCM_PATH}/include/rocal)
+endif()
+include_directories(${ROCM_PATH}/include ${ROCAL_INCLUDE_ROOT})
+
+# Prefer the same prefix for the library location.
+if(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/lib")
+    link_directories(${CMAKE_INSTALL_PREFIX}/lib ${ROCM_PATH}/lib)
+else()
+    link_directories(${ROCM_PATH}/lib)
+endif()
+
 file(GLOB My_Source_Files ./checkpoint_test.cpp)
 add_executable(${PROJECT_NAME} ${My_Source_Files})
 
 file(GLOB Restore_Source_Files ./restore_checkpoint_test.cpp)
 add_executable(restore_checkpoint_test ${Restore_Source_Files})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mf16c -Wall ")
-target_link_libraries(${PROJECT_NAME} rocal)
-target_link_libraries(restore_checkpoint_test rocal)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall ")
+# librocal carries Python C-API symbols (PythonFunction operator); link libpython to resolve them
+find_package(Python3 QUIET COMPONENTS Development.Embed)
+target_link_libraries(${PROJECT_NAME} rocal $<TARGET_NAME_IF_EXISTS:Python3::Python>)
+target_link_libraries(restore_checkpoint_test rocal $<TARGET_NAME_IF_EXISTS:Python3::Python>)

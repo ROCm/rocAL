@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <future>
 #include <iostream>
 #include <mutex>
 #include <string>
@@ -36,26 +37,14 @@ THE SOFTWARE.
 #include "rocal_api.h"
 #include "rocal_api_types.h"
 #if ENABLE_OPENCV
-#include <opencv2/opencv.hpp>
+#include "image_output.h"
 using namespace cv;
 
-#if USE_OPENCV_4
-#define CV_LOAD_IMAGE_COLOR IMREAD_COLOR
-#define CV_BGR2GRAY COLOR_BGR2GRAY
-#define CV_GRAY2RGB COLOR_GRAY2RGB
 #define CV_RGB2BGR COLOR_RGB2BGR
-#define CV_FONT_HERSHEY_SIMPLEX FONT_HERSHEY_SIMPLEX
-#define CV_FILLED FILLED
-#define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
-#define cvDestroyWindow destroyWindow
-#else
-#include <opencv/highgui.h>
-#endif
 #endif
 
 #define PRINT_NAMES_AND_LABELS 0  // uncomment for printing names and labels
 // #define ROCAL_MEMCPY_TO_HOST 0 //For HOST 0 / GPU 1
-#define DISPLAY 0
 using namespace std::chrono;
 std::mutex g_mtx;  // mutex for critical section
 
@@ -145,8 +134,7 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
     names.resize(effective_batch_size);
     std::vector<int> image_name_length(effective_batch_size);
 #if ENABLE_OPENCV
-    if (DISPLAY)
-        cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
+    rocal_test_output_open("output");
 #endif
 
     while (!rocalIsEmpty(handle)) {
@@ -179,10 +167,7 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
         cv::Mat mat_in_view(h, w, cv_color_format, mat_input.data());
         mat_in_view.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
         cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
-        if (DISPLAY)
-            cv::imshow("output.png", mat_color);
-        else
-            cv::imwrite("output.png", mat_color);
+        rocal_test_output_image(mat_color, mat_color, "output.png", "output.png");
 
         col_counter = (col_counter + 1) % number_of_cols;
 #endif
@@ -265,15 +250,21 @@ int main(int argc, const char **argv) {
     std::cout << "Number of GPUs: " << num_gpus << std::endl;
 
     // launch threads process shards
-    std::vector<std::thread> loader_threads(num_shards);
+    std::vector<std::future<int>> loader_threads(num_shards);
     auto gpu_id = num_gpus ? 0 : -1;
     int th_id;
     for (th_id = 0; th_id < num_shards; th_id++) {
-        loader_threads[th_id] = std::thread(thread_func, path, gpu_id, RocalImageColor::ROCAL_COLOR_RGB24, th_id, num_shards, decode_width, decode_height, inputBatchSize,
+        loader_threads[th_id] = std::async(std::launch::async, thread_func, path, gpu_id, RocalImageColor::ROCAL_COLOR_RGB24, th_id, num_shards, decode_width, decode_height, inputBatchSize,
                                             shuffle, display, dec_mode, cpu_thread_count);
         if (num_gpus) gpu_id = (gpu_id + 1) % num_gpus;
     }
-    for (auto &th : loader_threads) {
-        th.join();
+    int ret_status = 0;
+    for (th_id = 0; th_id < num_shards; th_id++) {
+        int shard_status = loader_threads[th_id].get();
+        if (shard_status != 0) {
+            std::cout << "shard_id: " << th_id << " failed with status " << shard_status << std::endl;
+            ret_status = -1;
+        }
     }
+    return ret_status;
 }

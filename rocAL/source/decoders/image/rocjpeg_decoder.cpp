@@ -31,44 +31,30 @@ THE SOFTWARE.
 #include "hip/hip_runtime_api.h"
 #include "hip/hip_runtime.h"
 #include "rocal_hip_kernels.h"
-
-#define CHECK_HIP(call) {                                             \
-    hipError_t hip_status = (call);                                   \
-    if (hip_status != hipSuccess) {                                   \
-        std::cerr << "HIP failure: 'status: " << hipGetErrorName(hip_status) << "' at " << __FILE__ << ":" << __LINE__ << std::endl;\
-        exit(1);                                                      \
-    }                                                                 \
-}
-
-#define CHECK_ROCJPEG(call) {                                             \
-    RocJpegStatus rocjpeg_status = (call);                                \
-    if (rocjpeg_status != ROCJPEG_STATUS_SUCCESS) {                       \
-        std::cerr << #call << " returned " << rocJpegGetErrorName(rocjpeg_status) << " at " <<  __FILE__ << ":" << __LINE__ << std::endl;\
-        exit(1);                                                        \
-    }                                                                     \
-}
+#include "decoders/image/rocjpeg_error_check.h"
 
 HWRocJpegDecoder::HWRocJpegDecoder() {
 };
 
 void HWRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
     int num_devices;
-    CHECK_HIP(hipGetDeviceCount(&num_devices));
+    CHECK_HIP_THROW(hipGetDeviceCount(&num_devices));
+    // These two used to print and return, which left the decoder with a null _rocjpeg_handle that
+    // the first decode would then use. Throw instead so the pipeline fails where the problem is.
     if (num_devices < 1) {
-        std::cerr << "ERROR: didn't find any GPU!" << std::endl;
-        return;
+        THROW("didn't find any GPU!");
     }
     if (device_id >= num_devices) {
-        std::cerr << "ERROR: the requested device_id is not found!" << std::endl;
-        return;
+        THROW("the requested device_id " + std::to_string(device_id) + " is not found, " +
+              std::to_string(num_devices) + " device(s) available");
     }
-    CHECK_HIP(hipSetDevice(device_id));
+    CHECK_HIP_THROW(hipSetDevice(device_id));
     RocJpegBackend rocjpeg_backend = ROCJPEG_BACKEND_HARDWARE;
     // Create stream and handle
-    CHECK_ROCJPEG(rocJpegCreate(rocjpeg_backend, device_id, &_rocjpeg_handle));
+    CHECK_ROCJPEG_THROW(rocJpegCreate(rocjpeg_backend, device_id, &_rocjpeg_handle));
     _rocjpeg_streams.resize(batch_size);
     for (unsigned i = 0; i < batch_size; i++) {
-        CHECK_ROCJPEG(rocJpegStreamCreate(&_rocjpeg_streams[i]));
+        CHECK_ROCJPEG_THROW(rocJpegStreamCreate(&_rocjpeg_streams[i]));
     }
 
     _device_id = device_id;
@@ -78,13 +64,13 @@ void HWRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
     _image_needs_rescaling.resize(_batch_size);
 
     // Allocate pinned memory for width and height arrays for src and dst.
-    if (!_src_width) CHECK_HIP(hipHostMalloc((void **)&_src_width, _batch_size * sizeof(size_t)));
-    if (!_src_height) CHECK_HIP(hipHostMalloc((void **)&_src_height, _batch_size * sizeof(size_t)));
-    if (!_dst_width) CHECK_HIP(hipHostMalloc((void **)&_dst_width, _batch_size * sizeof(size_t)));
-    if (!_dst_height) CHECK_HIP(hipHostMalloc((void **)&_dst_height, _batch_size * sizeof(size_t)));
-    if (!_src_hstride) CHECK_HIP(hipHostMalloc((void **)&_src_hstride, _batch_size * sizeof(size_t)));
-    if (!_src_img_offset) CHECK_HIP(hipHostMalloc((void **)&_src_img_offset, _batch_size * sizeof(size_t)));
-    if (!_dst_img_idx) CHECK_HIP(hipHostMalloc((void **)&_dst_img_idx, _batch_size * sizeof(uint32_t)));
+    if (!_src_width) CHECK_HIP_THROW(hipHostMalloc((void **)&_src_width, _batch_size * sizeof(size_t)));
+    if (!_src_height) CHECK_HIP_THROW(hipHostMalloc((void **)&_src_height, _batch_size * sizeof(size_t)));
+    if (!_dst_width) CHECK_HIP_THROW(hipHostMalloc((void **)&_dst_width, _batch_size * sizeof(size_t)));
+    if (!_dst_height) CHECK_HIP_THROW(hipHostMalloc((void **)&_dst_height, _batch_size * sizeof(size_t)));
+    if (!_src_hstride) CHECK_HIP_THROW(hipHostMalloc((void **)&_src_hstride, _batch_size * sizeof(size_t)));
+    if (!_src_img_offset) CHECK_HIP_THROW(hipHostMalloc((void **)&_src_img_offset, _batch_size * sizeof(size_t)));
+    if (!_dst_img_idx) CHECK_HIP_THROW(hipHostMalloc((void **)&_dst_img_idx, _batch_size * sizeof(uint32_t)));
 
 }
 
@@ -213,11 +199,16 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
         // Allocate memory for the intermediate decoded output for only the images that need resizing.
         const size_t resize_image_buff_bytes = (size_t)_rocjpeg_image_buff_size * (size_t)_num_channels;
         if (!_rocjpeg_image_buff) {
-            CHECK_HIP(hipMalloc((void **)&_rocjpeg_image_buff, resize_image_buff_bytes));
+            CHECK_HIP_RETURN(hipMalloc((void **)&_rocjpeg_image_buff, resize_image_buff_bytes), Status::NO_MEMORY);
             _prev_image_buff_size = resize_image_buff_bytes;
         } else if (resize_image_buff_bytes > _prev_image_buff_size) {  // Reallocate if intermediate output exceeds allocated memory
-            CHECK_HIP(hipFree((void *)_rocjpeg_image_buff));
-            CHECK_HIP(hipMalloc((void **)&_rocjpeg_image_buff, resize_image_buff_bytes));
+            CHECK_HIP_RETURN(hipFree((void *)_rocjpeg_image_buff), Status::NO_MEMORY);
+            // The free succeeded, so drop the stale pointer and size before reallocating. A failed
+            // hipMalloc is recoverable now, and leaving the freed pointer in place would make the
+            // next decode_batch() free it a second time or hand it to the resize kernel.
+            _rocjpeg_image_buff = nullptr;
+            _prev_image_buff_size = 0;
+            CHECK_HIP_RETURN(hipMalloc((void **)&_rocjpeg_image_buff, resize_image_buff_bytes), Status::NO_MEMORY);
             _prev_image_buff_size = resize_image_buff_bytes;
         }
 
@@ -257,7 +248,7 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
         }
     }
 
-    CHECK_ROCJPEG(rocJpegDecodeBatched(_rocjpeg_handle, _rocjpeg_streams.data(), _batch_size, _decode_params.data(), _output_images.data()));
+    CHECK_ROCJPEG_RETURN(rocJpegDecodeBatched(_rocjpeg_handle, _rocjpeg_streams.data(), _batch_size, _decode_params.data(), _output_images.data()), Status::CONTENT_DECODE_FAILED);
 
     if (_enable_resize && resize_count) {
         HipExecResizeTensor(_hip_stream, (void *)_rocjpeg_image_buff, (void *)output_buffer[0],
@@ -266,7 +257,7 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
                             max_decoded_width, max_decoded_height, max_decoded_width, max_decoded_height);
         // The circular buffer hands off `output_buffer` to the consumer immediately after `decode_batch()` returns.
         // Ensure the resize kernel has finished writing into the output tensor before we release the batch.
-        CHECK_HIP(hipStreamSynchronize(_hip_stream));
+        CHECK_HIP_RETURN(hipStreamSynchronize(_hip_stream), Status::CONTENT_DECODE_FAILED);
     }
     _enable_resize = false;  // Need to reset this value for every batch
     _rocjpeg_image_buff_size = 0;
@@ -276,20 +267,22 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
 }
 
 HWRocJpegDecoder::~HWRocJpegDecoder() {
+    // Log and keep going: a failure here must not throw out of a destructor, and releasing the
+    // remaining resources still matters.
     if (_rocjpeg_handle) {
-        CHECK_ROCJPEG(rocJpegDestroy(_rocjpeg_handle));
+        CHECK_ROCJPEG_LOG(rocJpegDestroy(_rocjpeg_handle));
         _rocjpeg_handle = nullptr;
     }
     for (size_t j = 0; j < _rocjpeg_streams.size(); j++) {
-        CHECK_ROCJPEG(rocJpegStreamDestroy(_rocjpeg_streams[j]));
+        if (_rocjpeg_streams[j]) CHECK_ROCJPEG_LOG(rocJpegStreamDestroy(_rocjpeg_streams[j]));
     }
-    if (_rocjpeg_image_buff) CHECK_HIP(hipFree(_rocjpeg_image_buff));
-    if (_src_width) CHECK_HIP(hipHostFree(_src_width));
-    if (_src_height) CHECK_HIP(hipHostFree(_src_height));
-    if (_dst_width) CHECK_HIP(hipHostFree(_dst_width));
-    if (_dst_height) CHECK_HIP(hipHostFree(_dst_height));
-    if (_src_hstride) CHECK_HIP(hipHostFree(_src_hstride));
-    if (_src_img_offset) CHECK_HIP(hipHostFree(_src_img_offset));
-    if (_dst_img_idx) CHECK_HIP(hipHostFree(_dst_img_idx));
+    if (_rocjpeg_image_buff) CHECK_HIP_LOG(hipFree(_rocjpeg_image_buff));
+    if (_src_width) CHECK_HIP_LOG(hipHostFree(_src_width));
+    if (_src_height) CHECK_HIP_LOG(hipHostFree(_src_height));
+    if (_dst_width) CHECK_HIP_LOG(hipHostFree(_dst_width));
+    if (_dst_height) CHECK_HIP_LOG(hipHostFree(_dst_height));
+    if (_src_hstride) CHECK_HIP_LOG(hipHostFree(_src_hstride));
+    if (_src_img_offset) CHECK_HIP_LOG(hipHostFree(_src_img_offset));
+    if (_dst_img_idx) CHECK_HIP_LOG(hipHostFree(_dst_img_idx));
 }
 #endif

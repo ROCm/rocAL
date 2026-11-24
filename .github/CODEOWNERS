@@ -1,9 +1,9 @@
 # Source code
-* @kiritigowda @rrawther
+* @kiritigowda @rrawther @LakshmiKumar23
 # Documentation files
-docs/ @ROCm/rocm-documentation @kiritigowda @rrawther
-*.md  @ROCm/rocm-documentation @kiritigowda @rrawther
-*.rst  @ROCm/rocm-documentation @kiritigowda @rrawther
+docs/ @ROCm/rocm-documentation @kiritigowda @rrawther @LakshmiKumar23
+*.md  @ROCm/rocm-documentation @kiritigowda @rrawther @LakshmiKumar23
+*.rst  @ROCm/rocm-documentation @kiritigowda @rrawther @LakshmiKumar23
 .readthedocs.yaml @ROCm/rocm-documentation
 # Header directory
-library/include/  @ROCm/rocm-documentation @kiritigowda @rrawther
+library/include/  @ROCm/rocm-documentation @kiritigowda @rrawther @LakshmiKumar23
