@@ -10,6 +10,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Adds hipFile support in rocAL numpy reader
 * Adds support for voxel augmentations, random object bbox and ROI random cropping in rocAL.
 * Adds `rocalGetOutputByteSize()`, which returns the size of an output batch in bytes as required by `rocalCopyToOutput()`.
+* Support for `gfx1250-strict` and `gfx1251`
 
 ### Removed
 * OpenCV is no longer a dependency. It has been removed from the core library, build, setup script, and C++ tests.
@@ -76,7 +77,9 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve every audio augmentation failing at `rocalVerify()` with `Invalid layout` when vx_rpp was built without audio kernels, by building without audio support in that case and rejecting the audio operators where they are called, with the reason. Needs vx_rpp 3.3.3 or later, which reports whether it has audio.
 * Resolve a heap over-read in the MXNet RecordIO reader when a record's length is shorter than the 24-byte header or longer than the bytes just read. The reader now rejects that record with an error naming the length and the number of bytes read. The MXNet label reader rejects a record shorter than the header, and a record with no image data raises an error instead of hanging the loader. `rocalCreateMXNetReader()` reports a label reader error through `rocalGetStatus()` instead of terminating the process, and `fn.readers.mxnet` raises it as a `RuntimeError`.
 * Document that the output of `rocalNop()` and `fn.nop()` is undefined rather than a copy of the input, so that `rocalCopy()` and `fn.copy()` are used where the data matters.
+* Resolve the `audio_tests` segmentation fault at process exit when `rocalVerify()` fails, by releasing the context before returning instead of leaving the loader threads still decoding.
 * Resolve a second `rocalResetLoaders()` call, with no `rocalRun()` between the two, starting the next epoch part way through the dataset. The readers do not roll their read pointer back over samples that were prefetched but never returned, so the second reset dropped the prefetched batches while leaving the pointer past them. Every epoch after the first skipped as many samples as the last batch was padded by and returned the padding sample in their place. A reset with no run since the previous one is now a no-op. This affected `ROCALClassificationIterator` and `ROCALGenericIterator` in the PyTorch plugin, which reset in `__next__` and again in `reset()`.
+* Resolve a video decoder that fails to initialize being reported only in the log. The pipeline went on to build, and the first batch sent undecoded frames with a zero region of interest to the graph, faulting the GPU in the RPP resize kernel. The failure now names the file and is raised from `build()`, and a sequence that decodes no frames is reported from the batch that contains it instead of being passed on.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.
