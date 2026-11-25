@@ -1,0 +1,70 @@
+{
+  "_comment": [
+    "Only things that must be MEASURED live here.",
+    "",
+    "The ctest and pybind inventories used to be pinned in this file and went stale twice",
+    "in three weeks. check_ctest.py now derives both from the CMakeLists that registers",
+    "them, so they are deliberately absent."
+  ],
+
+  "python_api": {
+    "_comment": [
+      "tests/python_api/image_comparison.py exits non-zero since #616, so the exit code is",
+      "now a real signal - but only for 'did anything fail', which is always true while",
+      "known failures exist. The set below is what distinguishes the SAME known failures",
+      "from a different set of the same size.",
+      "",
+      "Names are golden filenames with '.png' and the '_host'/'_hip' suffix stripped.",
+      "These failures are KNOWN, NOT root-caused and NOT accepted; the report repeats that",
+      "every run so they do not quietly become permanent.",
+      "",
+      "Re-measure rather than re-derive. The previous 139/19 baseline was patched on paper",
+      "to an expected 129 after #587 disabled ten cases; the measured total is 151, because",
+      "develop also ADDED cases (Posterize, Solarize, LUT, JpegCompressionDistortion ...).",
+      "Arithmetic on a baseline produces a number that looks authoritative and is wrong."
+    ],
+    "measured_on": "2026-11-20",
+    "measured_against": "add-rocal-validate-skill @ ab63879b (develop merged), gfx1100, ROCm 7.16.26314, built from source and run against build/lib",
+    "host": {
+      "total": 151,
+      "passed": 142,
+      "failed": 9,
+      "failing": [
+        "ColorTemp_rgb",
+        "Dilate_gray", "Dilate_rgb",
+        "Erode_gray", "Erode_rgb",
+        "GaussianFilter_gray", "GaussianFilter_rgb",
+        "Hue_rgb",
+        "Posterize_gray"
+      ],
+      "no_golden": [
+        "Dilate_gray", "Dilate_rgb",
+        "Erode_gray", "Erode_rgb",
+        "Posterize_gray"
+      ],
+      "note": "5 of these 9 are NOT pixel mismatches - MIVisionX-data has no reference image for them, and image_comparison.py counts a missing golden as a failure. Only ColorTemp_rgb, GaussianFilter_{gray,rgb} and Hue_rgb actually compared and differed. Goldens are per-backend (the filename carries _host/_hip), which is why a name can lack a golden on one backend and have one on the other."
+    },
+    "hip": {
+      "total": 152,
+      "passed": 142,
+      "failed": 10,
+      "failing": [
+        "Erode_gray", "Erode_rgb",
+        "GaussianFilter_gray", "GaussianFilter_rgb",
+        "Hue_rgb",
+        "Posterize_gray",
+        "Saturation_rgb",
+        "Solarize_gray",
+        "WarpPerspective_gray", "WarpPerspective_rgb"
+      ],
+      "no_golden": ["Posterize_gray", "Solarize_gray"],
+      "note": "152 vs host's 151 is expected: #629 disables the WarpPerspective HOST case only, so hip still runs it - and it fails, which is what #629 was filed for. 2 of these 10 are missing goldens rather than mismatches."
+    }
+  },
+
+  "audio": {
+    "_comment": "Only runs when the build reports AUDIO_SUPPORT. audio_unit_test.py prints 'Number of FAILED tests: N'.",
+    "expected_failed": 0,
+    "pinned": false
+  }
+}
