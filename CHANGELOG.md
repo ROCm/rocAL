@@ -10,6 +10,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Adds hipFile support in rocAL numpy reader
 * Adds support for voxel augmentations, random object bbox and ROI random cropping in rocAL.
 * Adds `rocalGetOutputByteSize()`, which returns the size of an output batch in bytes as required by `rocalCopyToOutput()`.
+* Support for `gfx1250-strict` and `gfx1251`
 
 ### Removed
 * OpenCV is no longer a dependency. It has been removed from the core library, build, setup script, and C++ tests.
@@ -32,6 +33,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Adds new method in Argument class for type-safe value retrieval of arguments.
 * `RocalPipelineParams` struct to represent pipeline configuration parameters used during serialization and deserialization.
 * The `Phase`, Bitwise AND/OR/XOR and `ResizeCropMirror` unit test cases are disabled, pending a fix to the RPP bilinear sampler they depend on.
+* The `WarpPerspective` unit test case's host backend is disabled, pending a fix to a known RPP perspective-divide defect that blackens in-bounds output under a genuine-perspective matrix.
 * The `Remap` unit test case's hip+gray combination is disabled, pending the same RPP bilinear sampler fix.
 
 ### Resolved issues
@@ -62,6 +64,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve `rocalCopyToOutput()` reporting success at the end of the data, where it leaves the caller's buffer untouched.
 * Resolve the `unit_tests` numpy cases sizing their buffer from the color format, which counts one channel for a three channel batch.
 * Resolve a `TypeError` from `fn.decoders.image_raw`, which called the decoder binding one argument short on every TFRecord pipeline.
+* Resolve the raw TFRecord source reporting success while discarding part of each record, by failing when a record does not fit the output slot.
 * Resolve a process abort when a metadata getter is called before the output copy, by making the getters wait for the current batch instead of reporting it as never loaded.
 * Resolve a segmentation fault in the CIFAR-10 reader on a folder holding no `data_batch_*` files, by raising an error naming the folder and the prefix instead of indexing an empty file list.
 * Resolve CPU pipelines aborting on a host with no GPU, where the output thread selected a HIP device whatever the pipeline's affinity.
@@ -70,7 +73,12 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve the TFRecord reader passing directories to the record parser. The scan now skips anything that is not a regular file, so an empty subdirectory no longer fails a directory that also holds records, and a root whose only child is an empty subdirectory raises the empty-scan error.
 * Resolve the Caffe and Caffe2 LMDB readers passing uninitialized LMDB handles to cleanup when creation fails before the read environment is opened.
 * Resolve readers skipping image files that are symbolic links. A labelled folder of links crashed while the pipeline was built in Python and failed the label lookup in C++. The readers now keep a link whose target is a regular file.
+* Resolve every audio augmentation failing at `rocalVerify()` with `Invalid layout` when vx_rpp was built without audio kernels, by building without audio support in that case and rejecting the audio operators where they are called, with the reason. Needs vx_rpp 3.3.3 or later, which reports whether it has audio.
+* Resolve a heap over-read in the MXNet RecordIO reader when a record's length is shorter than the 24-byte header or longer than the bytes just read. The reader now rejects that record with an error naming the length and the number of bytes read. The MXNet label reader rejects a record shorter than the header, and a record with no image data raises an error instead of hanging the loader. `rocalCreateMXNetReader()` reports a label reader error through `rocalGetStatus()` instead of terminating the process, and `fn.readers.mxnet` raises it as a `RuntimeError`.
 * Document that the output of `rocalNop()` and `fn.nop()` is undefined rather than a copy of the input, so that `rocalCopy()` and `fn.copy()` are used where the data matters.
+* Resolve the `audio_tests` segmentation fault at process exit when `rocalVerify()` fails, by releasing the context before returning instead of leaving the loader threads still decoding.
+* Resolve a second `rocalResetLoaders()` call, with no `rocalRun()` between the two, starting the next epoch part way through the dataset. The readers do not roll their read pointer back over samples that were prefetched but never returned, so the second reset dropped the prefetched batches while leaving the pointer past them. Every epoch after the first skipped as many samples as the last batch was padded by and returned the padding sample in their place. A reset with no run since the previous one is now a no-op. This affected `ROCALClassificationIterator` and `ROCALGenericIterator` in the PyTorch plugin, which reset in `__next__` and again in `reset()`.
+* Resolve a video decoder that fails to initialize being reported only in the log. The pipeline went on to build, and the first batch sent undecoded frames with a zero region of interest to the graph, faulting the GPU in the RPP resize kernel. The failure now names the file and is raised from `build()`, and a sequence that decodes no frames is reported from the batch that contains it instead of being passed on.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.

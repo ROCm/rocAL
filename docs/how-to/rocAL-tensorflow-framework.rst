@@ -55,8 +55,6 @@ Data is read from the dataset using ``readers.tfrecord``, which reads from TFRec
 
 An example of TensorFlow training using rocAL is available in the `rocAL GitHub repository <https://github.com/ROCm/rocAL/blob/develop/docs/examples/tf/>`_. `Jupyter Notebooks <https://github.com/ROCm/rocAL/tree/develop/docs/examples/notebooks>`_ are also available.
 
-A `Docker container <https://github.com/ROCm/rocAL/blob/develop/docker/README.md>`_ is available for PyTorch training with rocAL.
-
 
 .. |train.py| replace:: ``train.py``
 .. _train.py: https://github.com/ROCm/rocAL/tree/develop/docs/examples/tf/pets_training/train.py
