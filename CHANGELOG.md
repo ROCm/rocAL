@@ -10,6 +10,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Adds hipFile support in rocAL numpy reader
 * Adds support for voxel augmentations, random object bbox and ROI random cropping in rocAL.
 * Adds `rocalGetOutputByteSize()`, which returns the size of an output batch in bytes as required by `rocalCopyToOutput()`.
+* Support for `gfx1250-strict` and `gfx1251`
 
 ### Removed
 * OpenCV is no longer a dependency. It has been removed from the core library, build, setup script, and C++ tests.

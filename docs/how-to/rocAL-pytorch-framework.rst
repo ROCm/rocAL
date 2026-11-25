@@ -80,8 +80,6 @@ The appropriate iterator is then used to load data and run the pipeline. In |ima
 
 Two examples of PyTorch training using rocAL are available in the `rocAL GitHub repository <https://github.com/ROCm/rocAL/blob/develop/docs/examples/pytorch/>`_.  `Jupyter Notebooks <https://github.com/ROCm/rocAL/tree/develop/docs/examples/notebooks>`_ are also available.
 
-A `Docker container <https://github.com/ROCm/rocAL/blob/develop/docker/README.md>`_ is available for PyTorch training with rocAL.
-
 
 .. |imagenet.py| replace:: ``imagenet_training.py``
 .. _imagenet.py: https://github.com/ROCm/rocAL/tree/develop/docs/examples/pytorch/imagenet_training/imagenet_training.py
