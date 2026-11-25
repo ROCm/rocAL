@@ -56,6 +56,17 @@ void ImageLoader::shut_down() {
     _circ_buff.release();
 }
 
+void ImageLoader::release_all_blocked_calls() {
+    // The load thread can be parked inside the reader waiting for input the user is never going to
+    // feed (an external source pipeline left mid-epoch), which leaves the circular buffer empty and
+    // the caller of load_next() blocked on it. Wake both so the threads can be joined.
+    _stopped = true;
+    if (_image_loader)
+        _image_loader->shutdown();
+    _circ_buff.unblock_reader();
+    _circ_buff.unblock_writer();
+}
+
 void ImageLoader::set_prefetch_queue_depth(size_t prefetch_queue_depth) {
     if (prefetch_queue_depth <= 0)
         THROW("Prefetch quque depth value cannot be zero or negative");
@@ -130,6 +141,11 @@ void ImageLoader::set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_Met
 void ImageLoader::stop_internal_thread() {
     _internal_thread_running = false;
     _stopped = true;
+    // The load thread joined below can be parked inside the reader waiting for input, so wake it
+    // here too and not only through release_all_blocked_calls(), which keeps this correct when the
+    // loader is torn down on its own (de_init()) rather than through MasterGraph::release().
+    if (_image_loader)
+        _image_loader->shutdown();
     _circ_buff.unblock_reader();
     _circ_buff.unblock_writer();
     _circ_buff.reset();
@@ -198,6 +214,7 @@ void ImageLoader::start_loading() {
         std::lock_guard<std::mutex> lock(_load_exception_lock);
         _load_exception = nullptr;
     }
+    _stopped = false;  // For the same reason: the loader is running again, so it must produce batches.
     _internal_thread_running = true;
     _load_thread = std::thread(&ImageLoader::load_routine, this);
 }
@@ -411,6 +428,9 @@ void ImageLoader::restore_from_state(const LoaderState& s) {
         std::lock_guard<std::mutex> lock(_load_exception_lock);
         _load_exception = nullptr;
     }
+    // A restore on a running pipeline goes through stop_processing(), which stops this loader.
+    // Clear that here or update_output_image() keeps returning without producing a batch.
+    _stopped = false;
     _internal_thread_running = true;
     _load_thread = std::thread(&ImageLoader::load_routine, this);
 }

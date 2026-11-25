@@ -63,6 +63,8 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve `rocalCopyToOutput()` reporting success at the end of the data, where it leaves the caller's buffer untouched.
 * Resolve the `unit_tests` numpy cases sizing their buffer from the color format, which counts one channel for a three channel batch.
 * Resolve a `TypeError` from `fn.decoders.image_raw`, which called the decoder binding one argument short on every TFRecord pipeline.
+* Resolve `rocalRelease()` blocking forever when an external source pipeline is left before the end of an epoch, because it joined threads that were still waiting for input the user had stopped feeding.
+* Resolve `rocalRun()` blocking forever on an external source that yields no samples, which fed neither a batch nor an end of stream; the iterators now end the epoch instead.
 * Resolve the raw TFRecord source reporting success while discarding part of each record, by failing when a record does not fit the output slot.
 * Resolve a process abort when a metadata getter is called before the output copy, by making the getters wait for the current batch instead of reporting it as never loaded.
 * Resolve a segmentation fault in the CIFAR-10 reader on a folder holding no `data_batch_*` files, by raising an error naming the folder and the prefix instead of indexing an empty file list.

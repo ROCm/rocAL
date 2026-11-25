@@ -59,6 +59,10 @@ class LoaderModule {
     // introduce meta data reader
     virtual void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) { THROW("set_random_bbox_data_reader is not compatible with this implementation") }
     virtual void shut_down() = 0;
+    //! Unblocks any thread parked inside the loader waiting for data that is never going to arrive.
+    /*! Must be called before the threads holding those calls are joined, otherwise the join itself
+        deadlocks. Only loaders fed by an external source can block indefinitely, the rest are no-ops. */
+    virtual void release_all_blocked_calls() {}
     virtual std::vector<size_t> get_sequence_start_frame_number() { return {}; }
     virtual std::vector<std::vector<float>> get_sequence_frame_timestamps() { return {}; }
     // External Source reader

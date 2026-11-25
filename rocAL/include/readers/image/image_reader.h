@@ -304,6 +304,13 @@ class Reader {
     //! Starts reading from the first item in the resource
     virtual void reset() = 0;
 
+    //! Unblocks a reader that is waiting on an item which is never going to arrive
+    /*!
+     Called while the pipeline is being released, before any thread is joined. Only readers that
+     can block indefinitely (the external source reader waits for the user to feed it) need this.
+    */
+    virtual void shutdown() {}
+
     //! Returns the name/identifier of the last item opened in this resource
     virtual std::string id() = 0;
     //! Returns the number of items remained in this resource
