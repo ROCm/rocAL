@@ -94,7 +94,7 @@ def section_md5(path, name):
         capture_output=True)
     if res.returncode != 0:
         return None
-    return hashlib.md5(res.stdout).hexdigest()
+    return hashlib.md5(res.stdout, usedforsecurity=False).hexdigest()
 
 
 def dynamic_entries(path):
