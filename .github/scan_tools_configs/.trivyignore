@@ -18,9 +18,12 @@
 # A .trivyignore at the repository root applies only when this file is
 # absent; the two are never merged.
 
-# soupsieve: the fix for CVE-2026-126190 lands in soupsieve 4.0.0, which
-# requires Python >=3.11.5. The docs build (.readthedocs.yaml) is pinned to
-# Python 3.10, where the newest installable soupsieve is 2.x, so we hold it
-# at 2.8.1. soupsieve is a docs-build-only transitive dependency (via
-# beautifulsoup4), not shipped in rocAL.
+# soupsieve: every fixed version (>=3.0.2) requires Python >=3.11.5, but the
+# docs build (.readthedocs.yaml) is pinned to Python 3.10, where the newest
+# installable soupsieve is 2.x, so we hold it at 2.8.1. soupsieve is a
+# docs-build-only transitive dependency (via beautifulsoup4), not shipped in
+# rocAL. These HIGH findings cannot be remediated by a version bump on 3.10.
 CVE-2026-126190
+CVE-2026-126191
+CVE-2026-49476
+CVE-2026-49477
