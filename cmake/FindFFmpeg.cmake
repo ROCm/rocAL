@@ -248,3 +248,5 @@ else()
     message(FATAL_ERROR "${Red}FindFFmpeg -- libavcodec or libavformat or libavutil or libswscale NOT FOUND${ColourReset}")
   endif()
 endif()
+
+set(FFMPEG_FOUND ${FFMPEG_FOUND} CACHE INTERNAL "")

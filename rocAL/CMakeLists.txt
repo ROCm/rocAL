@@ -80,6 +80,7 @@ if(NOT hipFile_FOUND)
          set(hipFile_FOUND TRUE)
      endif()
  endif()
+set(hipFile_FOUND ${hipFile_FOUND} CACHE INTERNAL "")
 
 # HIP Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
