@@ -33,35 +33,48 @@
 # loads this module from <prefix>/share/rocal/test/cmake still resolves <prefix>. The first
 # candidate that holds both librocal and include/rocal/rocal_api.h is used:
 #   1. ROCAL_ROOT, when set. The test suite passes it to every test project.
-#   2. <prefix>, when the suite is <prefix>/share/rocal/test. This is the rocAL the tests were
-#      installed with. It comes before CMAKE_INSTALL_PREFIX because a standalone configure
+#   2. <prefix>, when the suite is <prefix>/<datadir>/rocal/test. This is the rocAL the tests
+#      were installed with. It comes before CMAKE_INSTALL_PREFIX because a standalone configure
 #      defaults that to /usr/local, which may hold an unrelated rocAL.
 #   3. CMAKE_INSTALL_PREFIX.
 #   4. ROCM_PATH.
-# Both lib and lib64 are checked. ROCAL_LIBRARY is a full path, so the linker cannot resolve
-# -lrocal to a librocal from another directory on its search path, and CMake adds that
+# lib, lib64 and lib/<multiarch> are checked. ROCAL_LIBRARY is a full path, so the linker cannot
+# resolve -lrocal to a librocal from another directory on its search path, and CMake adds that
 # directory to the build RPATH so the test also loads the same library at run time.
-# When no candidate holds rocAL, ROCAL_LIBRARY is the bare name "rocal" for the linker search
-# path and ROCAL_INCLUDE_DIR is ROCM_PATH/include/rocal.
+# An explicit ROCAL_ROOT without rocAL is an error. When no candidate holds rocAL, librocal from
+# the library search path is used with the ROCM_PATH/include/rocal headers; if either is missing,
+# ROCAL_FOUND is FALSE and ROCAL_LIBRARY is the bare name "rocal".
 get_filename_component(_ROCAL_TEST_SUITE_DIR "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
 
 function(rocal_test_find_rocal)
     set(_candidates ${ROCAL_ROOT})
-    if(_ROCAL_TEST_SUITE_DIR MATCHES "^(.*)/share/rocal/test$")
-        list(APPEND _candidates "${CMAKE_MATCH_1}")
+    if(_ROCAL_TEST_SUITE_DIR MATCHES "^(.*)/rocal/test$")
+        # <datadir> may be more than one level deep (e.g. share/rocm), so walk up to the prefix.
+        set(_dir "${CMAKE_MATCH_1}")
+        foreach(_level RANGE 2)
+            get_filename_component(_dir "${_dir}" DIRECTORY)
+            if(EXISTS "${_dir}/include/rocal/rocal_api.h")
+                list(APPEND _candidates "${_dir}")
+                break()
+            endif()
+        endforeach()
     endif()
     list(APPEND _candidates ${CMAKE_INSTALL_PREFIX} ${ROCM_PATH})
 
+    set(_libdirs lib lib64)
+    if(CMAKE_LIBRARY_ARCHITECTURE)
+        list(APPEND _libdirs lib/${CMAKE_LIBRARY_ARCHITECTURE})
+    endif()
     set(_library_name "${CMAKE_SHARED_LIBRARY_PREFIX}rocal${CMAKE_SHARED_LIBRARY_SUFFIX}")
     foreach(_root IN LISTS _candidates)
         if(NOT EXISTS "${_root}/include/rocal/rocal_api.h")
+            if(ROCAL_ROOT AND _root STREQUAL ROCAL_ROOT)
+                message(FATAL_ERROR "-- ${Red}${PROJECT_NAME}: ROCAL_ROOT=${ROCAL_ROOT} has no include/rocal/rocal_api.h${ColourReset}")
+            endif()
             continue()
         endif()
-        foreach(_libdir lib lib64)
+        foreach(_libdir IN LISTS _libdirs)
             if(EXISTS "${_root}/${_libdir}/${_library_name}")
-                if(ROCAL_ROOT AND NOT _root STREQUAL ROCAL_ROOT)
-                    message("-- ${Yellow}rocAL not found under ROCAL_ROOT=${ROCAL_ROOT}; using ${_root}${ColourReset}")
-                endif()
                 message("-- ${White}${PROJECT_NAME}: using rocAL from ${_root}${ColourReset}")
                 set(ROCAL_FOUND TRUE PARENT_SCOPE)
                 set(ROCAL_ROOT "${_root}" PARENT_SCOPE)
@@ -70,9 +83,22 @@ function(rocal_test_find_rocal)
                 return()
             endif()
         endforeach()
+        if(ROCAL_ROOT AND _root STREQUAL ROCAL_ROOT)
+            string(REPLACE ";" ", " _libdir_list "${_libdirs}")
+            message(FATAL_ERROR "-- ${Red}${PROJECT_NAME}: ROCAL_ROOT=${ROCAL_ROOT} has no ${_library_name} in ${_libdir_list}${ColourReset}")
+        endif()
     endforeach()
+
+    set(ROCAL_INCLUDE_DIR "${ROCM_PATH}/include/rocal" PARENT_SCOPE)
+    unset(ROCAL_SEARCH_PATH_LIBRARY CACHE)
+    find_library(ROCAL_SEARCH_PATH_LIBRARY NAMES rocal HINTS ${ROCM_PATH}/lib)
+    if(ROCAL_SEARCH_PATH_LIBRARY AND EXISTS "${ROCM_PATH}/include/rocal/rocal_api.h")
+        message("-- ${Yellow}${PROJECT_NAME}: rocAL not found under ${_candidates}; using ${ROCAL_SEARCH_PATH_LIBRARY} with headers from ${ROCM_PATH}/include/rocal${ColourReset}")
+        set(ROCAL_FOUND TRUE PARENT_SCOPE)
+        set(ROCAL_LIBRARY "${ROCAL_SEARCH_PATH_LIBRARY}" PARENT_SCOPE)
+        return()
+    endif()
     message("-- ${Yellow}rocAL not found under ${_candidates}; linking rocal from the library search path${ColourReset}")
     set(ROCAL_FOUND FALSE PARENT_SCOPE)
     set(ROCAL_LIBRARY rocal PARENT_SCOPE)
-    set(ROCAL_INCLUDE_DIR "${ROCM_PATH}/include/rocal" PARENT_SCOPE)
 endfunction()

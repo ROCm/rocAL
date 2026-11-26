@@ -109,6 +109,8 @@ else()
     set(MIVisionX_INCLUDE_SEARCH_PATHS ${ROCM_PATH}/include/mivisionx)
     if(MIVisionX_PATH)
         list(INSERT MIVisionX_INCLUDE_SEARCH_PATHS 0 ${MIVisionX_PATH}/include/mivisionx)
+        # A result cached by an earlier configure would otherwise win over MIVisionX_PATH.
+        unset(MIVisionX_INCLUDE_DIR CACHE)
     endif()
     find_path(MIVisionX_INCLUDE_DIR NAMES VX/vx.h PATHS ${MIVisionX_INCLUDE_SEARCH_PATHS} NO_DEFAULT_PATH)
     find_path(MIVisionX_INCLUDE_DIR NAMES VX/vx.h PATH_SUFFIXES mivisionx)

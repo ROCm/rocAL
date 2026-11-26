@@ -160,10 +160,9 @@ endfunction()
 
 # Derive the per-component versions from the headers that will be compiled, re-read on every
 # configure, so a changed FFmpeg install is picked up without clearing the cache.
-# pkg-config is only a fallback: pkg_check_modules caches its results and does not re-query a
-# module it found before, so its value can describe an FFmpeg that is no longer installed.
-# When pkg-config is not used for a component in this run, any value left in the cache by an
-# earlier configure is shadowed with an empty one so it cannot be mistaken for a detection.
+# pkg-config is only a fallback, and it is queried directly: pkg_check_modules does not re-query
+# a module it found before, so its cached version can describe an FFmpeg that is no longer
+# installed. A component found by neither is left empty, never at an earlier configure's value.
 # The results are plain variables. find_package(FFmpeg) runs in the top-level scope (and in the
 # video plugin when it is built on its own), so they reach every consumer without a cache entry
 # that could outlive the install.
@@ -173,7 +172,15 @@ _ffmpeg_header_version(libavutil "${AVUTIL_INCLUDE_DIR}" _FFMPEG_AVUTIL_HEADER_V
 foreach(_component AVCODEC AVFORMAT AVUTIL)
   if(_FFMPEG_${_component}_HEADER_VERSION)
     set(_FFMPEG_${_component}_VERSION "${_FFMPEG_${_component}_HEADER_VERSION}")
-  elseif(NOT PKG_CONFIG_FOUND OR NOT _FFMPEG_${_component}_FOUND)
+  elseif(PKG_CONFIG_FOUND AND _FFMPEG_${_component}_FOUND)
+    string(TOLOWER "lib${_component}" _module)
+    execute_process(COMMAND ${PKG_CONFIG_EXECUTABLE} --modversion ${_module}
+      OUTPUT_VARIABLE _FFMPEG_${_component}_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE
+      RESULT_VARIABLE _result ERROR_QUIET)
+    if(NOT _result EQUAL 0)
+      set(_FFMPEG_${_component}_VERSION "")
+    endif()
+  else()
     set(_FFMPEG_${_component}_VERSION "")
   endif()
 endforeach()

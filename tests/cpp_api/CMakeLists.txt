@@ -94,12 +94,12 @@ endif(NOT ROCAL_FOUND)
 # it uses the rocAL it was installed with (see cmake/RocalTestRoot.cmake).
 # Pass -DROCAL_ROOT=<prefix> to test a different rocAL install.
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/RocalTestRoot.cmake)
-if(NOT ROCAL_ROOT)
-    if(NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+if(NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    if(NOT ROCAL_ROOT)
         set(ROCAL_ROOT ${CMAKE_INSTALL_PREFIX})
-    else()
-        rocal_test_find_rocal()
     endif()
+else()
+    rocal_test_find_rocal()
 endif()
 message("-- ${White}${PROJECT_NAME}: test projects use rocAL from ${ROCAL_ROOT}${ColourReset}")
 
@@ -125,10 +125,13 @@ if(NOT "${BACKEND}" STREQUAL "HIP")
   message("-- ${Yellow}Warning: Skipping GPU tests")
 endif()
 
-# Tests need the tiny image dataset.  In a normal /opt/rocm install it lives under
-# /opt/rocm/share/rocal/test/data.  When building against a local install prefix, use
-# the same prefix so the test data path is resolvable without /opt/rocm.
-if(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/share/rocal/test/data/images/AMD-tinyDataSet")
+# Test data comes from the same install as the rocAL under test where possible: the data next to
+# this suite, then ROCAL_ROOT, then CMAKE_INSTALL_PREFIX, and ROCM_PATH last.
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/data/images/AMD-tinyDataSet")
+    set(ROCAL_TEST_DATA_PATH ${CMAKE_CURRENT_SOURCE_DIR}/data)
+elseif(ROCAL_ROOT AND EXISTS "${ROCAL_ROOT}/share/rocal/test/data/images/AMD-tinyDataSet")
+    set(ROCAL_TEST_DATA_PATH ${ROCAL_ROOT}/share/rocal/test/data)
+elseif(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/share/rocal/test/data/images/AMD-tinyDataSet")
     set(ROCAL_TEST_DATA_PATH ${CMAKE_INSTALL_PREFIX}/share/rocal/test/data)
 else()
     set(ROCAL_TEST_DATA_PATH ${ROCM_PATH}/share/rocal/test/data)

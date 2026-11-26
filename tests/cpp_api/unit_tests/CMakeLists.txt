@@ -50,23 +50,14 @@ project (unit_tests)
 # so they always describe the same build; see cmake/RocalTestRoot.cmake in the test suite.
 # The helper comes from the suite this test sits in. A test directory copied out of
 # <prefix>/share/rocal/test has no suite next to it, so it uses the one installed under ROCM_PATH.
-# Without either, as with a rocAL install that predates the helper, link rocal from the library
-# search path with the ROCM_PATH headers.
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/RocalTestRoot.cmake OPTIONAL RESULT_VARIABLE ROCAL_TEST_ROOT_MODULE)
 if(NOT ROCAL_TEST_ROOT_MODULE)
     include(${ROCM_PATH}/share/rocal/test/cmake/RocalTestRoot.cmake OPTIONAL RESULT_VARIABLE ROCAL_TEST_ROOT_MODULE)
 endif()
-if(ROCAL_TEST_ROOT_MODULE)
-    rocal_test_find_rocal()
-else()
-    set(ROCAL_LIBRARY rocal)
-    set(ROCAL_INCLUDE_DIR ${ROCM_PATH}/include/rocal)
-    # ROCAL_FOUND gates the backend detection below, so report an installed rocAL here too.
-    find_library(ROCAL_SEARCH_PATH_LIBRARY NAMES rocal HINTS ${ROCM_PATH}/lib)
-    if(ROCAL_SEARCH_PATH_LIBRARY AND EXISTS "${ROCAL_INCLUDE_DIR}/rocal_api.h")
-        set(ROCAL_FOUND TRUE)
-    endif()
+if(NOT ROCAL_TEST_ROOT_MODULE)
+    message(FATAL_ERROR "${PROJECT_NAME}: RocalTestRoot.cmake not found in ../cmake or ${ROCM_PATH}/share/rocal/test/cmake. Configure the test from the rocAL test suite, or set ROCM_PATH to a rocAL install that has one")
 endif()
+rocal_test_find_rocal()
 
 if(ROCAL_FOUND)
     message("-- ${White}${PROJECT_NAME}: Using rocAL -- \n\tLibraries:${ROCAL_LIBRARY} \n\tIncludes:${ROCAL_INCLUDE_DIR}${ColourReset}")

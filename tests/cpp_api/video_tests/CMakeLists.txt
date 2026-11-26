@@ -53,18 +53,14 @@ find_package(AMDRPP QUIET)
 # Start from the installed rocAL this test belongs to; see cmake/RocalTestRoot.cmake in the test suite.
 # The helper comes from the suite this test sits in. A test directory copied out of
 # <prefix>/share/rocal/test has no suite next to it, so it uses the one installed under ROCM_PATH.
-# Without either, as with a rocAL install that predates the helper, link rocal from the library
-# search path with the ROCM_PATH headers.
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/RocalTestRoot.cmake OPTIONAL RESULT_VARIABLE ROCAL_TEST_ROOT_MODULE)
 if(NOT ROCAL_TEST_ROOT_MODULE)
     include(${ROCM_PATH}/share/rocal/test/cmake/RocalTestRoot.cmake OPTIONAL RESULT_VARIABLE ROCAL_TEST_ROOT_MODULE)
 endif()
-if(ROCAL_TEST_ROOT_MODULE)
-    rocal_test_find_rocal()
-else()
-    set(ROCAL_LIBRARY rocal)
-    set(ROCAL_INCLUDE_DIR ${ROCM_PATH}/include/rocal)
+if(NOT ROCAL_TEST_ROOT_MODULE)
+    message(FATAL_ERROR "${PROJECT_NAME}: RocalTestRoot.cmake not found in ../cmake or ${ROCM_PATH}/share/rocal/test/cmake. Configure the test from the rocAL test suite, or set ROCM_PATH to a rocAL install that has one")
 endif()
+rocal_test_find_rocal()
 
 # Prefer the freshly built rocAL library directory when one is passed in.  This
 # lets the video_tests binary link against the in-tree librocal.so and lets the
@@ -78,6 +74,10 @@ if(ROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR AND EXISTS "${ROCAL_BUILD_LIBRARY}")
     set(ROCAL_LIBRARY ${ROCAL_BUILD_LIBRARY})
     if(ROCAL_VIDEO_PLUGIN_BUILD_INCLUDE_DIR AND EXISTS "${ROCAL_VIDEO_PLUGIN_BUILD_INCLUDE_DIR}/rocal_api.h")
         set(ROCAL_INCLUDE_DIR ${ROCAL_VIDEO_PLUGIN_BUILD_INCLUDE_DIR})
+    elseif(ROCAL_VIDEO_PLUGIN_BUILD_INCLUDE_DIR)
+        message(FATAL_ERROR "${PROJECT_NAME}: ROCAL_VIDEO_PLUGIN_BUILD_INCLUDE_DIR=${ROCAL_VIDEO_PLUGIN_BUILD_INCLUDE_DIR} has no rocal_api.h")
+    else()
+        message(WARNING "${PROJECT_NAME}: ROCAL_VIDEO_PLUGIN_BUILD_INCLUDE_DIR is not set, so ${ROCAL_LIBRARY} is paired with the headers in ${ROCAL_INCLUDE_DIR}, which may be from a different rocAL")
     endif()
     # Make the in-tree librocal.so and librocal_video_plugin.so discoverable at
     # runtime without relying on LD_LIBRARY_PATH.

@@ -249,11 +249,9 @@ if(${BUILD_ROCAL})
         # (resize_kernels.cpp / colorspace_kernels.cpp / roc_video_dec.cpp).  If any is
         # missing, disable rocDecode support instead of failing configure.
         # All three are checked here because this is the scope that adds ENABLE_ROCDECODE
-        # to librocal. rocAL_hip compiles both kernel files and drops rocDecode on its own
-        # when one is absent, but its rocdecode_FOUND=FALSE only applies inside that
-        # subdirectory. Enabling rocDecode here without both kernels would leave librocal
-        # calling kernels that were never built, which surfaces as undefined symbols when
-        # the library is loaded.
+        # to librocal, and rocAL_hip compiles both kernel files from this decision.
+        # Enabling rocDecode without both kernels would leave librocal calling kernels that
+        # were never built, which surfaces as undefined symbols when the library is loaded.
         if(EXISTS "${rocdecode_UTILS_DIR}/resize_kernels.cpp" AND EXISTS "${rocdecode_UTILS_DIR}/colorspace_kernels.cpp"
            AND EXISTS "${rocdecode_ROCVIDEODECODE_DIR}/roc_video_dec.cpp")
             include_directories(${rocdecode_INCLUDE_DIR} ${rocdecode_ROCVIDEODECODE_DIR})
