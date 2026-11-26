@@ -31,6 +31,7 @@ The rocAL public repository is located at `https://github.com/ROCm/rocAL <https:
   .. grid-item-card:: How to
 
     * :doc:`Create and run the rocAL pipeline <./how-to/rocAL-use-pipeline>`
+    * :doc:`Use augmentations in a rocAL pipeline <./how-to/rocAL-use-augmentations>`
     * :doc:`Run PyTorch training with rocAL <./how-to/rocAL-pytorch-framework>`
     * :doc:`Run TensorFlow training with rocAL <./how-to/rocAL-tensorflow-framework>`
     * :doc:`Run JAX training with rocAL <./how-to/rocAL-jax-framework>`
@@ -38,10 +39,12 @@ The rocAL public repository is located at `https://github.com/ROCm/rocAL <https:
   .. grid-item-card:: Examples
     
     * :doc:`rocAL framework integration examples <./examples/examples>`
+    * :doc:`rocAL Jupyter notebooks <./examples/rocAL-notebooks>`
 
   .. grid-item-card:: Reference
 
     * :doc:`rocAL pipelines <./reference/rocAL-pipeline>`  
+    * :doc:`rocAL augmentations <./reference/rocAL-augmentations>`  
     * :doc:`rocAL RNNT dataloading <./reference/rocAL-and-RNNT>`  
     * :doc:`rocAL Python API overview <../reference/rocAL-python-api>`
     * :doc:`rocAL Python reference <../reference/rocAL-python-api-list>`

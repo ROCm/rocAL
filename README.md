@@ -215,7 +215,7 @@ Available for **ROCm `7.2.x` and below**.
   sudo apt-get install rocal rocal-dev rocal-test
   ```
 
-#### `CentOS`/`RedHat`
+#### `RedHat`
 
   ```shell
   sudo yum install rocal rocal-devel rocal-test
@@ -235,7 +235,7 @@ Available for **ROCm `7.2.x` and below**.
 >   cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ../libjpeg-turbo/
 >   make -j8 && sudo make install
 >   ```
-> * `CentOS`/`RedHat`/`SLES` requires additional `FFMPEG Dev` package manual install
+> * `RedHat`/`SLES` requires additional `FFMPEG Dev` package manual install
 > * rocAL Python module: To use python module, you can set PYTHONPATH:
 >   + `export PYTHONPATH=/opt/rocm/lib:$PYTHONPATH`
 

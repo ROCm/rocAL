@@ -23,6 +23,8 @@ subtrees:
   entries:
   - file: how-to/rocAL-use-pipeline.rst
     title: Create and run the pipeline
+  - file: how-to/rocAL-use-augmentations.rst
+    title: Use augmentations in a pipeline
   - file: how-to/rocAL-pytorch-framework.rst
     title: Run PyTorch training 
   - file: how-to/rocAL-tensorflow-framework.rst
@@ -34,11 +36,15 @@ subtrees:
   entries:
   - file: examples/examples.rst
     title: Framework integration examples
+  - file: examples/rocAL-notebooks.rst
+    title: Jupyter notebooks
   
 - caption: Reference
   entries:
   - file: reference/rocAL-pipeline.rst
     title: Pipelines 
+  - file: reference/rocAL-augmentations.rst
+    title: Augmentations
   - file: reference/rocAL-and-RNNT.rst
     title: RNNT dataloading
   - file: reference/rocAL-cpp-api.rst

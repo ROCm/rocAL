@@ -21,7 +21,7 @@ The following prerequisites are required by both installation methods:
 * cmake
 * pkg-config 
 * `Google Protobuf <https://developers.google.com/protocol-buffers>`_ version 3.12.4 or later
-* `TurboJPEG <https://libjpeg-turbo.org/>`_
+* `TurboJPEG <https://libjpeg-turbo.org/>`_ version 2.0 or later
 * Python3, Python3 pip, and Python3 wheel
 * `LMDB Library <http://www.lmdb.tech/doc/>`_
 * `FFMPEG <https://www.ffmpeg.org>`_
@@ -31,6 +31,7 @@ The following prerequisites are required by both installation methods:
 .. note::
 
   | TurboJPEG must be installed manually on SLES. 
+  | TurboJPEG 2.0 or later is required. If your distribution's package repository doesn't provide TurboJPEG 2.0 or later, install it manually from the `libjpeg-turbo source <https://github.com/libjpeg-turbo/libjpeg-turbo>`_.
   | To use FFMPeg on SLES and RHEL, the ``FFMPeg-dev`` package must be installed manually.
   | libstdc++-12-dev is required on Ubuntu 22.04 only and must be installed manually.
 
