@@ -47,6 +47,14 @@ std::mutex & properties_registry_mutex() {
     return mtx;
 }
 
+const char * missing_video_properties_message() {
+#ifdef ROCAL_VIDEO_PLUGIN
+    return "No video properties provider is registered. The video plugin did not provide FFmpeg video properties.";
+#else
+    return "No video properties provider is registered. This rocAL build does not include FFmpeg, and a monolithic build does not produce rocal_video_plugin.";
+#endif
+}
+
 }  // namespace
 
 void substring_extraction(std::string const &str, const char delim, std::vector<std::string> &out) {
@@ -70,24 +78,36 @@ void register_video_properties_functions(
 
 void open_video_context(const char *video_file_path, Properties &props) {
     rocal::video::ensure_video_plugin_loaded();
-    std::lock_guard<std::mutex> lock(properties_registry_mutex());
-    if (!properties_registry().open_video_context)
-        THROW("No video properties plugin is registered. Link rocal_video_plugin if video support is required.");
-    properties_registry().open_video_context(video_file_path, props);
+    OpenVideoContextFn open_fn = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(properties_registry_mutex());
+        open_fn = properties_registry().open_video_context;
+    }
+    if (!open_fn)
+        THROW(missing_video_properties_message());
+    open_fn(video_file_path, props);
 }
 
 void get_video_properties_from_txt_file(VideoProperties &video_props, const char *file_path, bool file_list_frame_num) {
     rocal::video::ensure_video_plugin_loaded();
-    std::lock_guard<std::mutex> lock(properties_registry_mutex());
-    if (!properties_registry().get_video_properties_from_txt_file)
-        THROW("No video properties plugin is registered. Link rocal_video_plugin if video support is required.");
-    properties_registry().get_video_properties_from_txt_file(video_props, file_path, file_list_frame_num);
+    GetVideoPropertiesFromTxtFileFn properties_fn = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(properties_registry_mutex());
+        properties_fn = properties_registry().get_video_properties_from_txt_file;
+    }
+    if (!properties_fn)
+        THROW(missing_video_properties_message());
+    properties_fn(video_props, file_path, file_list_frame_num);
 }
 
 void find_video_properties(VideoProperties &video_props, const char *source_path, bool file_list_frame_num) {
     rocal::video::ensure_video_plugin_loaded();
-    std::lock_guard<std::mutex> lock(properties_registry_mutex());
-    if (!properties_registry().find_video_properties)
-        THROW("No video properties plugin is registered. Link rocal_video_plugin if video support is required.");
-    properties_registry().find_video_properties(video_props, source_path, file_list_frame_num);
+    FindVideoPropertiesFn find_fn = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(properties_registry_mutex());
+        find_fn = properties_registry().find_video_properties;
+    }
+    if (!find_fn)
+        THROW(missing_video_properties_message());
+    find_fn(video_props, source_path, file_list_frame_num);
 }

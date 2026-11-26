@@ -30,8 +30,15 @@ THE SOFTWARE.
 
 #include <cstring>
 #include <mutex>
+#include <set>
 #include <string>
+#include <sys/stat.h>
+#include <utility>
 #include <vector>
+
+#ifdef ROCAL_VIDEO_PLUGIN
+#include <link.h>
+#endif
 
 #include "pipeline/commons.h"
 
@@ -79,6 +86,24 @@ std::string get_rocal_library_dir() {
     return {};
 }
 
+using FileId = std::pair<dev_t, ino_t>;
+
+// stat follows symlinks, so a versioned SONAME and its .so symlink share one id.
+bool file_id_of(const char *path, FileId &id) {
+    struct stat info;
+    if (stat(path, &info) != 0)
+        return false;
+    id = {info.st_dev, info.st_ino};
+    return true;
+}
+
+// Identity of the file dlopen actually mapped, which is how a bare SONAME is resolved.
+bool mapped_file_id(void *handle, FileId &id) {
+    struct link_map *map = nullptr;
+    return dlinfo(handle, RTLD_DI_LINKMAP, &map) == 0 && map != nullptr && map->l_name != nullptr &&
+           map->l_name[0] != '\0' && file_id_of(map->l_name, id);
+}
+
 std::vector<std::string> build_plugin_search_list() {
     std::vector<std::string> paths;
     // 1. Directory that contains the running librocal.so. The co-located plugin shares this
@@ -100,23 +125,42 @@ void do_load_video_plugin() {
     }
 
     std::string error_log;
+    std::set<std::string> tried_names;
+    // A rejected plugin is closed at once: while it stays loaded, a later bare-SONAME
+    // dlopen returns it instead of searching LD_LIBRARY_PATH / rpath. Its file id is
+    // kept so another path to the same file is not opened again.
+    std::set<FileId> rejected_files;
     for (const auto &candidate : build_plugin_search_list()) {
-        void *handle = dlopen(candidate.c_str(), RTLD_NOW | RTLD_GLOBAL);
-        if (handle) {
-            if (is_decoder_registered(DecoderType::FFMPEG_VIDEO)) {
-                return;  // plugin constructor registered the factories.
-            }
-            // The .so loaded but did not register; close it and keep searching.
-            if (!error_log.empty()) error_log += "; ";
-            error_log += candidate + ": loaded but registered no decoders (built against a different rocAL backend?)";
-            dlclose(handle);
-        } else {
+        if (!tried_names.insert(candidate).second)
+            continue;
+        FileId id;
+        if (candidate.find('/') != std::string::npos && file_id_of(candidate.c_str(), id) &&
+            rejected_files.count(id) != 0)
+            continue;
+
+        // RTLD_LOCAL: a rejected plugin must not add its symbols to the global scope,
+        // where they would bind ahead of a later plugin's own definitions.
+        void *handle = dlopen(candidate.c_str(), RTLD_NOW | RTLD_LOCAL);
+        if (!handle) {
             const char *err = dlerror();
             if (err) {
                 if (!error_log.empty()) error_log += "; ";
                 error_log += candidate + ": " + err;
             }
+            continue;
         }
+        if (is_decoder_registered(DecoderType::FFMPEG_VIDEO)) {
+            dlopen(candidate.c_str(), RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
+            return;  // plugin constructor registered the factories.
+        }
+        // The .so loaded but did not register; close it and keep searching.
+        FileId mapped;
+        const bool seen = mapped_file_id(handle, mapped) && !rejected_files.insert(mapped).second;
+        if (!seen) {
+            if (!error_log.empty()) error_log += "; ";
+            error_log += candidate + ": loaded but registered no decoders (built against a different rocAL backend?)";
+        }
+        dlclose(handle);
     }
 
     THROW("rocAL video plugin (" + std::string(kPluginName) + " or " +

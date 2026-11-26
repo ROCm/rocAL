@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 #include <map>
 #include <mutex>
+#include <string>
 #include "decoders/video/video_plugin_loader.h"
 #include "pipeline/commons.h"
 
@@ -44,6 +45,24 @@ std::mutex& decoder_registry_mutex() {
     return mtx;
 }
 
+// In plugin builds ensure_video_plugin_loaded() has already thrown unless the plugin
+// registered FFmpeg, so only rocDecode can be missing here.
+std::string missing_video_decoder_message(DecoderType type) {
+    switch (type) {
+#ifdef ROCAL_VIDEO_PLUGIN
+        case DecoderType::ROCDECODE_VIDEO:
+            return "No video decoder factory is registered for rocDecode. The video plugin is loaded but was built without rocDecode.";
+#else
+        case DecoderType::ROCDECODE_VIDEO:
+            return "No video decoder factory is registered for rocDecode. This rocAL build does not include rocDecode.";
+        case DecoderType::FFMPEG_VIDEO:
+            return "No video decoder factory is registered for FFmpeg. This rocAL build does not include FFmpeg, and a monolithic build does not produce rocal_video_plugin.";
+#endif
+        default:
+            return "No video decoder factory is registered for decoder type " + TOSTR(type) + ".";
+    }
+}
+
 }  // namespace
 
 void register_decoder_factory(DecoderType type, VideoDecoderFactory factory) {
@@ -53,12 +72,15 @@ void register_decoder_factory(DecoderType type, VideoDecoderFactory factory) {
 
 std::shared_ptr<VideoDecoder> create_decoder(DecoderType type, DecoderConfig& cfg) {
     ensure_video_plugin_loaded();
-    std::lock_guard<std::mutex> lock(decoder_registry_mutex());
-    auto it = decoder_registry().find(type);
-    if (it == decoder_registry().end() || !it->second)
-        THROW("No video decoder factory is registered for decoder type " + TOSTR(type) +
-              ". Link rocal_video_plugin if video support is required.");
-    return it->second(cfg);
+    VideoDecoderFactory factory;
+    {
+        std::lock_guard<std::mutex> lock(decoder_registry_mutex());
+        auto it = decoder_registry().find(type);
+        if (it == decoder_registry().end() || !it->second)
+            THROW(missing_video_decoder_message(type));
+        factory = it->second;
+    }
+    return factory(cfg);
 }
 
 bool is_decoder_registered(DecoderType type) {
