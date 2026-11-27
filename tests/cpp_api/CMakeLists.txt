@@ -87,6 +87,22 @@ else()
     endif()
 endif(NOT ROCAL_FOUND)
 
+# The rocAL every test project builds against, passed down as ROCAL_ROOT so all of them use one
+# prefix for both headers and library. From the rocAL build tree that is the install prefix: the
+# test projects are configured by ctest, after `make install` has filled it, so it cannot be
+# checked here. When the suite is configured on its own (e.g. from <prefix>/share/rocal/test),
+# it uses the rocAL it was installed with (see cmake/RocalTestRoot.cmake).
+# Pass -DROCAL_ROOT=<prefix> to test a different rocAL install.
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/RocalTestRoot.cmake)
+if(NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    if(NOT ROCAL_ROOT)
+        set(ROCAL_ROOT ${CMAKE_INSTALL_PREFIX})
+    endif()
+else()
+    rocal_test_find_rocal()
+endif()
+message("-- ${White}${PROJECT_NAME}: test projects use rocAL from ${ROCAL_ROOT}${ColourReset}")
+
 message("-- ${BoldBlue}Test backend set to -- ${BACKEND}${ColourReset}")
 
 # rocdecode_FOUND only reports that the package is present. The top-level build passes down
@@ -109,10 +125,13 @@ if(NOT "${BACKEND}" STREQUAL "HIP")
   message("-- ${Yellow}Warning: Skipping GPU tests")
 endif()
 
-# Tests need the tiny image dataset.  In a normal /opt/rocm install it lives under
-# /opt/rocm/share/rocal/test/data.  When building against a local install prefix, use
-# the same prefix so the test data path is resolvable without /opt/rocm.
-if(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/share/rocal/test/data/images/AMD-tinyDataSet")
+# Test data comes from the same install as the rocAL under test where possible: the data next to
+# this suite, then ROCAL_ROOT, then CMAKE_INSTALL_PREFIX, and ROCM_PATH last.
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/data/images/AMD-tinyDataSet")
+    set(ROCAL_TEST_DATA_PATH ${CMAKE_CURRENT_SOURCE_DIR}/data)
+elseif(ROCAL_ROOT AND EXISTS "${ROCAL_ROOT}/share/rocal/test/data/images/AMD-tinyDataSet")
+    set(ROCAL_TEST_DATA_PATH ${ROCAL_ROOT}/share/rocal/test/data)
+elseif(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/share/rocal/test/data/images/AMD-tinyDataSet")
     set(ROCAL_TEST_DATA_PATH ${CMAKE_INSTALL_PREFIX}/share/rocal/test/data)
 else()
     set(ROCAL_TEST_DATA_PATH ${ROCM_PATH}/share/rocal/test/data)
@@ -129,7 +148,7 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/basic_test"
                               "${CMAKE_CURRENT_BINARY_DIR}/basic_test"
             --build-generator "${CMAKE_GENERATOR}"
-            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
+            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" "-DROCAL_ROOT=${ROCAL_ROOT}"
             --test-command "basic_test"
             ${ROCAL_TEST_IMAGES} ${ROCAL_TEST_IMAGES_VAL} 1 0 224 224
 )
@@ -173,7 +192,7 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/dataloader_multithread"
                               "${CMAKE_CURRENT_BINARY_DIR}/dataloader_multithread"
             --build-generator "${CMAKE_GENERATOR}"
-            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
+            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" "-DROCAL_ROOT=${ROCAL_ROOT}"
             --test-command "dataloader_multithread"
             ${ROCAL_TEST_IMAGES} 0
 )
@@ -187,7 +206,7 @@ if("${BACKEND}" STREQUAL "HIP")
               --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/dataloader_multithread"
                                 "${CMAKE_CURRENT_BINARY_DIR}/dataloader_multithread_gpu"
               --build-generator "${CMAKE_GENERATOR}"
-              --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
+              --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" "-DROCAL_ROOT=${ROCAL_ROOT}"
               --test-command "dataloader_multithread"
               ${ROCAL_TEST_IMAGES} 1
   )
@@ -217,7 +236,7 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/performance_tests"
                               "${CMAKE_CURRENT_BINARY_DIR}/performance_tests"
             --build-generator "${CMAKE_GENERATOR}"
-            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
+            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" "-DROCAL_ROOT=${ROCAL_ROOT}"
             --test-command "performance_tests"
             ${ROCAL_TEST_IMAGES} 224 224 1 16 0
 )
@@ -238,7 +257,7 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/performance_tests_with_depth"
                               "${CMAKE_CURRENT_BINARY_DIR}/performance_tests_with_depth"
             --build-generator "${CMAKE_GENERATOR}"
-            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
+            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" "-DROCAL_ROOT=${ROCAL_ROOT}"
             --test-command "performance_tests_with_depth"
             ${ROCAL_TEST_IMAGES} 224 224 1 1 1 0
 )
@@ -259,7 +278,7 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/unit_tests"
                               "${CMAKE_CURRENT_BINARY_DIR}/unit_tests"
             --build-generator "${CMAKE_GENERATOR}"
-            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
+            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" "-DROCAL_ROOT=${ROCAL_ROOT}"
             --test-command "unit_tests"
             0 ${ROCAL_TEST_IMAGES} test 224 224 1 0 1
 )
@@ -278,6 +297,12 @@ endif()
 
 if("${BACKEND}" STREQUAL "HIP")
   if(ROCAL_VIDEO_TESTS_ENABLED)
+    # video_tests links the librocal just built in CMAKE_LIBRARY_OUTPUT_DIRECTORY, so it also takes
+    # the API headers from the same source tree instead of an installed copy.
+    set(ROCAL_VIDEO_PLUGIN_BUILD_INCLUDE_DIR "")
+    if(CMAKE_LIBRARY_OUTPUT_DIRECTORY AND EXISTS "${CMAKE_SOURCE_DIR}/rocAL/include/api/rocal_api.h")
+      set(ROCAL_VIDEO_PLUGIN_BUILD_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/rocAL/include/api)
+    endif()
     # 14 - video_tests -- video reader with ffmpeg decoder
     add_test(
       NAME
@@ -287,7 +312,7 @@ if("${BACKEND}" STREQUAL "HIP")
                 --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/video_tests"
                                   "${CMAKE_CURRENT_BINARY_DIR}/video_tests"
                 --build-generator "${CMAKE_GENERATOR}"
-                --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" "-DROCAL_VIDEO_PLUGIN=${ROCAL_VIDEO_PLUGIN}" "-DROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
+                --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" "-DROCAL_ROOT=${ROCAL_ROOT}" "-DROCAL_VIDEO_PLUGIN=${ROCAL_VIDEO_PLUGIN}" "-DROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}" "-DROCAL_VIDEO_PLUGIN_BUILD_INCLUDE_DIR=${ROCAL_VIDEO_PLUGIN_BUILD_INCLUDE_DIR}"
                 --test-command "video_tests"
                 ${ROCAL_TEST_DATA_PATH}/videos/AMD_driving_virtual_20.mp4
     )
@@ -323,7 +348,7 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/serialization_test"
                               "${CMAKE_CURRENT_BINARY_DIR}/serialization_test"
             --build-generator "${CMAKE_GENERATOR}"
-            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
+            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" "-DROCAL_ROOT=${ROCAL_ROOT}"
             --test-command "serialization_test"
             ${ROCAL_TEST_IMAGES} 0
 )
@@ -344,7 +369,7 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/checkpoint_test"
                               "${CMAKE_CURRENT_BINARY_DIR}/checkpoint_test"
             --build-generator "${CMAKE_GENERATOR}"
-            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
+            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" "-DROCAL_ROOT=${ROCAL_ROOT}"
             --test-command "checkpoint_test"
             ${ROCAL_TEST_IMAGES}
             ${ROCAL_TEST_IMAGES_VAL}
@@ -360,7 +385,7 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/checkpoint_test"
                               "${CMAKE_CURRENT_BINARY_DIR}/checkpoint_test"
             --build-generator "${CMAKE_GENERATOR}"
-            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
+            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" "-DROCAL_ROOT=${ROCAL_ROOT}"
             --test-command bash -c
             "./checkpoint_test ${ROCAL_TEST_IMAGES} ${ROCAL_TEST_IMAGES_VAL} 0 && \
              ./restore_checkpoint_test ${ROCAL_TEST_IMAGES} ${ROCAL_TEST_IMAGES_VAL} 0"
@@ -378,7 +403,7 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/basic_test"
                               "${CMAKE_CURRENT_BINARY_DIR}/basic_test"
             --build-generator "${CMAKE_GENERATOR}"
-            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
+            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" "-DROCAL_ROOT=${ROCAL_ROOT}"
             --test-command "basic_test"
             ${ROCAL_TEST_IMAGES} ${ROCAL_TEST_IMAGES_VAL} 1 0 32 32
 )
@@ -400,7 +425,7 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/unit_tests"
                               "${CMAKE_CURRENT_BINARY_DIR}/unit_tests_one_hot"
             --build-generator "${CMAKE_GENERATOR}"
-            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
+            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" "-DROCAL_ROOT=${ROCAL_ROOT}"
             --test-command "unit_tests"
             0 ${ROCAL_TEST_IMAGES} one_hot 224 224 0 0 1 2
 )

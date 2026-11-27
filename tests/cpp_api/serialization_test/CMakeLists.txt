@@ -48,17 +48,20 @@ endif()
 
 project(serialization_test)
 
-# Prefer a local rocAL install prefix over the system ROCm layout.
-if(CMAKE_INSTALL_PREFIX)
-    find_library(ROCAL_LIBRARY NAMES rocal HINTS ${CMAKE_INSTALL_PREFIX}/lib ${ROCM_PATH}/lib)
-    find_path(ROCAL_INCLUDE_DIR NAMES rocal_api.h PATHS ${CMAKE_INSTALL_PREFIX}/include/rocal ${ROCM_PATH}/include/rocal)
-else()
-    find_library(ROCAL_LIBRARY NAMES rocal HINTS ${ROCM_PATH}/lib)
-    find_path(ROCAL_INCLUDE_DIR NAMES rocal_api.h PATHS ${ROCM_PATH}/include/rocal)
+# Take the rocAL headers and library from one prefix, the rocAL this test belongs to,
+# so they always describe the same build; see cmake/RocalTestRoot.cmake in the test suite.
+# The helper comes from the suite this test sits in. A test directory copied out of
+# <prefix>/share/rocal/test has no suite next to it, so it uses the one installed under ROCM_PATH.
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/RocalTestRoot.cmake OPTIONAL RESULT_VARIABLE ROCAL_TEST_ROOT_MODULE)
+if(NOT ROCAL_TEST_ROOT_MODULE)
+    include(${ROCM_PATH}/share/rocal/test/cmake/RocalTestRoot.cmake OPTIONAL RESULT_VARIABLE ROCAL_TEST_ROOT_MODULE)
 endif()
+if(NOT ROCAL_TEST_ROOT_MODULE)
+    message(FATAL_ERROR "${PROJECT_NAME}: RocalTestRoot.cmake not found in ../cmake or ${ROCM_PATH}/share/rocal/test/cmake. Configure the test from the rocAL test suite, or set ROCM_PATH to a rocAL install that has one")
+endif()
+rocal_test_find_rocal()
 
-if(ROCAL_LIBRARY AND ROCAL_INCLUDE_DIR)
-    set(ROCAL_FOUND TRUE)
+if(ROCAL_FOUND)
     message("-- ${White}${PROJECT_NAME}: Using rocAL -- \n\tLibraries:${ROCAL_LIBRARY} \n\tIncludes:${ROCAL_INCLUDE_DIR}${ColourReset}")
 endif()
 
@@ -85,21 +88,8 @@ list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rocal/test/cmake)
 # Find required packages
 find_package(AMDRPP QUIET)
 
-# Prefer CMAKE_INSTALL_PREFIX/include/rocal when building against a local install,
-# falling back to the system ROCm layout.
-if(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/include/rocal/rocal_api.h")
-    set(ROCAL_INCLUDE_ROOT ${CMAKE_INSTALL_PREFIX}/include/rocal)
-else()
-    set(ROCAL_INCLUDE_ROOT ${ROCM_PATH}/include/rocal)
-endif()
-include_directories(${ROCM_PATH}/include ${ROCAL_INCLUDE_ROOT})
-
-# Prefer the same prefix for the library location.
-if(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/lib")
-    link_directories(${CMAKE_INSTALL_PREFIX}/lib ${ROCM_PATH}/lib)
-else()
-    link_directories(${ROCM_PATH}/lib)
-endif()
+include_directories(${ROCM_PATH}/include ${ROCAL_INCLUDE_DIR})
+link_directories(${ROCM_PATH}/lib)
 
 # Source files
 file(GLOB Source_Files ./*.cpp)
@@ -115,4 +105,4 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall")
 # Link libraries
 # librocal carries Python C-API symbols (PythonFunction operator); link libpython to resolve them
 find_package(Python3 QUIET COMPONENTS Development.Embed)
-target_link_libraries(${PROJECT_NAME} rocal $<TARGET_NAME_IF_EXISTS:Python3::Python>)
+target_link_libraries(${PROJECT_NAME} ${ROCAL_LIBRARY} $<TARGET_NAME_IF_EXISTS:Python3::Python>)

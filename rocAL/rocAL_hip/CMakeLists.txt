@@ -40,20 +40,13 @@ list(APPEND rocAL_HIP_SOURCES
 )
 # With ROCAL_VIDEO_PLUGIN the rocDecode decoder and its kernels live in the plugin. Building them
 # here as well would export a second copy that the RTLD_GLOBAL-loaded plugin could bind to.
+# The parent directory leaves rocdecode_FOUND TRUE only when rocdecode_UTILS_DIR holds both
+# kernel sources, and adds ENABLE_ROCDECODE to librocal from the same decision.
 if (rocdecode_FOUND AND NOT ROCAL_VIDEO_PLUGIN)
-    get_filename_component(rocdecode_PREFIX_DIR "${rocdecode_INCLUDE_DIR}" DIRECTORY)
-    set(rocdecode_UTILS_DIR "${rocdecode_PREFIX_DIR}/share/rocdecode/utils")
-    # Some rocDecode runtime packages (e.g. DEB installs) do not ship the
-    # utility source files.  Disable rocDecode HIP kernels if they are missing.
-    if(EXISTS "${rocdecode_UTILS_DIR}/resize_kernels.cpp" AND EXISTS "${rocdecode_UTILS_DIR}/colorspace_kernels.cpp")
-        set (rocDecode_UTIL_SOURCES
-            ${rocdecode_UTILS_DIR}/resize_kernels.cpp
-            ${rocdecode_UTILS_DIR}/colorspace_kernels.cpp
-        )
-    else()
-        message("-- ${Yellow}NOTE: rocDecode utility sources missing at ${rocdecode_UTILS_DIR}; disabling rocDecode HIP kernels${ColourReset}")
-        set(rocdecode_FOUND FALSE)
-    endif()
+    set (rocDecode_UTIL_SOURCES
+        ${rocdecode_UTILS_DIR}/resize_kernels.cpp
+        ${rocdecode_UTILS_DIR}/colorspace_kernels.cpp
+    )
 endif()
 
 set_source_files_properties(${rocAL_HIP_SOURCES} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)

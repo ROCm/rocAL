@@ -101,10 +101,23 @@ else()
         ${ROCAL_INSTALL_PREFIX}/include
         ${ROCAL_INSTALL_PREFIX}/include/rocal
     )
-    find_path(MIVisionX_INCLUDE_DIR NAMES vx_ext_amd.h PATHS ${MIVisionX_PATH}/include/mivisionx ${ROCM_PATH}/include/mivisionx NO_DEFAULT_PATH)
-    if(MIVisionX_INCLUDE_DIR)
-        list(APPEND ROCAL_INCLUDE_DIRS ${MIVisionX_INCLUDE_DIR})
+    # The installed rocAL headers include <VX/vx.h> (pipeline/graph.h), so MIVisionX is required.
+    # Search MIVisionX_PATH and ROCM_PATH first, then the default paths (CMAKE_PREFIX_PATH and
+    # system include directories), and stop at configure with the searched locations instead of
+    # letting the compile fail on a missing header. VX/vx.h is the header every build needs;
+    # vx_ext_amd.h is only included by the HIP device manager.
+    set(MIVisionX_INCLUDE_SEARCH_PATHS ${ROCM_PATH}/include/mivisionx)
+    if(MIVisionX_PATH)
+        list(INSERT MIVisionX_INCLUDE_SEARCH_PATHS 0 ${MIVisionX_PATH}/include/mivisionx)
+        # A result cached by an earlier configure would otherwise win over MIVisionX_PATH.
+        unset(MIVisionX_INCLUDE_DIR CACHE)
     endif()
+    find_path(MIVisionX_INCLUDE_DIR NAMES VX/vx.h PATHS ${MIVisionX_INCLUDE_SEARCH_PATHS} NO_DEFAULT_PATH)
+    find_path(MIVisionX_INCLUDE_DIR NAMES VX/vx.h PATH_SUFFIXES mivisionx)
+    if(NOT MIVisionX_INCLUDE_DIR)
+        message(FATAL_ERROR "-- ${Red}rocal_video_plugin: MIVisionX header VX/vx.h not found under ${MIVisionX_INCLUDE_SEARCH_PATHS} or the default include paths. Install MIVisionX or pass -DMIVisionX_PATH=<MIVisionX install prefix>${ColourReset}")
+    endif()
+    list(APPEND ROCAL_INCLUDE_DIRS ${MIVisionX_INCLUDE_DIR})
 endif()
 
 # FFmpeg is mandatory for the plugin.
